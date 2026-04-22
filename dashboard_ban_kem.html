@@ -483,9 +483,19 @@ function isValid(r){
          (r[C.hinhThucXuat]||'').trim()!=='Xuất khuyến mãi';
 }
 
-// Trả góp: cột hinhThucXuat chứa "trả góp" (không phân biệt hoa thường)
+// Thu hộ: các giao dịch thu hộ trả góp (không phải doanh thu bán hàng của NV)
+function isThuHo(r){
+  const htx=(r[C.hinhThucXuat]||'').toLowerCase();
+  return htx.includes('thu hộ') || htx.includes('smartnet') ||
+         htx.includes('epay')   || htx.includes('payoo')    ||
+         htx.includes('dịch vụ thu hộ');
+}
+
+// Trả góp thực sự: hinhThucXuat chứa "trả góp" (bán hàng trả góp của NV)
+// Bao gồm cả thu hộ trả góp (FE Credit, Home Credit...) tính vào trả góp
 function isInstallment(r){
-  return (r[C.hinhThucXuat]||'').toLowerCase().includes('trả góp');
+  const htx=(r[C.hinhThucXuat]||'').toLowerCase();
+  return htx.includes('trả góp') || isThuHo(r);
 }
 
 // ── GLOBAL ──
@@ -580,12 +590,24 @@ function analyzeData(){
       CATS.forEach(cat=>{empMap[nm].cats[cat.name]={sl:0,dt:0,brands:{}};});
     }
     const emp=empMap[nm];
-    emp.totalSL+=sl; emp.totalDT+=dt;
-    if(isTG){emp.tgSL+=sl; emp.tgDT+=dt;}
-    else{emp.tmDT+=dt;}
+    const isThuHoRow=isThuHo(r);
 
-    // Daily tracking
-    if(dayNum>0){
+    // Thu hộ KHÔNG tính vào doanh thu bán hàng của NV
+    // Chỉ cộng totalDT khi KHÔNG phải thu hộ
+    if(!isThuHoRow){
+      emp.totalSL+=sl;
+      emp.totalDT+=dt;
+    }
+
+    if(isTG){
+      emp.tgSL+=sl;
+      emp.tgDT+=dt;    // DT trả góp = bán hàng trả góp + thu hộ
+    } else if(!isThuHoRow){
+      emp.tmDT+=dt;    // Tiền mặt = chỉ bán hàng tiền mặt thực sự
+    }
+
+    // Daily tracking (chỉ tính ngày cho giao dịch bán hàng thực, không tính thu hộ)
+    if(dayNum>0 && !isThuHoRow){
       if(!emp.daily[dayNum]) emp.daily[dayNum]={totalDT:0,tgDT:0};
       emp.daily[dayNum].totalDT+=dt;
       if(isTG) emp.daily[dayNum].tgDT+=dt;
