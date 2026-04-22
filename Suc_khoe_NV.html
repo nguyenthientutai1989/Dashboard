@@ -612,13 +612,24 @@
 
       /* Make sales-detail table more compact (optimize for screenshots) */
       #salesDetailCard .table thead th {
-        font-size: 11px;
-        padding: 8px 8px;
+        font-size: 10px;
+        padding: 5px 5px;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.3;
+        text-align: center;
+        vertical-align: bottom;
       }
 
       #salesDetailCard .table tbody td {
-        padding: 8px 8px;
-        font-size: 12px;
+        padding: 5px 5px;
+        font-size: 11px;
+        text-align: center;
+      }
+
+      #salesDetailCard .cell-cat {
+        min-width: 90px;
+        max-width: 110px;
       }
 
       #salesDetailCard .rank-badge {
@@ -2161,7 +2172,7 @@
         const tablesHtml = chunks
           .map((catsChunk, idxChunk) => {
             const theadCats = catsChunk
-              .map((c) => `<th style="width:150px"><div class="th-cat">${escapeHtml(c.name)}</div></th>`)
+              .map((c) => `<th style="width:100px;word-break:break-word;white-space:normal;line-height:1.3"><div class="th-cat" style="font-size:10px">${escapeHtml(c.name)}</div></th>`)
               .join("");
 
             const bodyRows = detail.rows
@@ -2193,7 +2204,7 @@
                       perPersonTarget,
                       2
                     )}</div>
-                        <div class="pct mono">${formatNumber(pct, 0)}%</div>
+                        <div class="pct mono" style="color:var(--blue);font-weight:700">${formatNumber(pct, 0)}%</div>
                       </td>
                     `;
                   })
@@ -2232,7 +2243,7 @@
                   Number(cat.target || 0),
                   2
                 )}</div>
-                    <div class="pct mono">${formatNumber(pct, 0)}%</div>
+                    <div class="pct mono" style="color:var(--blue);font-weight:700">${formatNumber(pct, 0)}%</div>
                   </td>
                 `;
               })
@@ -2256,10 +2267,10 @@
                 <table class="table" aria-label="Chi tiết bán (bảng ${idxChunk + 1})">
                   <thead>
                     <tr>
-                      <th style="width:60px">Hạng</th>
-                      <th style="width:260px">Nhân viên</th>
-                      <th style="width:110px">DTQĐ</th>
-                      <th style="width:110px">SL NH HT</th>
+                      <th style="width:50px">Hạng</th>
+                      <th style="width:180px">Nhân viên</th>
+                      <th style="width:80px">DTQĐ</th>
+                      <th style="width:80px">SL<br>NH HT</th>
                       ${theadCats}
                     </tr>
                   </thead>
@@ -2302,35 +2313,34 @@
         const day = getActiveDayData(true);
         if (!store || !day) return;
 
-        // Pills / header hints
+        // Skip re-render list/grid nếu user đang focus vào input trong đó
+        const af = document.activeElement;
+        const editingInPlace = af && af.tagName === "INPUT" && (
+          af.closest(".list-row") || af.dataset.grid
+        );
+
         $("pillTargets").textContent = `${(day.targetText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
-        $("pillEmployees").textContent = `${(day.employeeText || "")
-          .split(/\r?\n/)
-          .filter((l) => l.trim()).length} dòng`;
+        $("pillEmployees").textContent = `${(day.employeeText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
         $("pillSales").textContent = `${(day.salesText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
 
         $("pillStore").textContent = store.name || "Chưa chọn";
         $("pillStore").title = `Store: ${store.name || ""} • Date: ${state.ui.selectedDate}`;
-
         $("summaryHint").textContent = `Store: ${store.name} • Ngày: ${state.ui.selectedDate}`;
         $("txtReportStore").textContent = store.name || "—";
         $("txtReportStoreChip").textContent = store.name || "—";
 
-        // Editable lists
-        renderTargetsList(day);
-        renderEmployeesList(day);
+        if (!editingInPlace) {
+          renderTargetsList(day);
+          renderEmployeesList(day);
+          renderCatsGrid(day);
+          renderEmpsGrid(day);
+        }
 
-        // Grids
-        renderCatsGrid(day);
-        renderEmpsGrid(day);
         renderGroupsGrid(day);
         renderGroupFilter(day);
-
-        // Analysis
         renderAnalysis(day);
         renderSalesDetailTables(day);
 
-        // Monthly target UI
         $("inpStoreMonthlyTarget").value = String(store.monthlyTarget ?? "");
       }
 
@@ -2572,6 +2582,15 @@
             .export-root table {
               min-width: 0 !important;
               width: 100% !important;
+              table-layout: auto !important;
+            }
+            .export-root .cell-cat {
+              min-width: 90px !important;
+              max-width: 110px !important;
+            }
+            .export-root .table-scroll {
+              width: 100% !important;
+              overflow: visible !important;
             }
             .export-root .report-header {
               width: 100% !important;
