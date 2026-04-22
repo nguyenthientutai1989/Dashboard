@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập - BI MWG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --panel: rgba(17, 24, 39, 0.72);
+      --line: rgba(255, 255, 255, 0.14);
+      --text: #f8fafc;
+      --muted: rgba(226, 232, 240, 0.78);
+      --accent: #f5c518;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100vh;
+      font-family: "Inter", sans-serif;
+      color: var(--text);
+      background-image: url("https://cdn.mwg.vn/mwg-content/images/truso/truso1.jpg");
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.75));
+      z-index: 1;
+    }
+    .login-wrap {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 400px);
+      padding: 20px 16px;
+    }
+    .login-card {
+      background: rgba(10, 14, 24, 0.72);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      padding: 36px 32px;
+      backdrop-filter: blur(12px);
+    }
+    .logo-area {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .logo-area h1 {
+      font-family: "Roboto Condensed", sans-serif;
+      font-size: 2rem;
+      line-height: 1;
+      letter-spacing: 0.03em;
+    }
+    .logo-area h1 span { color: var(--accent); }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 7px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      font-size: 0.97rem;
+      font-family: "Inter", sans-serif;
+      outline: none;
+      transition: border-color 160ms, background 160ms;
+    }
+    input[type="text"]:focus, input[type="password"]:focus {
+      border-color: rgba(245,197,24,0.5);
+      background: rgba(255,255,255,0.1);
+    }
+    input::placeholder { color: rgba(255,255,255,0.28); }
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      margin-top: 8px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: #1a1000;
+      font-size: 0.97rem;
+      font-weight: 700;
+      font-family: "Inter", sans-serif;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: opacity 160ms, transform 160ms;
+    }
+    .btn-login:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-login:active { transform: scale(0.98); }
+    .error-msg {
+      margin-top: 14px;
+      padding: 11px 14px;
+      border-radius: 8px;
+      background: rgba(248, 113, 113, 0.15);
+      border: 1px solid rgba(248,113,113,0.3);
+      color: #fca5a5;
+      font-size: 0.85rem;
+      text-align: center;
+      display: none;
+    }
+    .footer-note {
+      margin-top: 20px;
+      text-align: center;
+      color: rgba(255,255,255,0.35);
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="logo-area">
+        <p class="eyebrow">MWG Business Intelligence</p>
+        <h1>BI <span>MWG</span></h1>
+      </div>
+      <div class="form-group">
+        <label for="username">Tên đăng nhập</label>
+        <input type="text" id="username" placeholder="Nhập tên đăng nhập..." autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label for="password">Mật khẩu</label>
+        <input type="password" id="password" placeholder="Nhập mật khẩu..." autocomplete="current-password">
+      </div>
+      <button class="btn-login" onclick="doLogin()">Đăng nhập</button>
+      <div class="error-msg" id="error-msg">Tên đăng nhập hoặc mật khẩu không đúng.</div>
+    </div>
+    <p class="footer-note">Chỉ dành cho nhân viên được cấp quyền</p>
+  </div>
+
+  <script>
+    // ─── CONFIG ───────────────────────────────────────────
+    const API_URL = "https://script.google.com/macros/s/AKfycbyqrqGQlBBUBwWHK-lIn_L701DDADeYoyJqbs9wFT-kta_-K5mu78qS3n6GYFso0UtS/exec";
+
+    // ─── AUTO LOGIN nếu đã có session ─────────────────────
+    (function () {
+      try {
+        const s = JSON.parse(localStorage.getItem("mwg_session") || "null");
+        if (s && s.username) window.location.href = "./main.html";
+      } catch (e) {}
+    })();
+
+    // ─── HELPER: hiển thị / ẩn lỗi ───────────────────────
+    function showError(msg) {
+      const el = document.getElementById("error-msg");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+    function hideError() {
+      document.getElementById("error-msg").style.display = "none";
+    }
+
+    function setLoading(btn, loading) {
+      btn.disabled = loading;
+      btn.style.opacity = loading ? "0.6" : "1";
+      btn.textContent = loading ? "Đang xử lý..." : btn._origText;
+    }
+
+    // ─── LOGIN ────────────────────────────────────────────
+    async function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const btn = document.querySelector(".btn-login");
+      if (!btn._origText) btn._origText = btn.textContent;
+
+      hideError();
+
+      if (!username || !password) {
+        showError("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.");
+        return;
+      }
+
+      setLoading(btn, true);
+
+      try {
+        const res = await fetch(
+          `${API_URL}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+          { method: "GET" }
+        );
+        const data = await res.json();
+
+        if (data.status === "success") {
+          // Lưu session
+          localStorage.setItem("mwg_session", JSON.stringify({
+            username: username,
+            displayName: data.displayName || username,
+            role: data.role || "US"   // "AD" = admin, "US" = user
+          }));
+          window.location.href = "./main.html";
+        } else {
+          showError("Tên đăng nhập hoặc mật khẩu không đúng.");
+        }
+      } catch (err) {
+        showError("Không kết nối được máy chủ. Kiểm tra mạng và thử lại.");
+        console.error("Login error:", err);
+      } finally {
+        setLoading(btn, false);
+      }
+    }
+
+    // Giữ tên hàm cũ doLogin() để không cần sửa onclick trong HTML
+    function doLogin() { login(); }
+
+    // ─── REGISTER (gọi từ main.html khi admin tạo user) ───
+    async function register(newUser, newPass, displayName) {
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newUser, newPass, displayName })
+        });
+        const data = await res.json();
+
+        if (data.status === "success") {
+          return { ok: true, msg: "Tạo tài khoản thành công!" };
+        } else if (data.status === "duplicate") {
+          return { ok: false, msg: "Tên đăng nhập đã tồn tại." };
+        } else {
+          return { ok: false, msg: data.message || "Tạo tài khoản thất bại." };
+        }
+      } catch (err) {
+        console.error("Register error:", err);
+        return { ok: false, msg: "Lỗi kết nối máy chủ." };
+      }
+    }
+
+    // ─── LOGOUT ───────────────────────────────────────────
+    function logout() {
+      localStorage.removeItem("mwg_session");
+      window.location.href = "./index.html";
+    }
+
+    // ─── ENTER KEY ────────────────────────────────────────
+    document.addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+  </script>
+</body>
+</html>

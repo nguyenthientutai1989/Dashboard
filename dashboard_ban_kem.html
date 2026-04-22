@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BI Bán Kèm — MWG 485</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#080b12;--bg2:#0f1320;--bg3:#161c2e;--bg4:#1e2540;--bg5:#252d4a;
+  --border:rgba(99,120,198,0.12);--border2:rgba(99,120,198,0.22);--border3:rgba(99,120,198,0.35);
+  --text:#dde3f5;--text2:#a0aacb;--text3:#6b789a;
+  --accent:#f5c518;--accent2:rgba(245,197,24,0.12);
+  --good:#34d399;--good2:rgba(52,211,153,0.1);
+  --warn:#fbbf24;--warn2:rgba(251,191,36,0.1);
+  --bad:#f87171;--bad2:rgba(248,113,113,0.1);
+  --blue:#60a5fa;--blue2:rgba(96,165,250,0.1);
+  --purple:#c084fc;--purple2:rgba(192,132,252,0.1);
+  --teal:#2dd4bf;--teal2:rgba(45,212,191,0.1);
+  --pink:#f472b6;--pink2:rgba(244,114,182,0.1);
+  --orange:#fb923c;--orange2:rgba(251,146,60,0.1);
+  --cyan:#22d3ee;--cyan2:rgba(34,211,238,0.1);
+  --r:8px;--r2:12px;--r3:16px;
+  --font:'Be Vietnam Pro',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;line-height:1.55;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:99px;}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:10px;padding:0 24px;height:52px;
+  background:rgba(8,11,18,0.96);border-bottom:1px solid var(--border2);backdrop-filter:blur(16px);}
+.nav-brand{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none;}
+.nav-logo-badge{background:linear-gradient(135deg,#f5c518,#e6a800);color:#0a0c10;font-size:9px;font-weight:800;
+  letter-spacing:0.14em;padding:3px 8px;border-radius:5px;line-height:1;}
+.nav-logo-name{font-size:13px;font-weight:700;color:var(--text);letter-spacing:0.01em;}
+.nav-page-chip{font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);
+  padding:3px 10px;border-radius:20px;letter-spacing:0.03em;}
+.nav-user{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);margin-right:8px;}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:var(--good);box-shadow:0 0 6px rgba(52,211,153,.5);}
+.nav-user strong{color:var(--accent);font-weight:600;}
+.nav-btn{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:7px;
+  font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;border:1px solid transparent;
+  text-decoration:none;transition:all 130ms;white-space:nowrap;}
+.nav-btn:active{transform:scale(.97);}
+.btn-home{background:var(--bg3);border-color:var(--border2);color:var(--text2);}
+.btn-home:hover{background:var(--bg4);color:var(--text);}
+.btn-logout{background:var(--bad2);border-color:rgba(248,113,113,.25);color:#fca5a5;}
+.btn-logout:hover{background:rgba(248,113,113,.2);}
+
+/* ── LAYOUT ── */
+.wrap{max-width:1200px;margin:0 auto;padding:24px 20px 80px;}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r3);padding:20px 22px;margin-bottom:16px;}
+.card-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;}
+.card-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;border:1px solid var(--border2);}
+.card-head-text{flex:1;}
+.card-kicker{font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:2px;}
+.card-title{font-size:15px;font-weight:700;color:var(--text);}
+.card-subtitle{font-size:11px;color:var(--text3);margin-top:2px;}
+.head-badge{margin-left:auto;font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  background:var(--bg4);color:var(--text3);padding:3px 10px;border-radius:20px;border:1px solid var(--border);white-space:nowrap;}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+
+/* ── FORM ── */
+.form-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);}
+.field input,.field select,.field textarea{
+  padding:9px 12px;border-radius:var(--r);border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text);font-family:var(--font);font-size:12px;outline:none;
+  transition:border-color 140ms,background 140ms;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(245,197,24,.45);background:var(--bg4);}
+.field input::placeholder,.field textarea::placeholder{color:var(--text3);}
+textarea.raw{width:100%;min-height:100px;max-height:200px;font-family:var(--mono);font-size:10.5px;resize:vertical;line-height:1.5;}
+
+/* ── BUTTONS ── */
+.action-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;}
+.btn-prim{padding:9px 20px;border-radius:var(--r);border:none;
+  background:linear-gradient(135deg,#f5c518,#e6a800);color:#0a0c10;
+  font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;
+  transition:opacity 130ms,transform 130ms;letter-spacing:0.02em;display:flex;align-items:center;gap:6px;}
+.btn-prim:hover{opacity:.9;}
+.btn-prim:active{transform:scale(.97);}
+.btn-prim:disabled{opacity:.35;cursor:default;}
+.btn-sec{padding:9px 16px;border-radius:var(--r);border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all 130ms;display:flex;align-items:center;gap:6px;}
+.btn-sec:hover{background:var(--bg4);color:var(--text);}
+.btn-sec:disabled{opacity:.35;cursor:default;}
+.btn-img{padding:8px 16px;border-radius:var(--r);border:1px solid rgba(96,165,250,.3);
+  background:rgba(96,165,250,.08);color:var(--blue);font-family:var(--font);font-size:11px;font-weight:600;
+  cursor:pointer;transition:all 130ms;display:flex;align-items:center;gap:5px;}
+.btn-img:hover{background:rgba(96,165,250,.15);}
+.btn-img:disabled{opacity:.35;cursor:default;}
+.st{font-size:11px;color:var(--text3);}
+
+/* ── EMP CHIPS ── */
+.emp-grid{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0;}
+.emp-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--r);
+  background:var(--bg3);border:1px solid var(--border2);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all 130ms;user-select:none;color:var(--text2);}
+.emp-chip.on{background:var(--accent2);border-color:rgba(245,197,24,.35);color:var(--accent);}
+.emp-chip:hover{background:var(--bg4);}
+.emp-chip .xtx{font-size:9px;font-family:var(--mono);color:var(--text3);margin-left:2px;}
+.emp-chip .xdel{font-size:15px;color:var(--text3);line-height:1;}
+.emp-chip.on .xdel{color:rgba(245,197,24,.5);}
+.emp-note{font-size:10px;color:var(--text3);margin-top:6px;}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-bottom:16px;}
+.kpi-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);
+  padding:13px 15px;position:relative;overflow:hidden;transition:border-color 200ms;}
+.kpi-card:hover{border-color:var(--border2);}
+.kpi-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--accent));}
+.kpi-icon{font-size:20px;margin-bottom:6px;display:block;}
+.kpi-label{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;}
+.kpi-val{font-size:20px;font-weight:700;color:var(--kc,var(--accent));line-height:1;font-family:var(--mono);}
+.kpi-sub{font-size:10px;color:var(--text3);margin-top:3px;}
+
+/* ── SEC HDR ── */
+.sec-hdr{display:flex;align-items:center;gap:10px;margin:20px 0 12px;}
+.sec-hdr-icon{font-size:16px;}
+.sec-hdr-label{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);}
+.sec-hdr-line{flex:1;height:1px;background:var(--border);}
+.sec-hdr-hint{font-size:10px;color:var(--accent);font-weight:600;letter-spacing:0.03em;}
+
+/* ── MAIN TABLE ── */
+.tbl-scroll{overflow-x:auto;border-radius:var(--r2);border:1px solid var(--border);}
+table.mtbl{width:100%;border-collapse:collapse;background:var(--bg2);min-width:980px;}
+table.mtbl thead tr{background:var(--bg4);}
+table.mtbl th{padding:10px 10px;text-align:center;font-size:8.5px;font-weight:700;letter-spacing:0.09em;
+  text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border2);white-space:nowrap;}
+table.mtbl th.left{text-align:left;}
+table.mtbl td{padding:9px 10px;text-align:center;border-bottom:1px solid var(--border);
+  font-size:12px;vertical-align:middle;}
+table.mtbl td.left{text-align:left;}
+table.mtbl tbody tr.data-row{transition:background 120ms;cursor:pointer;}
+table.mtbl tbody tr.data-row:hover{background:var(--bg3);}
+table.mtbl tbody tr.region-row td{background:var(--bg4);font-size:11px;border-bottom:2px solid var(--border3);}
+table.mtbl tbody tr.total-row{cursor:default;}
+table.mtbl tbody tr.total-row td{font-weight:700;color:var(--accent);background:var(--bg3);border-bottom:none;font-size:12px;}
+.emp-nm{font-weight:600;color:var(--text);font-size:12px;}
+.emp-id{font-size:10px;color:var(--text3);font-family:var(--mono);}
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+  border-radius:6px;font-size:10px;font-weight:800;background:var(--bg4);color:var(--text3);}
+.rb1{background:rgba(245,197,24,.15);color:var(--accent);}
+.rb2{background:rgba(192,192,192,.1);color:#c0c0c0;}
+.rb3{background:rgba(205,127,50,.1);color:#cd7f32;}
+.pct-tag{display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:5px;
+  font-size:11px;font-weight:700;font-family:var(--mono);min-width:46px;}
+.tg{background:var(--good2);color:var(--good);}
+.tw{background:var(--warn2);color:var(--warn);}
+.tb{background:var(--bad2);color:var(--bad);}
+.tn{background:var(--bg4);color:var(--text3);}
+.num-mono{font-family:var(--mono);font-size:12px;}
+/* region row special cells */
+.region-lbl{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--teal);display:block;}
+.region-val{font-size:13px;font-weight:700;font-family:var(--mono);color:var(--text);}
+.region-pct{font-size:11px;font-weight:700;color:var(--accent);font-family:var(--mono);}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);
+  z-index:300;overflow-y:auto;padding:24px;align-items:flex-start;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);
+  width:min(100%,860px);max-height:90vh;overflow-y:auto;animation:su 200ms ease;}
+@keyframes su{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.modal-head{display:flex;align-items:center;padding:18px 22px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--bg2);z-index:1;gap:12px;}
+.modal-avatar{width:42px;height:42px;border-radius:10px;background:var(--bg4);border:1px solid var(--border3);
+  display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--accent);flex-shrink:0;}
+.modal-emp-nm{font-size:16px;font-weight:700;}
+.modal-emp-sub{font-size:11px;color:var(--text3);}
+.btn-close{margin-left:auto;width:30px;height:30px;border-radius:7px;background:var(--bg3);
+  border:1px solid var(--border);color:var(--text3);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all 130ms;flex-shrink:0;}
+.btn-close:hover{background:var(--bg4);color:var(--text);}
+.modal-body{padding:18px 22px;}
+.d-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:8px;margin-bottom:14px;}
+.d-kpi{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;}
+.d-kpi-lbl{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:3px;}
+.d-kpi-val{font-size:16px;font-weight:700;font-family:var(--mono);color:var(--accent);}
+.d-kpi-sub{font-size:10px;color:var(--text3);margin-top:2px;}
+/* cat accordion */
+.cat-sec{margin-bottom:7px;}
+.cat-btn{width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);
+  background:var(--bg3);border:1px solid var(--border);cursor:pointer;transition:all 130ms;
+  text-align:left;font-family:var(--font);}
+.cat-btn:hover{background:var(--bg4);border-color:var(--border2);}
+.cat-icon{font-size:15px;flex-shrink:0;}
+.cat-nm{font-size:13px;font-weight:700;color:var(--text);flex:1;}
+.cat-nums{font-size:12px;font-weight:600;font-family:var(--mono);}
+.cat-arr{color:var(--text3);transition:transform 200ms;font-size:11px;}
+.cat-btn.open .cat-arr{transform:rotate(90deg);}
+.cat-body{display:none;background:rgba(0,0,0,.25);border:1px solid var(--border);
+  border-top:none;border-radius:0 0 var(--r) var(--r);overflow:hidden;}
+.cat-body.open{display:block;}
+.sub-row{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);transition:background 100ms;}
+.sub-row:last-child{border-bottom:none;}
+.sub-row:hover{background:var(--bg4);}
+.sub-brand{font-size:12px;font-weight:700;flex:1;}
+.sub-item-nm{font-size:11px;color:var(--text3);flex:1;padding-left:18px;}
+.sub-sl{font-size:11px;font-family:var(--mono);color:var(--text3);min-width:54px;text-align:right;}
+.sub-dt{font-size:12px;font-weight:600;font-family:var(--mono);min-width:68px;text-align:right;}
+
+/* ── INSTALLMENT TABLE ── */
+table.itbl{width:100%;border-collapse:collapse;background:var(--bg2);min-width:900px;}
+table.itbl thead tr{background:var(--bg4);}
+table.itbl th{padding:9px 10px;text-align:center;font-size:8.5px;font-weight:700;letter-spacing:0.09em;
+  text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border2);white-space:nowrap;}
+table.itbl th.left{text-align:left;}
+table.itbl td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--border);font-size:11.5px;vertical-align:middle;}
+table.itbl td.left{text-align:left;}
+table.itbl tbody tr:hover{background:var(--bg3);}
+table.itbl tbody tr.total-row td{font-weight:700;color:var(--accent);background:var(--bg3);border-bottom:none;}
+
+/* ── DAILY TABLE ── */
+table.dtbl{border-collapse:collapse;background:var(--bg2);}
+table.dtbl th{padding:8px 9px;text-align:center;font-size:8px;font-weight:700;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border2);white-space:nowrap;}
+table.dtbl th.left{text-align:left;min-width:130px;}
+table.dtbl td{padding:7px 9px;text-align:center;border-bottom:1px solid var(--border);font-size:11px;vertical-align:middle;}
+table.dtbl td.left{text-align:left;}
+table.dtbl tbody tr:hover{background:var(--bg3);}
+table.dtbl tbody tr.total-row td{font-weight:700;color:var(--accent);background:var(--bg3);border-bottom:none;font-size:11px;}
+.day-cell{font-size:11px;font-family:var(--mono);font-weight:600;}
+
+/* ── EXPORT ── */
+#exp-bk{position:fixed;left:-9999px;top:0;width:1020px;padding:22px;background:var(--bg);}
+#exp-tra{position:fixed;left:-9999px;top:0;width:1020px;padding:22px;background:var(--bg);}
+#exp-daily{position:fixed;left:-9999px;top:0;width:1200px;padding:22px;background:var(--bg);}
+.exp-wrap{background:var(--bg);padding:16px;border-radius:var(--r3);}
+.exp-title{text-align:center;padding:10px 0 14px;border-bottom:2px solid var(--accent);margin-bottom:12px;}
+.exp-title h2{font-size:16px;font-weight:800;color:var(--accent);letter-spacing:0.06em;text-transform:uppercase;}
+.exp-title p{font-size:10px;color:var(--text3);margin-top:3px;}
+table.exp-tbl{width:100%;border-collapse:collapse;}
+table.exp-tbl thead tr{background:var(--bg4);}
+table.exp-tbl th{padding:8px 9px;text-align:center;font-size:8.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border2);white-space:nowrap;}
+table.exp-tbl th.left{text-align:left;}
+table.exp-tbl td{padding:7px 9px;text-align:center;border-bottom:1px solid var(--border);font-size:11px;color:var(--text);}
+table.exp-tbl td.left{text-align:left;}
+table.exp-tbl tbody tr:last-child td{background:var(--bg3);font-weight:700;color:var(--accent);border-bottom:none;}
+
+@keyframes fi{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fi{animation:fi 260ms ease forwards;}
+@media(max-width:640px){.nav-page-chip,.nav-user{display:none;}.wrap{padding:14px 12px 60px;}}
+</style>
+</head>
+<body>
+<script>(function(){if(!localStorage.getItem('mwg_session'))window.location.replace('./index.html');})();</script>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-brand" href="./main.html">
+    <span class="nav-logo-badge">MWG</span>
+    <span class="nav-logo-name">BI Bán Kèm</span>
+  </a>
+  <span class="nav-page-chip">485 · 222 Yersin</span>
+  <div class="nav-user"><span class="nav-dot"></span>Xin chào, <strong id="nav-user-nm">—</strong></div>
+  <a class="nav-btn btn-home" href="./main.html">🏠 Trang chủ</a>
+  <button class="nav-btn btn-logout" onclick="navLogout()">↩ Đăng xuất</button>
+</nav>
+
+<div class="wrap">
+
+<!-- STEP 1 -->
+<div class="card">
+  <div class="card-head">
+    <div class="card-icon" style="background:var(--accent2);">📥</div>
+    <div class="card-head-text">
+      <p class="card-kicker">Bước 1 — Nhập liệu</p>
+      <p class="card-title">Dán dữ liệu thô từ hệ thống</p>
+      <p class="card-subtitle">Tab-separated · Có hoặc không có header đều được</p>
+    </div>
+    <span class="head-badge">Bước 1 / 2</span>
+  </div>
+  <div class="form-row">
+    <div class="field"><label>Tháng / Năm</label><input type="month" id="inp-month"></div>
+    <div class="field"><label>Tên siêu thị</label><input type="text" id="inp-store" value="485 - TGD_BDU_TDM - 222 Yersin" style="width:270px;"></div>
+  </div>
+  <div class="field"><label>Dữ liệu thô (copy toàn bộ từ hệ thống)</label>
+    <textarea class="raw" id="raw-data" rows="7" placeholder="Dán dữ liệu xuất từ hệ thống vào đây..."></textarea>
+  </div>
+  <div class="action-row">
+    <button class="btn-prim" onclick="loadEmployees()">▶ Tải danh sách nhân viên</button>
+    <span class="st" id="st-load">Dán dữ liệu rồi nhấn nút trên</span>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="card" id="card-step2" style="display:none;">
+  <div class="card-head">
+    <div class="card-icon" style="background:rgba(52,211,153,.1);">👥</div>
+    <div class="card-head-text">
+      <p class="card-kicker">Bước 2 — Chốt nhân viên & Trung bình miền</p>
+      <p class="card-title">Chọn nhân viên cần phân tích + nhập benchmark miền</p>
+    </div>
+    <span class="head-badge" id="emp-badge">0 NV</span>
+  </div>
+
+  <!-- Emp selector -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+    <span style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;">Nhân viên:</span>
+    <button class="btn-sec" style="padding:5px 11px;font-size:10px;" onclick="toggleAllEmp(true)">Chọn tất cả</button>
+    <button class="btn-sec" style="padding:5px 11px;font-size:10px;" onclick="toggleAllEmp(false)">Bỏ chọn tất cả</button>
+    <span style="font-size:11px;color:var(--text3);margin-left:4px;" id="emp-count-txt"></span>
+  </div>
+  <div class="emp-grid" id="emp-grid"></div>
+  <p class="emp-note">💡 Click để bật/tắt — nhân viên bỏ chọn sẽ không xuất hiện trong báo cáo</p>
+
+  <div class="divider"></div>
+
+  <!-- Region benchmark -->
+  <p style="font-size:11px;font-weight:700;color:var(--teal);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">📊 Trung bình miền (nhập tay)</p>
+  <div class="form-row" style="gap:12px;">
+    <div class="field"><label>Tổng SL ICT (miền)</label><input type="number" id="tb-ict" placeholder="VD: 71526" style="width:130px;"></div>
+    <div class="field"><label>PK / ICT % (miền)</label><input type="number" id="tb-pk-pct" placeholder="VD: 294" style="width:110px;"></div>
+    <div class="field"><label>ĐH / ICT % (miền)</label><input type="number" id="tb-dh-pct" placeholder="VD: 23" style="width:110px;"></div>
+    <div class="field"><label>Pin / ICT % (miền)</label><input type="number" id="tb-pin-pct" placeholder="VD: 43" style="width:110px;"></div>
+    <div class="field"><label>Cam / ICT % (miền)</label><input type="number" id="tb-cam-pct" placeholder="VD: 24" style="width:110px;"></div>
+    <div class="field"><label>SIM / ICT % (miền)</label><input type="number" id="tb-sim-pct" placeholder="VD: 38" style="width:110px;"></div>
+  </div>
+  <p style="font-size:10px;color:var(--text3);margin-top:4px;">Ví dụ từ file: TB Miền — 71.526 / 294% / 23% / 43% / 24% / 38%</p>
+
+  <div class="action-row" style="margin-top:16px;">
+    <button class="btn-prim" onclick="analyzeData()">📊 Phân tích dữ liệu</button>
+    <span class="st" id="st-analyze"></span>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="result-area" style="display:none;">
+
+  <!-- KPI -->
+  <div class="kpi-grid" id="kpi-grid"></div>
+
+  <!-- ── BẢN 1: BÁN KÈM ── -->
+  <div class="card" id="card-bankhem">
+    <div class="card-head">
+      <div class="card-icon" style="background:var(--accent2);">🏆</div>
+      <div class="card-head-text">
+        <p class="card-kicker">Bảng 1 — Bán kèm theo nhân viên</p>
+        <p class="card-title">Thống kê phụ kiện · đồng hồ · pin sạc · camera · SIM</p>
+        <p class="card-subtitle">↓ Click vào tên nhân viên để xem chi tiết ngành hàng</p>
+      </div>
+      <button class="btn-img" id="btn-exp-bk" disabled onclick="exportImg('bk')">📷 Tạo ảnh</button>
+    </div>
+    <div class="tbl-scroll" id="tbl-bk"></div>
+  </div>
+
+  <!-- ── BẢNG 2: TRẢ GÓP TỔNG HỢP ── -->
+  <div class="card" id="card-tragop">
+    <div class="card-head">
+      <div class="card-icon" style="background:var(--blue2);">💳</div>
+      <div class="card-head-text">
+        <p class="card-kicker">Bảng 2 — Tỉ lệ trả góp theo nhân viên</p>
+        <p class="card-title">Doanh thu trả góp · tiền mặt · tỉ trọng</p>
+      </div>
+      <button class="btn-img" id="btn-exp-tra" disabled onclick="exportImg('tra')">📷 Tạo ảnh</button>
+    </div>
+    <div class="tbl-scroll" id="tbl-tra"></div>
+  </div>
+
+  <!-- ── BẢNG 3: TRẢ GÓP THEO NGÀY ── -->
+  <div class="card" id="card-daily">
+    <div class="card-head">
+      <div class="card-icon" style="background:var(--purple2);">📅</div>
+      <div class="card-head-text">
+        <p class="card-kicker">Bảng 3 — Tỉ lệ trả góp theo ngày</p>
+        <p class="card-title">% trả góp từng ngày của từng nhân viên trong tháng</p>
+      </div>
+      <button class="btn-img" id="btn-exp-daily" disabled onclick="exportImg('daily')">📷 Tạo ảnh</button>
+    </div>
+    <div class="tbl-scroll" id="tbl-daily"></div>
+  </div>
+
+</div><!-- /result-area -->
+</div><!-- /wrap -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-avatar" id="m-avatar">?</div>
+      <div><div class="modal-emp-nm" id="m-name">—</div><div class="modal-emp-sub" id="m-sub">—</div></div>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="m-body"></div>
+  </div>
+</div>
+
+<!-- HIDDEN EXPORT TARGETS -->
+<div id="exp-bk"><div id="exp-bk-inner"></div></div>
+<div id="exp-tra"><div id="exp-tra-inner"></div></div>
+<div id="exp-daily"><div id="exp-daily-inner"></div></div>
+
+<script>
+// ────────────────────────────────────────────────
+// COLUMN MAP (index based on exact system export)
+// ────────────────────────────────────────────────
+const C={
+  loaiYCX:1, hinhThucXuat:3, ngayTao:4,
+  ttDuyet:11, ttThuTien:12, ttXuat:13, ttGiaoHang:14, ttHuy:15,
+  maNVGH:18, tenNVGH:19,
+  soLuong:35, giaBan:36,
+  nganhHang:39, nhomHang:40, nhaSX:41,
+  tenSP:32, tinhTrangNhapTra:44
+};
+
+// ────────────────────────────────────────────────
+// CATEGORY RULES — CHỈ dựa vào cột nganhHang / nhomHang
+// ────────────────────────────────────────────────
+const CATS=[
+  {
+    // Điện thoại: ngành hàng bắt đầu bằng "13 -"
+    name:'Điện thoại', icon:'📱', color:'var(--blue)',
+    fn:r=>{const ng=r[C.nganhHang]||'';return ng.startsWith('13 -');}
+  },
+  {
+    // Laptop: nhóm hàng chứa "laptop" (ko phân biệt hoa thường)
+    name:'Laptop', icon:'💻', color:'var(--purple)',
+    fn:r=>{const nh=(r[C.nhomHang]||'').toLowerCase();return nh.includes('laptop');}
+  },
+  {
+    // Tablet: nhóm hàng chứa "tablet" hoặc "ipad"
+    name:'Tablet', icon:'📟', color:'var(--teal)',
+    fn:r=>{const nh=(r[C.nhomHang]||'').toLowerCase();return nh.includes('tablet')||nh.includes('ipad');}
+  },
+  {
+    // Đồng hồ: CỘT NGÀNH HÀNG chứa "1274 - Đồng Hồ Thời Trang"
+    name:'Đồng hồ', icon:'⌚', color:'var(--warn)',
+    fn:r=>{const ng=r[C.nganhHang]||'';return ng.includes('1274');}
+  },
+  {
+    // Pin sạc dự phòng: CỘT NHÓM HÀNG chứa "12 - Pin sạc dự phòng"
+    name:'Pin sạc DP', icon:'🔋', color:'var(--good)',
+    fn:r=>{const nh=r[C.nhomHang]||'';return nh.startsWith('12 -')&&nh.toLowerCase().includes('pin');}
+  },
+  {
+    // Camera: CỘT NHÓM HÀNG chứa "6479" hoặc "4219"
+    name:'Camera', icon:'📷', color:'var(--orange)',
+    fn:r=>{const nh=r[C.nhomHang]||'';return nh.includes('6479')||nh.includes('4219');}
+  },
+  {
+    // SIM: CỘT NHÓM HÀNG chứa "664" (664 - Sim online) — bỏ điều kiện &&sim vì 664 đã đủ unique
+    name:'SIM', icon:'📶', color:'var(--cyan)',
+    fn:r=>{const nh=r[C.nhomHang]||'';return nh.includes('664');}
+  },
+  {
+    // Phụ kiện: CỘT NGÀNH HÀNG bắt đầu "16 -" hoặc "184 -"
+    name:'Phụ kiện', icon:'🎧', color:'var(--pink)',
+    fn:r=>{const ng=r[C.nganhHang]||'';return ng.startsWith('16 -')||ng.startsWith('184 -');}
+  },
+  {
+    name:'Trả góp/VAS', icon:'💳', color:'var(--good)',
+    fn:r=>{const nh=(r[C.nhomHang]||'').toLowerCase();const ng=(r[C.nganhHang]||'').toLowerCase();
+      return ng.includes('464 -')||ng.includes('164 -')||nh.includes('thu hộ')||nh.includes('bảo hiểm')||nh.includes('bảo hành');}
+  },
+  {name:'Khác', icon:'📦', color:'var(--text3)', fn:r=>true}
+];
+const CAT_MAIN=['Điện thoại','Laptop','Tablet','Đồng hồ','Pin sạc DP','Camera','SIM','Phụ kiện','Trả góp/VAS'];
+
+// ────────────────────────────────────────────────
+// FILTER: 5 điều kiện bắt buộc + không xuất KM
+// ────────────────────────────────────────────────
+function isValid(r){
+  return (r[C.ttHuy]||'').trim()==='Chưa hủy'     &&
+         (r[C.ttDuyet]||'').trim()==='Đã duyệt'    &&
+         (r[C.ttXuat]||'').trim()==='Đã xuất'      &&
+         (r[C.ttGiaoHang]||'').trim()==='Đã giao'  &&
+         (r[C.ttThuTien]||'').trim()==='Đã thu'    &&
+         (r[C.tinhTrangNhapTra]||'').trim()==='Chưa trả' &&
+         (r[C.hinhThucXuat]||'').trim()!=='Xuất khuyến mãi';
+}
+
+// Trả góp: cột hinhThucXuat chứa "trả góp" (không phân biệt hoa thường)
+function isInstallment(r){
+  return (r[C.hinhThucXuat]||'').toLowerCase().includes('trả góp');
+}
+
+// ── GLOBAL ──
+let G={rows:[],empMeta:{},selectedEmps:new Set(),parsed:null};
+
+// ── AUTH ──
+(function(){try{const s=JSON.parse(localStorage.getItem('mwg_session')||'{}');document.getElementById('nav-user-nm').textContent=s.displayName||s.username||'—';}catch(e){}})();
+function navLogout(){localStorage.removeItem('mwg_session');window.location.href='./index.html';}
+
+// ── STEP 1 ──
+function loadEmployees(){
+  const raw=document.getElementById('raw-data').value.trim();
+  if(!raw){setSt('load','⚠ Chưa có dữ liệu');return;}
+  const lines=raw.split('\n').filter(l=>l.trim());
+  let si=0;
+  const h=lines[0]||'';
+  if(h.toLowerCase().includes('thương hiệu')||h.toLowerCase().includes('mã đơn hàng')||h.toLowerCase().includes('loại ycx')) si=1;
+  const rows=[];
+  for(let i=si;i<lines.length;i++){
+    const c=lines[i].split('\t');
+    if(c.length<15) continue;
+    rows.push(c);
+  }
+  if(!rows.length){setSt('load','⚠ Không đọc được dữ liệu');return;}
+
+  const empMap={};
+  rows.forEach(r=>{
+    if(!isValid(r)) return;
+    const nm=(r[C.tenNVGH]||'').trim(); const id=(r[C.maNVGH]||'').trim();
+    if(!nm||nm.toLowerCase()==='admin'||nm.toLowerCase()==='administrator') return;
+    if(!empMap[nm]) empMap[nm]={nm,id,cnt:0};
+    empMap[nm].cnt++;
+  });
+
+  const list=Object.values(empMap).sort((a,b)=>b.cnt-a.cnt);
+  if(!list.length){setSt('load','⚠ Không tìm thấy nhân viên hợp lệ');return;}
+
+  G.rows=rows; G.empMeta=empMap;
+  G.selectedEmps=new Set(list.map(e=>e.nm));
+  renderEmpSelector(list);
+  document.getElementById('card-step2').style.display='block';
+  setSt('load',`✓ Đọc được ${rows.length} dòng · ${list.length} nhân viên có giao dịch`);
+}
+
+function renderEmpSelector(list){
+  document.getElementById('emp-grid').innerHTML=list.map(e=>`
+    <div class="emp-chip on" data-nm="${esc(e.nm)}" onclick="toggleEmp(this)">
+      <span>${e.nm}</span><span class="xtx">${e.cnt}tx</span><span class="xdel">×</span>
+    </div>`).join('');
+  document.getElementById('emp-badge').textContent=list.length+' NV';
+  updEmpCount();
+}
+function toggleEmp(c){c.classList.toggle('on');c.classList.contains('on')?G.selectedEmps.add(c.dataset.nm):G.selectedEmps.delete(c.dataset.nm);updEmpCount();}
+function toggleAllEmp(s){document.querySelectorAll('.emp-chip').forEach(c=>{s?c.classList.add('on'):c.classList.remove('on');s?G.selectedEmps.add(c.dataset.nm):G.selectedEmps.delete(c.dataset.nm);});updEmpCount();}
+function updEmpCount(){document.getElementById('emp-count-txt').textContent=`Đã chọn ${G.selectedEmps.size}/${Object.keys(G.empMeta).length} NV`;}
+
+// ── STEP 2: ANALYZE ──
+function analyzeData(){
+  if(!G.rows.length||!G.selectedEmps.size){setSt('analyze','⚠ Thiếu dữ liệu hoặc chưa chọn nhân viên');return;}
+
+  const month=document.getElementById('inp-month').value;
+  const store=document.getElementById('inp-store').value.trim();
+  const region={
+    ict:parseFloat(document.getElementById('tb-ict').value)||0,
+    pkPct:parseFloat(document.getElementById('tb-pk-pct').value)||0,
+    dhPct:parseFloat(document.getElementById('tb-dh-pct').value)||0,
+    pinPct:parseFloat(document.getElementById('tb-pin-pct').value)||0,
+    camPct:parseFloat(document.getElementById('tb-cam-pct').value)||0,
+    simPct:parseFloat(document.getElementById('tb-sim-pct').value)||0,
+  };
+
+  // Filter rows
+  const valid=G.rows.filter(r=>isValid(r)&&G.selectedEmps.has((r[C.tenNVGH]||'').trim()));
+
+  // Build employee data
+  const empMap={};
+  valid.forEach(r=>{
+    const nm=(r[C.tenNVGH]||'').trim();
+    const id=(r[C.maNVGH]||'').trim();
+    const sl=parseInt(r[C.soLuong])||1;
+    const dt=parseFloat(r[C.giaBan])||0;
+    const isTG=isInstallment(r);
+
+    // Parse date for daily tracking
+    const raw_date=(r[C.ngayTao]||'');
+    let dayNum=0;
+    const dm=raw_date.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if(dm) dayNum=parseInt(dm[1]);
+
+    if(!empMap[nm]){
+      empMap[nm]={nm,id,totalSL:0,totalDT:0,tgSL:0,tgDT:0,tmDT:0,cats:{},daily:{}};
+      CATS.forEach(cat=>{empMap[nm].cats[cat.name]={sl:0,dt:0,brands:{}};});
+    }
+    const emp=empMap[nm];
+    emp.totalSL+=sl; emp.totalDT+=dt;
+    if(isTG){emp.tgSL+=sl; emp.tgDT+=dt;}
+    else{emp.tmDT+=dt;}
+
+    // Daily tracking
+    if(dayNum>0){
+      if(!emp.daily[dayNum]) emp.daily[dayNum]={totalDT:0,tgDT:0};
+      emp.daily[dayNum].totalDT+=dt;
+      if(isTG) emp.daily[dayNum].tgDT+=dt;
+    }
+
+    // Classify into category
+    let matched=false;
+    for(const cat of CATS){
+      if(cat.name==='Khác') break;
+      if(cat.fn(r)){addToCat(emp.cats[cat.name],r,sl,dt);matched=true;break;}
+    }
+    if(!matched) addToCat(emp.cats['Khác'],r,sl,dt);
+  });
+
+  const employees=Object.values(empMap).sort((a,b)=>b.totalSL-a.totalSL);
+  const sum=key=>employees.reduce((s,e)=>s+e.cats[key].sl,0);
+
+  // Collect all day numbers
+  const allDays=new Set();
+  employees.forEach(e=>Object.keys(e.daily).forEach(d=>allDays.add(parseInt(d))));
+  const dayList=Array.from(allDays).sort((a,b)=>a-b);
+
+  G.parsed={employees,region,month,store,validCount:valid.length,dayList,
+    totSL:employees.reduce((s,e)=>s+e.totalSL,0),
+    totDT:employees.reduce((s,e)=>s+e.totalDT,0),
+    totPhone:sum('Điện thoại'),totLaptop:sum('Laptop'),totTablet:sum('Tablet'),
+    totPK:sum('Phụ kiện'),totPin:sum('Pin sạc DP'),totCam:sum('Camera'),
+    totSim:sum('SIM'),totDH:sum('Đồng hồ'),
+    totTgSL:employees.reduce((s,e)=>s+e.tgSL,0),
+    totTgDT:employees.reduce((s,e)=>s+e.tgDT,0),
+    totTmDT:employees.reduce((s,e)=>s+e.tmDT,0),
+  };
+
+  renderAll();
+  setSt('analyze',`✓ ${valid.length} giao dịch hợp lệ · ${employees.length} nhân viên`);
+  document.getElementById('result-area').style.display='block';
+  document.getElementById('result-area').classList.add('fi');
+  ['bk','tra','daily'].forEach(k=>{document.getElementById('btn-exp-'+k).disabled=false;});
+  setTimeout(()=>document.getElementById('result-area').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+function addToCat(cat,r,sl,dt){
+  cat.sl+=sl;cat.dt+=dt;
+  const brand=(r[C.nhaSX]||'Khác').trim();
+  const tenSP=(r[C.tenSP]||'').trim();
+  if(!cat.brands[brand]) cat.brands[brand]={sl:0,dt:0,items:{}};
+  cat.brands[brand].sl+=sl;cat.brands[brand].dt+=dt;
+  if(!cat.brands[brand].items[tenSP]) cat.brands[brand].items[tenSP]={sl:0,dt:0};
+  cat.brands[brand].items[tenSP].sl+=sl;cat.brands[brand].items[tenSP].dt+=dt;
+}
+
+// ── RENDER ALL ──
+function renderAll(){
+  const p=G.parsed;
+  renderKPI(p);
+  renderBanKem(p);
+  renderTraGop(p);
+  renderDailyTable(p);
+  buildExports(p);
+}
+
+function renderKPI(p){
+  const ict=p.totPhone+p.totLaptop+p.totTablet;
+  const tgPct=p.totDT>0?((p.totTgDT/p.totDT)*100).toFixed(1):0;
+  const kpis=[
+    {icon:'📦',l:'Tổng SL bán',v:fmt(p.totSL),s:'sản phẩm',c:'var(--accent)'},
+    {icon:'💰',l:'Tổng doanh thu',v:fmtM(p.totDT),s:'theo giá bán',c:'var(--blue)'},
+    {icon:'📱',l:'SL ICT',v:fmt(ict),s:'Phone+Laptop+Tablet',c:'var(--purple)'},
+    {icon:'🎧',l:'SL Phụ kiện',v:fmt(p.totPK),s:'sp',c:'var(--pink)'},
+    {icon:'🔋',l:'SL Pin sạc DP',v:fmt(p.totPin),s:'sp',c:'var(--good)'},
+    {icon:'📷',l:'SL Camera',v:fmt(p.totCam),s:'sp',c:'var(--orange)'},
+    {icon:'📶',l:'SL SIM',v:fmt(p.totSim),s:'sim online',c:'var(--cyan)'},
+    {icon:'⌚',l:'SL Đồng hồ',v:fmt(p.totDH),s:'đồng hồ TT',c:'var(--warn)'},
+    {icon:'💳',l:'Tỉ lệ trả góp',v:tgPct+'%',s:'so tổng DT',c:'var(--good)'},
+  ];
+  document.getElementById('kpi-grid').innerHTML=kpis.map(k=>`
+    <div class="kpi-card" style="--kc:${k.c}">
+      <span class="kpi-icon">${k.icon}</span>
+      <div class="kpi-label">${k.l}</div>
+      <div class="kpi-val">${k.v}</div>
+      <div class="kpi-sub">${k.s}</div>
+    </div>`).join('');
+}
+
+// ── BẢNG 1: BÁN KÈM ──
+function renderBanKem(p){
+  const {employees,region,totSL,totPK,totPin,totCam,totSim,totDH,totPhone,totLaptop,totTablet}=p;
+  const pctStr=(sl,ict)=>ict?((sl/ict)*100).toFixed(1)+'%':'—';
+  const pctCls=(val,ref)=>{if(!ref)return 'tn';if(val>=ref)return 'tg';if(val>=ref*0.7)return 'tw';return 'tb';};
+
+  let html=`<table class="mtbl"><thead>
+    <tr>
+      <th class="left">#</th>
+      <th class="left">Nhân viên</th>
+      <th>Tổng SL</th>
+      <th title="Phone+Laptop+Tablet">SL ICT</th>
+      <th>🎧 PK</th><th>PK/ICT</th>
+      <th>⌚ ĐH</th><th>ĐH/ICT</th>
+      <th>🔋 Pin DP</th><th>Pin/ICT</th>
+      <th>📷 Cam</th><th>Cam/ICT</th>
+      <th>📶 SIM</th><th>SIM/ICT</th>
+      <th>Dưới TB</th>
+    </tr>`;
+
+  // ── REGION ROW ──
+  if(region.ict>0){
+    html+=`<tr class="region-row">
+      <td colspan="2"><span class="region-lbl">🏆 Trung bình miền</span></td>
+      <td><span class="region-val">${fmt(region.ict)}</span></td>
+      <td>—</td>
+      <td>—</td><td><span class="region-pct">${region.pkPct}%</span></td>
+      <td>—</td><td><span class="region-pct">${region.dhPct}%</span></td>
+      <td>—</td><td><span class="region-pct">${region.pinPct}%</span></td>
+      <td>—</td><td><span class="region-pct">${region.camPct}%</span></td>
+      <td>—</td><td><span class="region-pct">${region.simPct}%</span></td>
+      <td>—</td>
+    </tr>`;
+  }
+
+  html+='</thead><tbody>';
+
+  employees.forEach((emp,i)=>{
+    const ict=emp.cats['Điện thoại'].sl+emp.cats['Laptop'].sl+emp.cats['Tablet'].sl;
+    const pk=emp.cats['Phụ kiện'].sl; const dh=emp.cats['Đồng hồ'].sl;
+    const pin=emp.cats['Pin sạc DP'].sl; const cam=emp.cats['Camera'].sl; const sim=emp.cats['SIM'].sl;
+    const pkPct=ict?pk/ict*100:0; const dhPct=ict?dh/ict*100:0;
+    const pinPct=ict?pin/ict*100:0; const camPct=ict?cam/ict*100:0; const simPct=ict?sim/ict*100:0;
+    const rc=i===0?'rb1':i===1?'rb2':i===2?'rb3':'';
+    // Đếm chỉ số dưới TB (so sánh % với region)
+    let belowCount=0;
+    if(region.pkPct>0&&pkPct<region.pkPct) belowCount++;
+    if(region.dhPct>0&&dhPct<region.dhPct) belowCount++;
+    if(region.pinPct>0&&pinPct<region.pinPct) belowCount++;
+    if(region.camPct>0&&camPct<region.camPct) belowCount++;
+    if(region.simPct>0&&simPct<region.simPct) belowCount++;
+    const maxBelow=([region.pkPct,region.dhPct,region.pinPct,region.camPct,region.simPct].filter(v=>v>0).length)||5;
+    const belowCls=belowCount===0?'tg':belowCount<=2?'tw':'tb';
+
+    html+=`<tr class="data-row" onclick="openModal('${emp.nm.replace(/'/g,"\\'")}')">
+      <td class="left"><span class="rank-badge ${rc}">${i+1}</span></td>
+      <td class="left"><div class="emp-nm">${emp.nm}</div><div class="emp-id">#${emp.id}</div></td>
+      <td><b class="num-mono">${fmt(emp.totalSL)}</b></td>
+      <td class="num-mono">${fmt(ict)}</td>
+      <td class="num-mono">${fmt(pk)}</td>
+      <td><span class="pct-tag ${pctCls(pkPct,region.pkPct)}">${pctStr(pk,ict)}</span></td>
+      <td class="num-mono">${fmt(dh)}</td>
+      <td><span class="pct-tag ${pctCls(dhPct,region.dhPct)}">${pctStr(dh,ict)}</span></td>
+      <td class="num-mono">${fmt(pin)}</td>
+      <td><span class="pct-tag ${pctCls(pinPct,region.pinPct)}">${pctStr(pin,ict)}</span></td>
+      <td class="num-mono">${fmt(cam)}</td>
+      <td><span class="pct-tag ${pctCls(camPct,region.camPct)}">${pctStr(cam,ict)}</span></td>
+      <td class="num-mono">${fmt(sim)}</td>
+      <td><span class="pct-tag ${pctCls(simPct,region.simPct)}">${pctStr(sim,ict)}</span></td>
+      <td><span class="pct-tag ${belowCls}">${belowCount}/${maxBelow}</span></td>
+    </tr>`;
+  });
+
+  const totICT=totPhone+totLaptop+totTablet;
+  html+=`<tr class="total-row">
+    <td colspan="2">TOTAL (${employees.length} NV)</td>
+    <td>${fmt(totSL)}</td><td>${fmt(totICT)}</td>
+    <td>${fmt(totPK)}</td><td>${pctStr(totPK,totICT)}</td>
+    <td>${fmt(totDH)}</td><td>${pctStr(totDH,totICT)}</td>
+    <td>${fmt(totPin)}</td><td>${pctStr(totPin,totICT)}</td>
+    <td>${fmt(totCam)}</td><td>${pctStr(totCam,totICT)}</td>
+    <td>${fmt(totSim)}</td><td>${pctStr(totSim,totICT)}</td>
+    <td>—</td>
+  </tr></tbody></table>`;
+  document.getElementById('tbl-bk').innerHTML=html;
+}
+
+// ── BẢNG 2: TRẢ GÓP ──
+function renderTraGop(p){
+  const {employees,totTgSL,totTgDT,totTmDT,totDT}=p;
+  let html=`<table class="itbl"><thead><tr>
+    <th class="left">#</th><th class="left">Nhân viên</th>
+    <th>SL trả góp</th><th>DT trả góp</th>
+    <th>DT tiền mặt</th><th>Tổng DT</th>
+    <th>Tỉ lệ TG/TM</th><th>Tỉ lệ TG/Tổng DT</th>
+    <th>Trung bình TG/đơn</th>
+  </tr></thead><tbody>`;
+
+  employees.forEach((emp,i)=>{
+    const tgPct=emp.totalDT>0?((emp.tgDT/emp.totalDT)*100).toFixed(1):0;
+    const tgvtm=emp.tmDT>0?((emp.tgDT/emp.tmDT)*100).toFixed(1):'—';
+    const avgTg=emp.tgSL>0?(emp.tgDT/emp.tgSL):0;
+    const tgCls=parseFloat(tgPct)>=60?'tg':parseFloat(tgPct)>=40?'tw':'tb';
+    const rc=i===0?'rb1':i===1?'rb2':i===2?'rb3':'';
+    html+=`<tr>
+      <td class="left"><span class="rank-badge ${rc}">${i+1}</span></td>
+      <td class="left"><div class="emp-nm">${emp.nm}</div><div class="emp-id">#${emp.id}</div></td>
+      <td class="num-mono">${fmt(emp.tgSL)}</td>
+      <td class="num-mono">${fmtM(emp.tgDT)}</td>
+      <td class="num-mono">${fmtM(emp.tmDT)}</td>
+      <td class="num-mono">${fmtM(emp.totalDT)}</td>
+      <td><span class="pct-tag ${tgCls}">${tgvtm}%</span></td>
+      <td><span class="pct-tag ${tgCls}">${tgPct}%</span></td>
+      <td class="num-mono" style="color:var(--accent);">${avgTg>0?fmtM(avgTg):'—'}</td>
+    </tr>`;
+  });
+
+  const totTgPct=totDT>0?((totTgDT/totDT)*100).toFixed(1):0;
+  const totTgvtm=totTmDT>0?((totTgDT/totTmDT)*100).toFixed(1):'—';
+  const totAvg=totTgSL>0?(totTgDT/totTgSL):0;
+  html+=`<tr class="total-row">
+    <td colspan="2">TOTAL</td>
+    <td>${fmt(totTgSL)}</td><td>${fmtM(totTgDT)}</td>
+    <td>${fmtM(totTmDT)}</td><td>${fmtM(totDT)}</td>
+    <td>${totTgvtm}%</td><td>${totTgPct}%</td>
+    <td>${totAvg>0?fmtM(totAvg):'—'}</td>
+  </tr></tbody></table>`;
+  document.getElementById('tbl-tra').innerHTML=html;
+}
+
+// ── BẢNG 3: THEO NGÀY ──
+function renderDailyTable(p){
+  const {employees,dayList}=p;
+  if(!dayList.length){document.getElementById('tbl-daily').innerHTML='<p style="padding:20px;color:var(--text3);font-size:12px;">Không có dữ liệu ngày.</p>';return;}
+
+  let html=`<table class="dtbl" style="min-width:${180+dayList.length*70}px;width:100%;"><thead><tr>
+    <th class="left">Nhân viên</th>
+    <th>TL TG / Tổng DT</th>
+    ${dayList.map(d=>`<th>Ngày ${d}</th>`).join('')}
+  </tr></thead><tbody>`;
+
+  // Total row per day
+  const dayTotals={};
+  dayList.forEach(d=>{dayTotals[d]={totalDT:0,tgDT:0};});
+
+  employees.forEach(emp=>{
+    const overallPct=emp.totalDT>0?((emp.tgDT/emp.totalDT)*100).toFixed(1):0;
+    const overallCls=parseFloat(overallPct)>=60?'tg':parseFloat(overallPct)>=40?'tw':'tb';
+    html+=`<tr>
+      <td class="left"><div class="emp-nm">${emp.nm}</div></td>
+      <td><span class="pct-tag ${overallCls}">${overallPct}%</span></td>
+      ${dayList.map(d=>{
+        const dd=emp.daily[d];
+        if(!dd||dd.totalDT===0) return `<td class="day-cell" style="color:var(--text3);">—</td>`;
+        dayTotals[d].totalDT+=dd.totalDT; dayTotals[d].tgDT+=dd.tgDT;
+        const pct=((dd.tgDT/dd.totalDT)*100).toFixed(0);
+        const cls=parseFloat(pct)>=60?'tg':parseFloat(pct)>=40?'tw':'tb';
+        return `<td><span class="pct-tag ${cls}">${pct}%</span></td>`;
+      }).join('')}
+    </tr>`;
+  });
+
+  // Total row
+  html+=`<tr class="total-row"><td class="left">TB ngày</td><td>—</td>
+    ${dayList.map(d=>{
+      const dt=dayTotals[d];
+      if(!dt||dt.totalDT===0) return `<td>—</td>`;
+      const pct=((dt.tgDT/dt.totalDT)*100).toFixed(0);
+      return `<td><span class="pct-tag ${parseFloat(pct)>=60?'tg':parseFloat(pct)>=40?'tw':'tb'}">${pct}%</span></td>`;
+    }).join('')}
+  </tr>`;
+
+  html+='</tbody></table>';
+  document.getElementById('tbl-daily').innerHTML=html;
+}
+
+// ── MODAL DETAIL ──
+function openModal(empNm){
+  const emp=G.parsed.employees.find(e=>e.nm===empNm);
+  if(!emp) return;
+  document.getElementById('m-avatar').textContent=empNm.split(' ').slice(-1)[0][0]||'?';
+  document.getElementById('m-name').textContent=emp.nm;
+  document.getElementById('m-sub').textContent=`Mã NV: ${emp.id} · ${G.parsed.store||''}`;
+
+  const ict=emp.cats['Điện thoại'].sl+emp.cats['Laptop'].sl+emp.cats['Tablet'].sl;
+  const tgPct=emp.totalDT>0?((emp.tgDT/emp.totalDT)*100).toFixed(1):0;
+
+  let html=`<div class="d-kpi-grid">
+    <div class="d-kpi"><div class="d-kpi-lbl">Tổng SL</div><div class="d-kpi-val">${fmt(emp.totalSL)}</div><div class="d-kpi-sub">sp</div></div>
+    <div class="d-kpi"><div class="d-kpi-lbl">Tổng DT</div><div class="d-kpi-val">${fmtM(emp.totalDT)}</div><div class="d-kpi-sub">giá bán</div></div>
+    <div class="d-kpi"><div class="d-kpi-lbl">SL ICT</div><div class="d-kpi-val" style="color:var(--blue);">${fmt(ict)}</div><div class="d-kpi-sub">Phone+Laptop+Tablet</div></div>
+    <div class="d-kpi"><div class="d-kpi-lbl">Trả góp</div><div class="d-kpi-val" style="color:var(--good);">${fmtM(emp.tgDT)}</div><div class="d-kpi-sub">${tgPct}% tổng DT</div></div>
+    <div class="d-kpi"><div class="d-kpi-lbl">Tiền mặt</div><div class="d-kpi-val" style="color:var(--warn);">${fmtM(emp.tmDT)}</div><div class="d-kpi-sub">DT tiền mặt</div></div>
+  </div>`;
+
+  html+=`<div class="sec-hdr"><span class="sec-hdr-icon">📊</span><span class="sec-hdr-label">Chi tiết từng ngành hàng</span><div class="sec-hdr-line"></div></div>`;
+
+  CATS.forEach(cat=>{
+    const cd=emp.cats[cat.name];
+    if(!cd||cd.sl===0) return;
+    const brands=Object.entries(cd.brands).sort((a,b)=>b[1].sl-a[1].sl);
+    html+=`<div class="cat-sec">
+      <button class="cat-btn" onclick="toggleCat(this)" style="border-left:3px solid ${cat.color};">
+        <span class="cat-icon">${cat.icon}</span>
+        <span class="cat-nm">${cat.name}</span>
+        <span class="cat-nums" style="color:${cat.color};">${fmt(cd.sl)} sp · ${fmtM(cd.dt)}</span>
+        <span class="cat-arr">▶</span>
+      </button>
+      <div class="cat-body">`;
+    brands.forEach(([brand,bd])=>{
+      html+=`<div class="sub-row"><span style="font-size:13px;">${cat.icon}</span>
+        <span class="sub-brand" style="color:${cat.color};">${brand}</span>
+        <span class="sub-sl">${fmt(bd.sl)} sp</span><span class="sub-dt">${fmtM(bd.dt)}</span></div>`;
+      Object.entries(bd.items).sort((a,b)=>b[1].sl-a[1].sl).slice(0,12).forEach(([nm,iv])=>{
+        html+=`<div class="sub-row" style="padding-left:26px;background:rgba(0,0,0,.2);">
+          <span style="font-size:10px;color:var(--text3);">└</span>
+          <span class="sub-item-nm">${nm}</span>
+          <span class="sub-sl">${fmt(iv.sl)} sp</span>
+          <span class="sub-dt" style="font-size:11px;color:var(--text3);">${fmtM(iv.dt)}</span>
+        </div>`;
+      });
+    });
+    html+=`</div></div>`;
+  });
+
+  document.getElementById('m-body').innerHTML=html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function toggleCat(btn){btn.classList.toggle('open');btn.nextElementSibling.classList.toggle('open');}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ── BUILD EXPORT TABLES ──
+function buildExports(p){
+  buildExpBK(p);
+  buildExpTra(p);
+  buildExpDaily(p);
+}
+
+function buildExpBK(p){
+  const {employees,region,totSL,totPK,totPin,totCam,totSim,totDH,totPhone,totLaptop,totTablet,month,store}=p;
+  const pctStr=(sl,ict)=>ict?((sl/ict)*100).toFixed(1)+'%':'—';
+  const totICT=totPhone+totLaptop+totTablet;
+
+  let h=expHeader(`${store||'485'} — BÁN KÈM ${fmtMonth(month).toUpperCase()}`,'Lọc: Đã xuất · Đã giao · Đã thu · Chưa hủy · Chưa trả');
+
+  // Region row
+  let regRow='';
+  if(region.ict>0){
+    regRow=`<tr style="background:#1e2540;">
+      <td colspan="2" class="left" style="color:#2dd4bf;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">🏆 TB Miền</td>
+      <td style="color:#f5c518;font-weight:700;font-family:var(--mono);">${fmt(region.ict)}</td>
+      <td>—</td>
+      <td>—</td><td style="color:#f5c518;font-weight:700;">${region.pkPct}%</td>
+      <td>—</td><td style="color:#f5c518;font-weight:700;">${region.dhPct}%</td>
+      <td>—</td><td style="color:#f5c518;font-weight:700;">${region.pinPct}%</td>
+      <td>—</td><td style="color:#f5c518;font-weight:700;">${region.camPct}%</td>
+      <td>—</td><td style="color:#f5c518;font-weight:700;">${region.simPct}%</td>
+      <td>—</td>
+    </tr>`;
+  }
+
+  h+=`<table class="exp-tbl"><thead><tr>
+    <th class="left">#</th><th class="left">Nhân viên</th>
+    <th>Tổng SL</th><th>SL ICT</th>
+    <th>🎧 PK</th><th>PK/ICT</th>
+    <th>⌚ ĐH</th><th>ĐH/ICT</th>
+    <th>🔋 Pin DP</th><th>Pin/ICT</th>
+    <th>📷 Cam</th><th>Cam/ICT</th>
+    <th>📶 SIM</th><th>SIM/ICT</th>
+    <th>Dưới TB</th>
+  </tr>${regRow}</thead><tbody>`;
+
+  employees.forEach((emp,i)=>{
+    const ict=emp.cats['Điện thoại'].sl+emp.cats['Laptop'].sl+emp.cats['Tablet'].sl;
+    const pk=emp.cats['Phụ kiện'].sl,dh=emp.cats['Đồng hồ'].sl,pin=emp.cats['Pin sạc DP'].sl,cam=emp.cats['Camera'].sl,sim=emp.cats['SIM'].sl;
+    let bc=0;
+    if(region.pkPct>0&&ict&&pk/ict*100<region.pkPct) bc++;
+    if(region.dhPct>0&&ict&&dh/ict*100<region.dhPct) bc++;
+    if(region.pinPct>0&&ict&&pin/ict*100<region.pinPct) bc++;
+    if(region.camPct>0&&ict&&cam/ict*100<region.camPct) bc++;
+    if(region.simPct>0&&ict&&sim/ict*100<region.simPct) bc++;
+    const max=[region.pkPct,region.dhPct,region.pinPct,region.camPct,region.simPct].filter(v=>v>0).length||5;
+    h+=`<tr>
+      <td class="left">${i+1}</td><td class="left">${emp.nm}</td>
+      <td>${fmt(emp.totalSL)}</td><td>${fmt(ict)}</td>
+      <td>${fmt(pk)}</td><td style="color:#f472b6;font-weight:700;">${pctStr(pk,ict)}</td>
+      <td>${fmt(dh)}</td><td style="color:#fbbf24;font-weight:700;">${pctStr(dh,ict)}</td>
+      <td>${fmt(pin)}</td><td style="color:#34d399;font-weight:700;">${pctStr(pin,ict)}</td>
+      <td>${fmt(cam)}</td><td style="color:#fb923c;font-weight:700;">${pctStr(cam,ict)}</td>
+      <td>${fmt(sim)}</td><td style="color:#22d3ee;font-weight:700;">${pctStr(sim,ict)}</td>
+      <td style="color:${bc===0?'#34d399':bc<=2?'#fbbf24':'#f87171'};font-weight:700;">${bc}/${max}</td>
+    </tr>`;
+  });
+
+  h+=`<tr><td colspan="2">TOTAL (${employees.length} NV)</td>
+    <td>${fmt(totSL)}</td><td>${fmt(totICT)}</td>
+    <td>${fmt(totPK)}</td><td>${pctStr(totPK,totICT)}</td>
+    <td>${fmt(totDH)}</td><td>${pctStr(totDH,totICT)}</td>
+    <td>${fmt(totPin)}</td><td>${pctStr(totPin,totICT)}</td>
+    <td>${fmt(totCam)}</td><td>${pctStr(totCam,totICT)}</td>
+    <td>${fmt(totSim)}</td><td>${pctStr(totSim,totICT)}</td>
+    <td>—</td>
+  </tr></tbody></table></div>`;
+  document.getElementById('exp-bk-inner').innerHTML=h;
+}
+
+function buildExpTra(p){
+  const {employees,totTgSL,totTgDT,totTmDT,totDT,month,store}=p;
+  let h=expHeader(`${store||'485'} — TRẢ GÓP ${fmtMonth(month).toUpperCase()}`,'Thống kê doanh thu trả góp theo nhân viên');
+  h+=`<table class="exp-tbl"><thead><tr>
+    <th class="left">#</th><th class="left">Nhân viên</th>
+    <th>SL trả góp</th><th>DT trả góp</th>
+    <th>DT tiền mặt</th><th>Tổng DT</th>
+    <th>TG/TM</th><th>TG/Tổng DT</th>
+    <th>TB TG/đơn</th>
+  </tr></thead><tbody>`;
+  employees.forEach((emp,i)=>{
+    const tgPct=emp.totalDT>0?((emp.tgDT/emp.totalDT)*100).toFixed(1):0;
+    const tgvtm=emp.tmDT>0?((emp.tgDT/emp.tmDT)*100).toFixed(1):'—';
+    const avg=emp.tgSL>0?fmtM(emp.tgDT/emp.tgSL):'—';
+    const col=parseFloat(tgPct)>=60?'#34d399':parseFloat(tgPct)>=40?'#fbbf24':'#f87171';
+    h+=`<tr>
+      <td class="left">${i+1}</td><td class="left">${emp.nm}</td>
+      <td>${fmt(emp.tgSL)}</td><td>${fmtM(emp.tgDT)}</td>
+      <td>${fmtM(emp.tmDT)}</td><td>${fmtM(emp.totalDT)}</td>
+      <td style="color:${col};font-weight:700;">${tgvtm}%</td>
+      <td style="color:${col};font-weight:700;">${tgPct}%</td>
+      <td style="color:#f5c518;">${avg}</td>
+    </tr>`;
+  });
+  const totPct=totDT>0?((totTgDT/totDT)*100).toFixed(1):0;
+  const totVtm=totTmDT>0?((totTgDT/totTmDT)*100).toFixed(1):'—';
+  h+=`<tr><td colspan="2">TOTAL</td>
+    <td>${fmt(totTgSL)}</td><td>${fmtM(totTgDT)}</td>
+    <td>${fmtM(totTmDT)}</td><td>${fmtM(totDT)}</td>
+    <td>${totVtm}%</td><td>${totPct}%</td>
+    <td>${totTgSL>0?fmtM(totTgDT/totTgSL):'—'}</td>
+  </tr></tbody></table></div>`;
+  document.getElementById('exp-tra-inner').innerHTML=h;
+}
+
+function buildExpDaily(p){
+  const {employees,dayList,month,store}=p;
+  let h=expHeader(`${store||'485'} — TRẢI GÓP THEO NGÀY ${fmtMonth(month).toUpperCase()}`,'% Trả góp / Tổng DT từng ngày');
+  h+=`<table class="exp-tbl" style="min-width:${220+dayList.length*65}px;"><thead><tr>
+    <th class="left">Nhân viên</th>
+    <th>TG / Tổng DT</th>
+    ${dayList.map(d=>`<th>N${d}</th>`).join('')}
+  </tr></thead><tbody>`;
+  const dayTot={};dayList.forEach(d=>{dayTot[d]={t:0,tg:0};});
+  employees.forEach(emp=>{
+    const op=emp.totalDT>0?((emp.tgDT/emp.totalDT)*100).toFixed(1):0;
+    const oc=parseFloat(op)>=60?'#34d399':parseFloat(op)>=40?'#fbbf24':'#f87171';
+    h+=`<tr><td class="left">${emp.nm}</td>
+      <td style="color:${oc};font-weight:700;">${op}%</td>
+      ${dayList.map(d=>{
+        const dd=emp.daily[d];
+        if(!dd||dd.totalDT===0) return '<td style="color:#6b789a;">—</td>';
+        dayTot[d].t+=dd.totalDT;dayTot[d].tg+=dd.tgDT;
+        const pct=((dd.tgDT/dd.totalDT)*100).toFixed(0);
+        const cl=parseFloat(pct)>=60?'#34d399':parseFloat(pct)>=40?'#fbbf24':'#f87171';
+        return `<td style="color:${cl};font-weight:700;">${pct}%</td>`;
+      }).join('')}
+    </tr>`;
+  });
+  h+=`<tr><td class="left" style="color:#f5c518;">TB ngày</td><td>—</td>
+    ${dayList.map(d=>{
+      const dt=dayTot[d];
+      if(!dt||dt.t===0) return '<td>—</td>';
+      const pct=((dt.tg/dt.t)*100).toFixed(0);
+      const cl=parseFloat(pct)>=60?'#34d399':parseFloat(pct)>=40?'#fbbf24':'#f87171';
+      return `<td style="color:${cl};font-weight:700;">${pct}%</td>`;
+    }).join('')}
+  </tr></tbody></table></div>`;
+  document.getElementById('exp-daily-inner').innerHTML=h;
+}
+
+function expHeader(title,sub){
+  return `<div class="exp-wrap"><div class="exp-title"><h2>${title}</h2><p>${sub} · ${new Date().toLocaleString('vi-VN')}</p></div>`;
+}
+
+// ── EXPORT IMAGE ──
+function exportImg(key){
+  const map={bk:['exp-bk','exp-bk-inner'],tra:['exp-tra','exp-tra-inner'],daily:['exp-daily','exp-daily-inner']};
+  const [wrapId,innerId]=map[key];
+  const el=document.getElementById(innerId);
+  const btn=document.getElementById('btn-exp-'+key);
+  const orig=btn.innerHTML; btn.innerHTML='⏳ Đang tạo...'; btn.disabled=true;
+  const wrap=document.getElementById(wrapId);
+  wrap.style.cssText=`position:absolute;left:0;top:0;z-index:9999;padding:22px;background:var(--bg);`;
+  const w=key==='daily'?1200:1020;
+  wrap.style.width=w+'px';
+  html2canvas(el,{scale:2,backgroundColor:'#080b12',useCORS:true,logging:false}).then(canvas=>{
+    const ts=new Date().toLocaleDateString('vi-VN').replace(/\//g,'-');
+    const a=document.createElement('a');
+    a.download=`${key}_${ts}.png`;a.href=canvas.toDataURL('image/png');a.click();
+  }).catch(e=>alert('Lỗi: '+e.message)).finally(()=>{
+    wrap.style.cssText=`position:fixed;left:-9999px;top:0;padding:22px;background:var(--bg);width:${w}px;`;
+    btn.innerHTML=orig;btn.disabled=false;
+  });
+}
+
+// ── UTILS ──
+function fmt(n){return Number(n||0).toLocaleString('vi-VN');}
+function fmtM(n){n=Number(n)||0;return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':String(Math.round(n));}
+function fmtMonth(m){if(!m)return '—';const[y,mo]=m.split('-');return `Tháng ${mo}/${y}`;}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function setSt(id,msg){document.getElementById('st-'+id).textContent=msg;}
+
+// Init
+(function(){
+  try{const s=JSON.parse(localStorage.getItem('mwg_session')||'{}');document.getElementById('nav-user-nm').textContent=s.displayName||s.username||'—';}catch(e){}
+  const d=new Date();document.getElementById('inp-month').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+})();
+</script>
+</body>
+</html>

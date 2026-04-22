@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BI Realtime — MWG</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+
+/* ── NAVBAR ── */
+:root{
+  --nav-h:52px;
+  --nav-bg:rgba(10,14,24,0.95);
+  --nav-border:rgba(255,255,255,0.1);
+  --accent:#f5c518;
+}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:#e8e8e8;
+  padding-top:calc(var(--nav-h) + 10px);
+  padding-left:10px;
+  padding-right:10px;
+  padding-bottom:10px;
+  font-size:13px;
+}
+
+.mwg-nav{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:var(--nav-h);
+  background:var(--nav-bg);
+  border-bottom:1px solid var(--nav-border);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  padding:0 16px;
+  gap:0;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+
+.nav-brand{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  text-decoration:none;
+  margin-right:auto;
+}
+.nav-brand-badge{
+  background:var(--accent);
+  color:#111;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  padding:3px 8px;
+  border-radius:5px;
+  line-height:1;
+}
+.nav-brand-name{
+  font-size:13px;
+  font-weight:700;
+  color:rgba(255,255,255,0.8);
+  letter-spacing:0.02em;
+}
+.nav-page-badge{
+  font-size:10px;
+  font-weight:600;
+  color:rgba(255,255,255,0.4);
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.12);
+  padding:3px 9px;
+  border-radius:20px;
+  margin-right:10px;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.nav-user{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-right:10px;
+  font-size:12px;
+  color:rgba(255,255,255,0.5);
+  white-space:nowrap;
+}
+.nav-user-dot{
+  width:7px;height:7px;
+  border-radius:50%;
+  background:#4ade80;
+  box-shadow:0 0 6px rgba(74,222,128,0.6);
+  flex-shrink:0;
+}
+.nav-user strong{color:var(--accent);font-weight:700;}
+
+.nav-btn{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  padding:7px 13px;
+  border-radius:7px;
+  font-size:11.5px;
+  font-weight:600;
+  font-family:inherit;
+  cursor:pointer;
+  text-decoration:none;
+  transition:background 140ms,transform 140ms;
+  border:1px solid transparent;
+  letter-spacing:0.02em;
+  white-space:nowrap;
+}
+.nav-btn:active{transform:scale(0.97);}
+.btn-home{
+  background:rgba(255,255,255,0.07);
+  border-color:rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.8);
+  margin-right:6px;
+}
+.btn-home:hover{background:rgba(255,255,255,0.13);color:#fff;}
+.btn-logout{
+  background:rgba(239,68,68,0.12);
+  border-color:rgba(239,68,68,0.25);
+  color:#fca5a5;
+}
+.btn-logout:hover{background:rgba(239,68,68,0.22);color:#fff;}
+
+@media(max-width:560px){
+  .nav-brand-name{display:none;}
+  .nav-user{display:none;}
+  .nav-page-badge{display:none;}
+  .nav-btn{padding:6px 10px;font-size:11px;}
+}
+
+/* ── ORIGINAL STYLES ── */
+.container{max-width:860px;margin:0 auto;}
+
+.form-wrap{background:#fff;border:1px solid #ddd;border-radius:10px;padding:9px 12px;margin-bottom:7px;}
+.form-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.form-label{font-size:11px;font-weight:600;color:#555;white-space:nowrap;}
+.form-toggle{background:none;border:1px solid #ccc;color:#0066cc;font-size:11px;font-weight:600;cursor:pointer;padding:3px 9px;border-radius:5px;white-space:nowrap;}
+.form-toggle:hover{background:#f0f4ff;}
+.inp-inner{display:none;margin-top:7px;}
+.inp-label{font-size:10px;color:#999;margin-bottom:3px;}
+textarea{width:100%;min-height:80px;font-family:'Courier New',monospace;font-size:10px;padding:6px 8px;border:1px solid #ddd;border-radius:5px;background:#fafafa;color:#333;resize:vertical;line-height:1.4;}
+textarea:focus{outline:none;border-color:#0066cc;}
+
+.btn-row{display:flex;gap:7px;align-items:center;margin-bottom:8px;}
+.btn-build{padding:7px 18px;background:#1c1c1e;color:#f5c518;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;}
+.btn-build:hover{background:#333;}
+.btn-img{padding:7px 18px;background:#0066cc;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;display:none;}
+.btn-img:hover{background:#0052aa;}
+.btn-img:disabled{background:#aaa;cursor:default;}
+.hint{font-size:10px;color:#bbb;}
+
+#db{background:#e8e8e8;}
+
+.top-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:7px;border-radius:9px;overflow:hidden;border:2px solid #1c1c1e;}
+.tc{background:#1c1c1e;padding:9px 11px;text-align:center;border-right:1px solid #383838;}
+.tc:last-child{border-right:none;}
+.tc-label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;}
+.tc-val{font-size:19px;font-weight:800;color:#f5c518;line-height:1.1;}
+.tc-sub{font-size:9px;color:#e84a5f;margin-top:2px;font-weight:600;}
+.tc-val.red{color:#e84a5f;}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.gcol{display:flex;flex-direction:column;gap:4px;}
+
+.krow{display:flex;align-items:center;gap:8px;border-radius:7px;padding:8px 10px;border-left:4px solid transparent;}
+.krow-icon{font-size:15px;min-width:20px;text-align:center;}
+.krow-name{flex:1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.2px;line-height:1.3;}
+.krow-right{text-align:right;min-width:58px;}
+.krow-nums{font-size:10px;font-weight:600;margin-bottom:1px;}
+.krow-pct{font-size:13px;font-weight:800;line-height:1;}
+.krow-rank{font-size:9px;margin-top:1px;opacity:.65;}
+
+.footer{text-align:center;margin-top:7px;font-size:10px;color:#999;padding-bottom:2px;}
+.footer b{color:#e84a5f;font-weight:700;}
+.empty{color:#aaa;font-size:12px;text-align:center;padding:24px;background:#fff;border-radius:8px;}
+</style>
+</head>
+<body>
+
+<!-- AUTH GUARD -->
+<script>
+(function(){
+  const s = localStorage.getItem('mwg_session');
+  if (!s) { window.location.replace('./index.html'); }
+})();
+</script>
+
+<!-- NAVBAR -->
+<nav class="mwg-nav">
+  <a class="nav-brand" href="./main.html">
+    <span class="nav-brand-badge">MWG</span>
+    <span class="nav-brand-name">Business Intelligence</span>
+  </a>
+  <span class="nav-page-badge">Realtime</span>
+  <div class="nav-user">
+    <span class="nav-user-dot"></span>
+    <span>Đăng nhập: <strong id="nav-username">—</strong></span>
+  </div>
+  <a class="nav-btn btn-home" href="./main.html">
+    <span>⌂</span> Trang chủ
+  </a>
+  <button class="nav-btn btn-logout" onclick="navLogout()">
+    <span>↩</span> Đăng xuất
+  </button>
+</nav>
+
+<!-- ORIGINAL CONTENT -->
+<div class="container">
+
+  <div class="form-wrap">
+    <div class="form-row">
+      <span class="form-label">📊 Vùng 1:</span>
+      <button class="form-toggle" onclick="tog('v1')">Dữ liệu tổng hợp ▾</button>
+      <span class="form-label" style="margin-left:6px;">🎯 Vùng 2:</span>
+      <button class="form-toggle" onclick="tog('v2')">Dữ liệu thi đua ▾</button>
+    </div>
+    <div class="inp-inner" id="v1">
+      <div class="inp-label">Bảng: Nhóm ngành hàng | SL | DT | Target | % HT | Trả Góp | Tỷ trọng</div>
+      <textarea id="d1" placeholder="Dán dữ liệu vùng 1..."></textarea>
+    </div>
+    <div class="inp-inner" id="v2">
+      <div class="inp-label">Bảng: Tên NH | DT/SL Realtime | Target | % HT | Xếp hạng</div>
+      <textarea id="d2" placeholder="Dán dữ liệu vùng 2..."></textarea>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-build" onclick="build()">▶ Tạo Dashboard</button>
+    <button class="btn-img" id="btnImg" onclick="saveImg()">📷 Tải ảnh về</button>
+    <span class="hint">Paste dữ liệu → Tạo Dashboard → Tải ảnh</span>
+  </div>
+
+  <div id="db"></div>
+</div>
+
+<script>
+// Set username in navbar
+(function(){
+  try {
+    const s = JSON.parse(localStorage.getItem('mwg_session') || '{}');
+    document.getElementById('nav-username').textContent = s.displayName || s.username || '—';
+  } catch(e){}
+})();
+
+function navLogout() {
+  localStorage.removeItem('mwg_session');
+  window.location.href = './index.html';
+}
+
+function tog(id){
+  const e=document.getElementById(id);
+  e.style.display=e.style.display==='block'?'none':'block';
+}
+
+const ICONS={
+  'flagship':'🔥','smartphone':'📱','điện thoại':'📱','realme':'📱','vivo':'📱',
+  'iphone':'📱','samsung':'📱','pin sạc':'🔋','tai nghe':'🎵','sim':'📶',
+  'phụ kiện':'🎧','máy lọc':'💧','camera':'📷','đồng hồ':'⏱️','laptop':'💻',
+  'wearable':'⌚','tablet':'📟','homecredit':'💳','fecredit':'🏦','shinhan':'🏦',
+  'ví trả sau':'💰','vay tiền':'💵','vas':'🔧','tpbank':'✨','vpbank':'✨',
+  'bảo hiểm':'🛡️','rút tiền':'🏧','quạt':'🌀','gia dụng':'🏠',
+  'máy lạnh':'❄️','điện tử':'📺','thẻ cào':'🎴','default':'📦'
+};
+function getIcon(n){
+  const l=n.toLowerCase();
+  for(const k in ICONS) if(l.includes(k)) return ICONS[k];
+  return ICONS['default'];
+}
+
+function rowStyle(p){
+  if(p===null||isNaN(p)||p===0)
+    return {bg:'#fff0f0',border:'#f5b8b8',name:'#c0392b',nums:'#c0392b',pct:'#e84a5f'};
+  if(p>=100) return {bg:'#edfaf3',border:'#5bc888',name:'#1a7a3e',nums:'#2a8a4e',pct:'#1aaa55'};
+  if(p>=80)  return {bg:'#f5fded',border:'#a0d878',name:'#3a6e10',nums:'#4a8020',pct:'#5a9a20'};
+  if(p>=60)  return {bg:'#fffbec',border:'#f5d060',name:'#7a5c00',nums:'#8a6c00',pct:'#c08000'};
+  if(p>=40)  return {bg:'#fff6ec',border:'#f5b060',name:'#8a4500',nums:'#9a5000',pct:'#d06010'};
+  if(p>=20)  return {bg:'#fff2ee',border:'#f5a080',name:'#8a2800',nums:'#9a3800',pct:'#d04020'};
+  return           {bg:'#fff0f0',border:'#f5b8b8',name:'#c0392b',nums:'#c0392b',pct:'#e84a5f'};
+}
+
+function fmtPct(p){
+  if(p===null||isNaN(p)) return '0%';
+  return Math.round(p)+'%';
+}
+
+function parseV1(raw){
+  let totalDT=0,totalTgt=0,totalPct=0,tgPct=0;
+  for(const line of raw.trim().split('\n')){
+    const c=line.split('\t');
+    if(c[0].trim().toLowerCase()==='tổng'&&c.length>=5){
+      totalDT  = parseFloat(c[2])||0;
+      totalTgt = parseFloat(c[3])||0;
+      totalPct = parseFloat((c[4]||'0').replace('%','').replace(',','.'))||0;
+      tgPct    = parseFloat((c[6]||'0').replace('%','').replace(',','.'))||0;
+      break;
+    }
+  }
+  return {totalDT,totalTgt,totalPct,tgPct};
+}
+
+function parseV2(raw){
+  const lines=raw.trim().split('\n');
+  const items=[];
+  let i=0;
+  while(i<lines.length){
+    const c=lines[i].split('\t');
+    const name=c[0].trim();
+    if(!name||name.startsWith('TGD_')||name.toLowerCase()==='tổng'||
+       name.includes('Realtime')||name.includes('Target')){i++;continue;}
+    let dt=0,tgt=0,pct=null,rank=0;
+    if(i+1<lines.length){
+      const t=lines[i+1].split('\t');
+      if(t[0].trim().toLowerCase()==='tổng'){
+        dt=parseFloat(t[1])||0;
+        tgt=parseFloat(t[2])||0;
+        const ps=(t[3]||'').replace('%','').replace(',','.');
+        pct=(ps===''||ps.toLowerCase()==='nan')?null:parseFloat(ps);
+      }
+    }
+    if(i+2<lines.length){
+      const r=lines[i+2].split('\t');
+      if(r[0].trim().startsWith('TGD_')) rank=parseInt(r[4])||0;
+    }
+    items.push({name,dt,tgt,pct,rank});
+    i+=3;
+  }
+  items.sort((a,b)=>{
+    const pa=(a.pct===null||isNaN(a.pct))?-Infinity:a.pct;
+    const pb=(b.pct===null||isNaN(b.pct))?-Infinity:b.pct;
+    return pb-pa;
+  });
+  return items;
+}
+
+function makeRow(g){
+  const s=rowStyle(g.pct);
+  const rankStr=g.rank>0?`#${g.rank} trong miền`:'';
+  return `<div class="krow" style="background:${s.bg};border-left-color:${s.border};">
+    <span class="krow-icon">${getIcon(g.name)}</span>
+    <span class="krow-name" style="color:${s.name};">${g.name}</span>
+    <div class="krow-right">
+      <div class="krow-nums" style="color:${s.nums};">${g.dt.toFixed(1)} / ${g.tgt.toFixed(1)}</div>
+      <div class="krow-pct" style="color:${s.pct};">${fmtPct(g.pct)}</div>
+      ${rankStr?`<div class="krow-rank" style="color:${s.nums};">${rankStr}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function build(){
+  const raw1=document.getElementById('d1').value.trim();
+  const raw2=document.getElementById('d2').value.trim();
+  const h=raw1?parseV1(raw1):{totalDT:0,totalTgt:0,totalPct:0,tgPct:0};
+  const items=raw2?parseV2(raw2):[];
+  const con=Math.max(0,h.totalTgt-h.totalDT);
+  const nhomDat=items.filter(g=>g.pct!==null&&!isNaN(g.pct)&&g.pct>=100).length;
+  const half=Math.ceil(items.length/2);
+  const leftItems=items.slice(0,half);
+  const rightItems=items.slice(half);
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  const dateStr=now.toLocaleDateString('vi-VN');
+
+  document.getElementById('db').innerHTML=`
+    <div class="top-cards">
+      <div class="tc">
+        <div class="tc-label">Doanh thu</div>
+        <div class="tc-val">${h.totalDT.toFixed(0)}/${h.totalTgt.toFixed(0)}tr</div>
+        <div class="tc-sub">Còn thiếu: ${con.toFixed(0)}tr</div>
+      </div>
+      <div class="tc">
+        <div class="tc-label">Tiến độ (%)</div>
+        <div class="tc-val">${fmtPct(h.totalPct)}</div>
+      </div>
+      <div class="tc">
+        <div class="tc-label">Trả góp (MT 60%)</div>
+        <div class="tc-val red">${h.tgPct.toFixed(1)}%</div>
+      </div>
+      <div class="tc">
+        <div class="tc-label">Nhóm hàng đạt</div>
+        <div class="tc-val">${nhomDat}/${items.length}</div>
+      </div>
+    </div>
+    ${items.length>0
+      ?`<div class="grid2">
+          <div class="gcol">${leftItems.map(makeRow).join('')}</div>
+          <div class="gcol">${rightItems.map(makeRow).join('')}</div>
+        </div>`
+      :'<div class="empty">Chưa có dữ liệu — paste vào Vùng 2 và bấm Tạo Dashboard</div>'
+    }
+    <div class="footer">Dashboard Siêu Thị — Cập nhật lúc: <b>${timeStr} - ${dateStr}</b></div>`;
+
+  document.getElementById('btnImg').style.display='inline-block';
+}
+
+function saveImg(){
+  const el=document.getElementById('db');
+  const btn=document.getElementById('btnImg');
+  const orig=btn.textContent;
+  btn.textContent='⏳ Đang tạo...';
+  btn.disabled=true;
+
+  html2canvas(el,{
+    scale:2,
+    useCORS:true,
+    backgroundColor:'#e8e8e8',
+    logging:false
+  }).then(canvas=>{
+    const now=new Date();
+    const ts=now.toLocaleDateString('vi-VN').replace(/\//g,'-')
+             +'_'+now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}).replace(':','-');
+    const a=document.createElement('a');
+    a.download='dashboard_'+ts+'.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    btn.textContent=orig;
+    btn.disabled=false;
+  }).catch(()=>{
+    alert('Lỗi tạo ảnh, thử lại nhé!');
+    btn.textContent=orig;
+    btn.disabled=false;
+  });
+}
+</script>
+</body>
+</html>

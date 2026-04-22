@@ -1,0 +1,2939 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard Phân Tích Hiệu Suất NV Bán Hàng</title>
+
+    <!-- Font (optional, graceful fallback to system font) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- html2canvas for "Chụp ảnh" -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    <style>
+      :root {
+        --bg: #f3f5f7;
+        --card: #ffffff;
+        --text: #111827;
+        --muted: #6b7280;
+        --border: rgba(17, 24, 39, 0.12);
+        --shadow: 0 10px 26px rgba(17, 24, 39, 0.08);
+        --shadow-soft: 0 6px 16px rgba(17, 24, 39, 0.08);
+        --radius: 18px;
+
+        --orange: #f97316;
+        --orange-dark: #ea580c;
+        --blue: #2563eb;
+        --green: #16a34a;
+        --red: #dc2626;
+        --slate: #334155;
+
+        --rowA: rgba(2, 132, 199, 0.06);
+        --rowB: rgba(148, 163, 184, 0.06);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: radial-gradient(
+            1200px 600px at 20% -10%,
+            rgba(249, 115, 22, 0.18),
+            transparent 60%
+          ),
+          radial-gradient(
+            1200px 600px at 80% -10%,
+            rgba(37, 99, 235, 0.14),
+            transparent 55%
+          ),
+          var(--bg);
+        color: var(--text);
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          sans-serif;
+        line-height: 1.35;
+      }
+
+      .topbar {
+        background: linear-gradient(90deg, var(--orange), #fb923c);
+        color: white;
+        padding: 16px 20px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        box-shadow: 0 6px 18px rgba(249, 115, 22, 0.35);
+      }
+
+      .topbar .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .badge {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(6px);
+      }
+
+      .title {
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        font-size: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .subtitle {
+        font-size: 12px;
+        opacity: 0.92;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 18px auto 56px;
+        padding: 0 16px;
+      }
+
+      .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      @media (max-width: 1100px) {
+        .cards-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .cards-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid rgba(17, 24, 39, 0.08);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-soft);
+        overflow: hidden;
+      }
+
+      .card-header {
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .card-header h3 {
+        margin: 0;
+        font-size: 13px;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .pill {
+        font-size: 11px;
+        color: #0f172a;
+        background: rgba(249, 115, 22, 0.14);
+        border: 1px solid rgba(249, 115, 22, 0.26);
+        padding: 4px 8px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+
+      .card-body {
+        padding: 14px 16px 16px;
+      }
+
+      /* Quản lý & lịch sử: allow vertical scroll when content grows */
+      #cardManage .card-body {
+        max-height: clamp(260px, 45vh, 420px);
+        overflow-y: auto;
+        overflow-x: visible; /* don't clip the store action buttons on narrow widths */
+        scrollbar-gutter: stable;
+      }
+
+      #cardManage .store-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      #cardManage .store-row select {
+        flex: 1 1 220px;
+        min-width: 220px;
+      }
+
+      #cardManage .card-body::-webkit-scrollbar {
+        width: 10px;
+      }
+      #cardManage .card-body::-webkit-scrollbar-thumb {
+        background: rgba(15, 23, 42, 0.22);
+        border-radius: 999px;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+      }
+      #cardManage .card-body::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.06);
+        border-radius: 999px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 210px;
+        resize: vertical;
+        border-radius: 14px;
+        border: 1px solid rgba(17, 24, 39, 0.14);
+        padding: 12px 12px;
+        font: inherit;
+        color: inherit;
+        outline: none;
+        background: #fbfdff;
+        box-shadow: inset 0 1px 0 rgba(17, 24, 39, 0.03);
+      }
+
+      textarea:focus {
+        border-color: rgba(37, 99, 235, 0.45);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+
+      .helper {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .list {
+        margin-top: 12px;
+        border: 1px dashed rgba(17, 24, 39, 0.18);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      .list-row {
+        display: grid;
+        grid-template-columns: 1.6fr 0.6fr auto;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 10px;
+        border-bottom: 1px solid rgba(17, 24, 39, 0.06);
+        background: white;
+      }
+
+      .list-row:nth-child(even) {
+        background: rgba(148, 163, 184, 0.06);
+      }
+
+      .list-row:last-child {
+        border-bottom: 0;
+      }
+
+      .list-row .mini {
+        width: 100%;
+        border: 1px solid rgba(17, 24, 39, 0.12);
+        border-radius: 12px;
+        padding: 8px 10px;
+        font: inherit;
+        background: white;
+        outline: none;
+      }
+
+      .list-row .mini:focus {
+        border-color: rgba(37, 99, 235, 0.45);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+
+      .row-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        cursor: pointer;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font: inherit;
+        font-weight: 700;
+        color: white;
+        box-shadow: 0 10px 18px rgba(17, 24, 39, 0.14);
+        transition: transform 0.12s ease, filter 0.12s ease,
+          box-shadow 0.12s ease;
+        user-select: none;
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+        box-shadow: 0 8px 14px rgba(17, 24, 39, 0.14);
+      }
+
+      .btn.secondary {
+        background: #64748b;
+      }
+
+      .btn.primary {
+        background: linear-gradient(180deg, #3b82f6, var(--blue));
+      }
+
+      .btn.success {
+        background: linear-gradient(180deg, #22c55e, var(--green));
+      }
+
+      .btn.danger {
+        background: linear-gradient(180deg, #ef4444, var(--red));
+      }
+
+      .btn.ghost {
+        background: rgba(15, 23, 42, 0.05);
+        color: #0f172a;
+        box-shadow: none;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        font-weight: 700;
+      }
+
+      .btn.small {
+        padding: 8px 10px;
+        border-radius: 12px;
+        font-weight: 800;
+        box-shadow: none;
+      }
+
+      .btn.icon {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 14px;
+      }
+
+      .btn.icon.plus {
+        background: rgba(37, 99, 235, 0.12);
+        color: #1d4ed8;
+        border: 1px solid rgba(37, 99, 235, 0.22);
+        box-shadow: none;
+      }
+
+      .btn.icon.edit {
+        background: rgba(249, 115, 22, 0.14);
+        color: #9a3412;
+        border: 1px solid rgba(249, 115, 22, 0.26);
+        box-shadow: none;
+      }
+
+      .btn.icon.minus {
+        background: rgba(220, 38, 38, 0.12);
+        color: #b91c1c;
+        border: 1px solid rgba(220, 38, 38, 0.22);
+        box-shadow: none;
+      }
+
+      .actions-row {
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .output-wrap {
+        margin-top: 18px;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 18px 2px 12px;
+      }
+
+      .section-title h2 {
+        margin: 0;
+        font-size: 14px;
+        letter-spacing: 0.25px;
+        text-transform: uppercase;
+        color: #0f172a;
+        font-weight: 900;
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .grids {
+        display: grid;
+        grid-template-columns: 1fr 1fr 0.8fr;
+        gap: 16px;
+      }
+
+      @media (max-width: 1100px) {
+        .grids {
+          grid-template-columns: 1fr;
+        }
+      }
+
+	      .table {
+	        width: 100%;
+	        border-collapse: separate;
+	        border-spacing: 0;
+	        overflow: hidden;
+	        border-radius: 14px;
+	        border: 1px solid rgba(17, 24, 39, 0.12);
+	        min-width: 760px; /* enable horizontal scroll when content is long */
+	      }
+
+      .table thead th {
+        background: linear-gradient(180deg, rgba(249, 115, 22, 0.9), var(--orange));
+        color: white;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.35px;
+        padding: 10px 10px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+	      .table tbody td {
+	        padding: 10px 10px;
+	        border-top: 1px solid rgba(17, 24, 39, 0.08);
+	        background: white;
+	        vertical-align: middle;
+	        font-size: 13px;
+	      }
+
+      .table thead th,
+      .table tbody td {
+        white-space: nowrap;
+      }
+
+      .th-cat {
+        white-space: normal;
+        line-height: 1.15;
+        max-width: 150px;
+      }
+
+      .cell-cat {
+        white-space: normal;
+        text-align: center;
+        font-weight: 900;
+      }
+
+      .cell-cat .sub {
+        font-weight: 800;
+        font-size: 12px;
+        color: rgba(15, 23, 42, 0.72);
+      }
+
+      .cell-cat.good {
+        background: rgba(34, 197, 94, 0.12) !important;
+        border-left: 1px solid rgba(34, 197, 94, 0.18);
+        border-right: 1px solid rgba(34, 197, 94, 0.18);
+        color: #14532d;
+      }
+
+      .cell-cat.bad {
+        background: rgba(244, 63, 94, 0.10) !important;
+        border-left: 1px solid rgba(244, 63, 94, 0.16);
+        border-right: 1px solid rgba(244, 63, 94, 0.16);
+        color: #7f1d1d;
+      }
+
+      .cell-cat .pct {
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .cell-cat.good .pct {
+        color: #166534;
+      }
+
+      .cell-cat.bad .pct {
+        color: #be123c;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 14px;
+	      }
+
+	      .table-scroll::-webkit-scrollbar {
+	        height: 10px;
+	      }
+
+	      .table-scroll::-webkit-scrollbar-thumb {
+	        background: rgba(15, 23, 42, 0.22);
+	        border-radius: 999px;
+	        border: 2px solid rgba(255, 255, 255, 0.7);
+	      }
+
+	      .table-scroll::-webkit-scrollbar-track {
+	        background: rgba(15, 23, 42, 0.06);
+	        border-radius: 999px;
+	      }
+
+      .table tbody tr:nth-child(odd) td {
+        background: var(--rowA);
+      }
+      .table tbody tr:nth-child(even) td {
+        background: var(--rowB);
+      }
+
+      .cell-muted {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .cell-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .drag {
+        cursor: grab;
+        width: 26px;
+        height: 26px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(15, 23, 42, 0.04);
+        color: #0f172a;
+        user-select: none;
+      }
+
+      .analysis {
+        margin-top: 16px;
+      }
+
+      .split-tables {
+        display: grid;
+        gap: 14px;
+      }
+
+      .report-header {
+        margin-top: 16px;
+        background: linear-gradient(90deg, #166534, #16a34a);
+        color: white;
+        border-radius: 18px;
+        border: 1px solid rgba(20, 83, 45, 0.22);
+        box-shadow: 0 14px 26px rgba(22, 163, 74, 0.20);
+        overflow: hidden;
+      }
+
+      .report-header .inner {
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        text-align: center;
+      }
+
+      .report-header .h1 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        font-weight: 900;
+      }
+
+      .report-header .sub {
+        margin-top: 6px;
+        font-size: 13px;
+        opacity: 0.95;
+        font-weight: 700;
+      }
+
+      .report-header .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        font-weight: 800;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      /* Make sales-detail table more compact (optimize for screenshots) */
+      #salesDetailCard .table thead th {
+        font-size: 11px;
+        padding: 8px 8px;
+      }
+
+      #salesDetailCard .table tbody td {
+        padding: 8px 8px;
+        font-size: 12px;
+      }
+
+      #salesDetailCard .rank-badge {
+        height: 28px;
+        min-width: 40px;
+        padding: 0 8px;
+        font-size: 11px;
+        box-shadow: 0 8px 14px rgba(15, 23, 42, 0.08);
+      }
+
+      #salesDetailCard .rank-badge .icon {
+        font-size: 13px;
+      }
+
+      #salesDetailCard .cell-cat .pct {
+        font-size: 11px;
+      }
+
+      .analysis-controls {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 200px;
+      }
+
+      .label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+
+      select,
+      input[type="text"],
+      input[type="number"],
+      input[type="date"] {
+        border: 1px solid rgba(17, 24, 39, 0.14);
+        border-radius: 14px;
+        padding: 10px 12px;
+        font: inherit;
+        outline: none;
+        background: white;
+      }
+
+      select:focus,
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      input[type="date"]:focus {
+        border-color: rgba(37, 99, 235, 0.45);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+
+      .danger-zone {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+      }
+
+      .progress {
+        height: 10px;
+        width: 100%;
+        background: rgba(15, 23, 42, 0.12);
+        border-radius: 999px;
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+      }
+
+      .bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+      }
+
+      .bar.red {
+        background: linear-gradient(90deg, #fb7185, #dc2626);
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .tag.ok {
+        color: #14532d;
+        border-color: rgba(34, 197, 94, 0.35);
+        background: rgba(34, 197, 94, 0.1);
+      }
+
+      .tag.bad {
+        color: #7f1d1d;
+        border-color: rgba(220, 38, 38, 0.35);
+        background: rgba(220, 38, 38, 0.1);
+      }
+
+      .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 44px;
+        height: 32px;
+        padding: 0 10px;
+        border-radius: 999px;
+        font-weight: 900;
+        font-size: 12px;
+        border: 1px solid rgba(15, 23, 42, 0.14);
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.10);
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      .rank-badge .icon {
+        font-size: 14px;
+        line-height: 1;
+      }
+
+      .rank-badge.gold {
+        color: #3b2f0b;
+        border-color: rgba(245, 158, 11, 0.45);
+        background: linear-gradient(180deg, rgba(253, 230, 138, 0.92), rgba(245, 158, 11, 0.45));
+      }
+
+      .rank-badge.silver {
+        color: #0f172a;
+        border-color: rgba(148, 163, 184, 0.65);
+        background: linear-gradient(180deg, rgba(241, 245, 249, 0.95), rgba(148, 163, 184, 0.38));
+      }
+
+      .rank-badge.bronze {
+        color: #3b1f10;
+        border-color: rgba(234, 88, 12, 0.45);
+        background: linear-gradient(180deg, rgba(255, 237, 213, 0.95), rgba(234, 88, 12, 0.28));
+      }
+
+      .mono {
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum";
+      }
+
+      .note {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.04);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        color: var(--muted);
+        font-size: 12px;
+      }
+    
+    /* ── MWG NAVBAR ── */
+    :root { --nav-h: 52px; }
+    .mwg-nav {
+      position: sticky; top: 0; z-index: 9999;
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 20px; height: var(--nav-h);
+      background: rgba(10,14,24,0.95);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(14px);
+      font-family: 'Inter', sans-serif;
+    }
+    .mwg-nav-brand {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; margin-right: auto;
+    }
+    .mwg-nav-badge {
+      background: #f5c518; color: #111;
+      font-size: 9px; font-weight: 800; letter-spacing: 0.1em;
+      padding: 3px 8px; border-radius: 5px; line-height: 1;
+    }
+    .mwg-nav-name {
+      font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.85);
+    }
+    .mwg-nav-chip {
+      font-size: 10px; color: rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 3px 10px; border-radius: 20px;
+      letter-spacing: 0.03em; white-space: nowrap;
+    }
+    .mwg-nav-user {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: rgba(255,255,255,0.5);
+      margin-right: 6px; white-space: nowrap;
+    }
+    .mwg-nav-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 6px rgba(74,222,128,0.5);
+      flex-shrink: 0;
+    }
+    .mwg-nav-user strong { color: #f5c518; font-weight: 600; }
+    .mwg-nav-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 13px; border-radius: 7px;
+      font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
+      cursor: pointer; border: 1px solid transparent;
+      text-decoration: none; transition: all 140ms; white-space: nowrap;
+    }
+    .mwg-nav-btn:active { transform: scale(.97); }
+    .mwg-btn-home {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.14); color: rgba(255,255,255,0.8);
+    }
+    .mwg-btn-home:hover { background: rgba(255,255,255,0.13); color: #fff; }
+    .mwg-btn-logout {
+      background: rgba(239,68,68,0.1);
+      border-color: rgba(239,68,68,0.25); color: #fca5a5;
+    }
+    .mwg-btn-logout:hover { background: rgba(239,68,68,0.2); }
+    @media(max-width:560px){
+      .mwg-nav-name, .mwg-nav-chip, .mwg-nav-user { display: none; }
+      .mwg-nav-btn { padding: 6px 10px; }
+    }
+</style>
+  </head>
+
+  <body>
+
+    <!-- AUTH GUARD -->
+    <script>
+      (function(){
+        var s = localStorage.getItem('mwg_session');
+        if (!s) { window.location.replace('./index.html'); }
+      })();
+    </script>
+
+    <!-- MWG NAVBAR -->
+    <nav class="mwg-nav">
+      <a class="mwg-nav-brand" href="./main.html">
+        <span class="mwg-nav-badge">MWG</span>
+        <span class="mwg-nav-name">Business Intelligence</span>
+      </a>
+      <span class="mwg-nav-chip">Sức khoẻ NV</span>
+      <div class="mwg-nav-user">
+        <span class="mwg-nav-dot"></span>
+        Xin chào, <strong id="mwg-nav-username">—</strong>
+      </div>
+      <a class="mwg-nav-btn mwg-btn-home" href="./main.html">⌂ Trang chủ</a>
+      <button class="mwg-nav-btn mwg-btn-logout" onclick="mwgLogout()">↩ Đăng xuất</button>
+    </nav>
+
+    <header class="topbar">
+      <div class="wrap">
+        <div class="brand">
+          <div class="badge" aria-hidden="true">📊</div>
+          <div style="min-width: 0">
+            <div class="title">Dashboard Phân Tích Hiệu Suất Nhân Viên</div>
+            <div class="subtitle">
+              HTML + CSS + JS thuần • Lưu localStorage • Chụp PNG
+            </div>
+          </div>
+        </div>
+        <div class="subtitle" id="clock"></div>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- ==========================================================
+           I. KHU NHẬP LIỆU (4 cards)
+           ========================================================== -->
+      <section class="input-wrap">
+        <div class="cards-grid">
+          <!-- 1) Target ngành hàng -->
+          <article class="card" id="cardTargets">
+            <div class="card-header">
+              <h3>1. Nhập target ngành hàng</h3>
+              <span class="pill" id="pillTargets">0 dòng</span>
+            </div>
+            <div class="card-body">
+              <textarea
+                id="taTargets"
+                placeholder="Ví dụ:\nSMARTPHONE FLAGSHIP & TABLET ANDROID 490.69\nĐIỆN THOẠI REALME 123.60"
+              ></textarea>
+              <div class="helper">
+                <span>Parse: tách <b>tên</b> + <b>target</b> (số cuối dòng)</span>
+                <button class="btn ghost small" id="btnParseTargets" type="button">
+                  Parse
+                </button>
+              </div>
+              <div class="list" id="listTargets" aria-label="Danh sách ngành hàng"></div>
+            </div>
+          </article>
+
+          <!-- 2) Doanh thu nhân viên -->
+          <article class="card" id="cardEmployees">
+            <div class="card-header">
+              <h3>2. Nhập doanh thu nhân viên</h3>
+              <span class="pill" id="pillEmployees">0 NV</span>
+            </div>
+            <div class="card-body">
+              <textarea
+                id="taEmployees"
+                placeholder="Gợi ý format:\n[Tên nhóm] Tên NV - MãNV 215.47\nTên NV - 178116 334.24\n\n(Doanh thu là số cuối dòng)"
+              ></textarea>
+              <div class="helper">
+                <span>Hỗ trợ group: <b>[Nhóm]</b> ở đầu dòng</span>
+                <button class="btn ghost small" id="btnParseEmployees" type="button">
+                  Parse
+                </button>
+              </div>
+              <div class="list" id="listEmployees" aria-label="Danh sách nhân viên"></div>
+            </div>
+          </article>
+
+          <!-- 3) Chi tiết bán -->
+          <article class="card" id="cardSales">
+            <div class="card-header">
+              <h3>3. Nhập chi tiết bán</h3>
+              <span class="pill" id="pillSales">0 dòng</span>
+            </div>
+            <div class="card-body">
+              <textarea
+                id="taSales"
+                placeholder="Dữ liệu raw. Hệ thống parse theo vài format:\n\nA) Mỗi dòng: MãNV | Ngành hàng | Doanh số\n   178116 | ĐIỆN THOẠI REALME | 12.5\n\nB) Block theo NV:\n   Tên NV - 178116\n   SMARTPHONE ... 10\n   ĐIỆN THOẠI REALME 2\n\nC) Paste ma trận (Phòng ban):\n   Phòng ban\n   Ngành 1\n   Ngành 2\n   ...\n   DTLK   DTLK ... (header dạng tab)\n   Hồng Văn Chiến - 84765   0.00  0.00 ...\n\nLưu ý: chỉ giữ cột ngành hàng đã có ở mục (1)."
+              ></textarea>
+              <div class="helper">
+                <span>Parse: mapping theo <b>nhân viên</b> + <b>ngành hàng</b></span>
+                <button class="btn ghost small" id="btnParseSales" type="button">
+                  Parse
+                </button>
+              </div>
+              <div class="note" id="salesNote">
+                Nếu bạn muốn “SỐ NH H.T” chính xác, hãy cung cấp chi tiết bán theo
+                format B hoặc A.
+              </div>
+            </div>
+          </article>
+
+          <!-- 4) Quản lý & lịch sử -->
+          <article class="card" id="cardManage">
+            <div class="card-header">
+              <h3>Quản lý &amp; lịch sử</h3>
+              <span class="pill" id="pillStore">Chưa chọn</span>
+            </div>
+            <div class="card-body">
+	              <div class="field">
+	                <div class="label">Chọn siêu thị</div>
+	                <div class="store-row">
+	                  <select id="selStore"></select>
+	                  <button class="btn icon plus" id="btnAddStore" type="button" title="Thêm siêu thị">
+	                    +
+	                  </button>
+	                  <button class="btn icon edit" id="btnEditStore" type="button" title="Sửa siêu thị">
+	                    ✎
+	                  </button>
+                  <button class="btn icon minus" id="btnDeleteStore" type="button" title="Xóa siêu thị">
+                    −
+                  </button>
+                </div>
+              </div>
+
+              <div class="field" style="margin-top: 12px">
+                <div class="label">Xem dữ liệu theo ngày</div>
+                <input id="inpDate" type="date" />
+                <div class="cell-muted">
+                  Các ngày đã lưu sẽ tự có dữ liệu khi chọn.
+                </div>
+              </div>
+
+              <div class="field" style="margin-top: 12px">
+                <div class="label">Target tháng siêu thị</div>
+                <input
+                  id="inpStoreMonthlyTarget"
+                  type="number"
+                  inputmode="decimal"
+                  placeholder="Ví dụ: 14100"
+                />
+              </div>
+
+              <div class="danger-zone">
+                <button class="btn danger" id="btnDeleteDay" type="button" style="width: 100%">
+                  🗑️ Xóa dữ liệu ngày này
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="actions-row">
+          <button class="btn secondary" id="btnBack" type="button">‹ Quay lại</button>
+          <button class="btn primary" id="btnAnalyzeSave" type="button">
+            Phân tích &amp; Lưu dữ liệu
+          </button>
+          <button class="btn success" id="btnCaptureAnalysis" type="button">
+            ⬇ Lưu ảnh Bảng phân tích
+          </button>
+          <button class="btn success" id="btnCaptureSales" type="button">
+            ⬇ Lưu ảnh Chi tiết bán
+          </button>
+        </div>
+      </section>
+
+      <!-- ==========================================================
+           II + III. KHU HIỂN THỊ DỮ LIỆU + PHÂN TÍCH
+           ========================================================== -->
+      <section class="output-wrap">
+        <div class="section-title">
+          <h2>Dữ liệu đã parse</h2>
+          <div class="hint" id="summaryHint">Nhập dữ liệu phía trên để hiển thị.</div>
+        </div>
+
+        <div class="grids">
+          <!-- Grid ngành hàng -->
+          <article class="card">
+            <div class="card-header">
+              <h3>Grid ngành hàng</h3>
+              <span class="pill" id="pillGridCats">0</span>
+            </div>
+            <div class="card-body" style="padding-top: 10px">
+              <div class="table-scroll">
+                <table class="table" aria-label="Grid ngành hàng">
+                  <thead>
+                    <tr>
+                      <th style="width: 44px">#</th>
+                      <th>Tên ngành hàng</th>
+                      <th style="width: 140px">Target</th>
+                      <th style="width: 156px; text-align: right">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyCats"></tbody>
+                </table>
+              </div>
+              <div class="note">
+                Reorder: kéo biểu tượng ☰ hoặc dùng nút ↑ ↓.
+              </div>
+            </div>
+          </article>
+
+          <!-- Grid nhân viên -->
+          <article class="card">
+            <div class="card-header">
+              <h3>Grid nhân viên</h3>
+              <span class="pill" id="pillGridEmps">0</span>
+            </div>
+            <div class="card-body" style="padding-top: 10px">
+              <div class="table-scroll">
+                <table class="table" aria-label="Grid nhân viên">
+                  <thead>
+                    <tr>
+                      <th style="width: 44px">#</th>
+                      <th>Nhân viên</th>
+                      <th style="width: 110px">Mã</th>
+                      <th style="width: 150px">Doanh thu</th>
+                      <th style="width: 160px; text-align: right">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyEmps"></tbody>
+                </table>
+              </div>
+              <div class="note">
+                Bạn có thể nhập nhóm bằng <span class="mono">[Nhóm]</span> ở đầu
+                dòng trong ô doanh thu nhân viên.
+              </div>
+            </div>
+          </article>
+
+          <!-- Grid nhóm thi đua -->
+          <article class="card">
+            <div class="card-header">
+              <h3>Grid nhóm thi đua</h3>
+              <span class="pill" id="pillGridGroups">0</span>
+            </div>
+            <div class="card-body" style="padding-top: 10px">
+              <div class="table-scroll">
+                <table class="table" aria-label="Grid nhóm thi đua">
+                  <thead>
+                    <tr>
+                      <th>Nhóm</th>
+                      <th style="width: 80px">NV</th>
+                      <th style="width: 120px; text-align: right">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyGroups"></tbody>
+                </table>
+              </div>
+              <div class="note">
+                Xóa nhóm chỉ ảnh hưởng filter/hiển thị, không xóa nhân viên.
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Shared report header for both tables -->
+        <section class="report-header" id="reportHeader" aria-label="Header báo cáo">
+          <div class="inner">
+            <div>
+              <h2 class="h1">HIỆU QUẢ THI ĐUA NGÀNH HÀNG THEO NV</h2>
+              <div class="sub">
+                Siêu thị:
+                <span class="mono" id="txtReportStore">—</span>
+              </div>
+            </div>
+            <div class="chip" title="Lấy từ combobox 'Chọn siêu thị'">
+              🏬 <span id="txtReportStoreChip">—</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Analysis -->
+        <article class="card analysis" id="analysisCard">
+          <div class="card-header">
+            <h3>Bảng phân tích (theo ngày)</h3>
+            <span class="pill" id="pillAnalysis">Chưa phân tích</span>
+          </div>
+          <div class="card-body">
+            <div class="analysis-controls">
+              <div class="field" style="min-width: 260px">
+                <div class="label">Lọc nhóm</div>
+                <select id="selGroupFilter"></select>
+              </div>
+              <div class="field">
+                <div class="label">Tùy chọn</div>
+                <label style="display: flex; gap: 10px; align-items: center">
+                  <input id="chkExcludeZero" type="checkbox" />
+                  <span class="cell-muted">Ẩn NV doanh thu = 0</span>
+                </label>
+              </div>
+              <div class="field" style="min-width: 340px">
+	                <div class="label">Công thức</div>
+	                <div class="cell-muted">
+	                  Mỗi người =
+	                  <span class="mono" id="txtPerPerson">0</span> • Tiến độ ngày =
+	                  <span class="mono" id="txtProgress">0%</span>
+	                </div>
+	              </div>
+	            </div>
+
+            <div style="margin-top: 12px">
+              <div class="table-scroll">
+                <table class="table" aria-label="Bảng kết quả phân tích">
+                  <thead>
+                    <tr>
+                      <th style="width: 60px">Hạng</th>
+                      <th>Nhân viên</th>
+                      <th style="width: 110px">Số NH H.T</th>
+                      <th style="width: 140px">Lũy kế DT</th>
+                      <th style="width: 140px">Target tháng</th>
+                      <th style="width: 130px">Còn lại</th>
+                      <th style="width: 170px">% dự kiến HT</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyAnalysis"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="note" id="analysisNote"></div>
+          </div>
+        </article>
+
+        <!-- Sales detail tables (from input #3) -->
+        <article class="card analysis" id="salesDetailCard">
+          <div class="card-header">
+            <h3>Chi tiết bán theo ngành hàng</h3>
+            <span class="pill" id="pillSalesDetail">Tối đa 10 NH/bảng</span>
+          </div>
+          <div class="card-body">
+            <div class="note" id="salesDetailNote"></div>
+            <div class="split-tables" id="salesDetailTables"></div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      /**
+       * Dashboard single-file (no framework)
+       * - Parse 3 inputs (target categories, employee revenue, sales details)
+       * - Editable grids, reorder categories
+       * - Analysis by date progression and store monthly target
+       * - Persist per store + per day in localStorage
+       */
+
+      // =========================
+      // Helpers
+      // =========================
+      const LS_KEY = "sales-dashboard:v1";
+
+      const $ = (id) => document.getElementById(id);
+
+      function todayISO() {
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
+      function daysInMonth(yyyy, mm1to12) {
+        return new Date(yyyy, mm1to12, 0).getDate();
+      }
+
+      function clamp(n, a, b) {
+        return Math.max(a, Math.min(b, n));
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function formatNumber(n, digits = 2) {
+        if (!Number.isFinite(n)) return "0";
+        const opts =
+          digits === 0
+            ? { maximumFractionDigits: 0 }
+            : { minimumFractionDigits: 0, maximumFractionDigits: digits };
+        return n.toLocaleString("en-US", opts);
+      }
+
+      function parseNumber(raw) {
+        // Accept: "3,266.94", "14100", "490.69", "59.13%", "0.00", "Infinity%"
+        const s = String(raw ?? "").trim().replace(/\s+/g, "");
+        if (!s) return NaN;
+        // Extract the first numeric token (ignore %, text, etc.)
+        const m = s.match(/-?[\d.,]+/);
+        if (!m) return NaN;
+        const token = m[0];
+
+        // If contains both comma and dot: assume comma is thousands separator
+        if (token.includes(",") && token.includes(".")) {
+          const cleaned = token.replaceAll(",", "");
+          const v = Number.parseFloat(cleaned);
+          return Number.isFinite(v) ? v : NaN;
+        }
+
+        // If only comma: assume thousands separator -> remove commas
+        if (token.includes(",") && !token.includes(".")) {
+          const cleaned = token.replaceAll(",", "");
+          const v = Number.parseFloat(cleaned);
+          return Number.isFinite(v) ? v : NaN;
+        }
+
+        // Only dot (or none)
+        const v = Number.parseFloat(token);
+        return Number.isFinite(v) ? v : NaN;
+      }
+
+      function debounce(fn, ms = 300) {
+        let t = null;
+        return (...args) => {
+          if (t) window.clearTimeout(t);
+          t = window.setTimeout(() => fn(...args), ms);
+        };
+      }
+
+      function uid(prefix = "id") {
+        return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now().toString(
+          16
+        )}`;
+      }
+
+      // =========================
+      // State
+      // =========================
+      const state = {
+        stores: {}, // { [storeKey]: { key, name, monthlyTarget, days: { [dateIso]: dayData } } }
+        ui: {
+          selectedStoreKey: "",
+          selectedDate: todayISO(),
+          groupFilter: "__ALL__",
+          excludeZero: false,
+        },
+      };
+
+      function emptyDayData() {
+        return {
+          targetText: "",
+          employeeText: "",
+          salesText: "",
+          categories: [], // [{id,name,target}]
+          employees: [], // [{id,name,empId,revenue,group}]
+          sales: {}, // { [empId]: { [categoryName]: amount } }
+          hiddenGroups: [], // groups bị "xóa" khỏi hiển thị
+          updatedAt: Date.now(),
+        };
+      }
+
+      function ensureSeedStores() {
+        // Seed 1 store for first-time user (similar to screenshot)
+        if (Object.keys(state.stores).length) return;
+        const key = uid("store");
+        state.stores[key] = {
+          key,
+          name: "485 - TGC",
+          monthlyTarget: 14100,
+          days: {},
+        };
+        state.ui.selectedStoreKey = key;
+      }
+
+      function getActiveStore() {
+        return state.stores[state.ui.selectedStoreKey] || null;
+      }
+
+      function getActiveDayData(createIfMissing = true) {
+        const store = getActiveStore();
+        if (!store) return null;
+        const date = state.ui.selectedDate;
+        if (!store.days[date] && createIfMissing) store.days[date] = emptyDayData();
+        return store.days[date] || null;
+      }
+
+      // =========================
+      // Persistence
+      // =========================
+      function loadFromLocalStorage() {
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (!raw) return;
+          const data = JSON.parse(raw);
+          if (!data || typeof data !== "object") return;
+          if (!data.stores || typeof data.stores !== "object") return;
+          state.stores = data.stores;
+          state.ui = { ...state.ui, ...(data.ui || {}) };
+        } catch (e) {
+          console.warn("Failed to load localStorage", e);
+        }
+      }
+
+      function saveToLocalStorage() {
+        try {
+          const payload = {
+            stores: state.stores,
+            ui: state.ui,
+          };
+          localStorage.setItem(LS_KEY, JSON.stringify(payload));
+        } catch (e) {
+          console.warn("Failed to save localStorage", e);
+        }
+      }
+
+      // =========================
+      // Parsing
+      // =========================
+      function parseTargetsText(text) {
+        const rawLines = String(text || "").split(/\r?\n/);
+        const lines = rawLines
+          .map((l) => String(l).replace(/^"+|"+$/g, "").trim())
+          .filter(Boolean);
+
+        // --- Mode 1: Paste from table (tab-separated) like:
+        // "SMARTPHONE ... \t DTLK \t Target \t ..."
+        // "Tổng \t 1,609.37 \t 2,721.94 \t 59.13% ..."
+        const outTable = [];
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (!line.includes("\t")) continue;
+          const cells = line.split("\t").map((c) => c.trim()).filter((c) => c.length > 0);
+          if (cells.length < 3) continue;
+
+          const first = cells[0];
+          if (!first) continue;
+          if (/^tổng$/i.test(first)) continue;
+          if (/^tgd_/i.test(first)) continue; // store row
+
+          const targetCol = cells.findIndex((c) => /^target$/i.test(c));
+          const hasDtlk = cells.some((c) => /^dtlk$/i.test(c) || /^sllk$/i.test(c));
+          if (targetCol < 0 || !hasDtlk) continue;
+
+          const categoryName = first;
+
+          // Find the "Tổng" row for this block (next lines)
+          let targetValue = NaN;
+          for (let j = i + 1; j < Math.min(i + 6, lines.length); j++) {
+            const l2 = lines[j];
+            if (!l2.includes("\t")) continue;
+            const c2 = l2.split("\t").map((c) => c.trim());
+            if (!c2.length) continue;
+            if (!/^tổng$/i.test((c2[0] || "").trim())) continue;
+            const vRaw = c2[targetCol] ?? "";
+            const v = parseNumber(vRaw);
+            if (Number.isFinite(v)) targetValue = v;
+            break;
+          }
+
+          if (Number.isFinite(targetValue)) {
+            outTable.push({ id: uid("cat"), name: categoryName, target: targetValue });
+          }
+        }
+
+        if (outTable.length) return outTable;
+
+        // --- Mode 2: Simple lines: "Tên ngành hàng ... 490.69"
+        const out = [];
+        for (const line of lines) {
+          const m = line.match(/(-?\d[\d.,]*)\s*$/);
+          if (!m) continue;
+          const target = parseNumber(m[1]);
+          if (!Number.isFinite(target)) continue;
+          const name = line.slice(0, m.index).trim();
+          if (!name) continue;
+          out.push({ id: uid("cat"), name, target });
+        }
+        return out;
+      }
+
+      function parseEmployeesText(text) {
+        const rawLines = String(text || "").split(/\r?\n/);
+        const lines = rawLines
+          .map((l) => String(l).replace(/^"+|"+$/g, "").trim())
+          .filter(Boolean);
+
+        // --- Mode 1: Paste table (tab-separated):
+        // "Nhân viên \t DTLK \t DTQĐ ..."
+        // "Võ Thành Long - 37354 \t 598.61 \t 904.27 ..."
+        const normHeader = (s) =>
+          String(s || "")
+            .trim()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replaceAll("Đ", "D")
+            .toUpperCase();
+
+        let revenueCol = -1;
+        for (const line of lines) {
+          if (!line.includes("\t")) continue;
+          const cells = line.split("\t").map((c) => c.trim());
+          if (!cells.length) continue;
+          if (/^nhân viên$/i.test((cells[0] || "").trim())) {
+            // Requirement update: lấy doanh thu ở cột DTQĐ (không phải DTLK)
+            revenueCol = cells.findIndex((c) => normHeader(c) === "DTQD");
+            if (revenueCol < 0) {
+              // fallback nếu bảng không có DTQĐ
+              revenueCol = cells.findIndex((c) => normHeader(c) === "DTLK");
+            }
+            break;
+          }
+        }
+
+        const outTable = [];
+        if (revenueCol >= 0) {
+          for (const line of lines) {
+            if (!line.includes("\t")) continue;
+            const cells = line.split("\t").map((c) => c.trim());
+            const first = (cells[0] || "").trim();
+            if (!first) continue;
+            if (/^nhân viên$/i.test(first)) continue;
+            if (/^tổng$/i.test(first)) continue;
+
+            // Optional [Group] in first cell
+            let group = "Chung";
+            let rest = first;
+            const g = rest.match(/^\s*\[([^\]]+)\]\s*(.+)$/);
+            if (g) {
+              group = g[1].trim() || "Chung";
+              rest = g[2].trim();
+            }
+
+            const m = rest.match(/^(.+?)\s*-\s*([^\s]+)\s*$/);
+            if (!m) continue;
+            const name = m[1].trim();
+            const empId = m[2].trim();
+            const revenue = parseNumber(cells[revenueCol] ?? "");
+            if (!name || !empId || !Number.isFinite(revenue)) continue;
+            outTable.push({ id: uid("emp"), name, empId, revenue, group });
+          }
+        }
+        if (outTable.length) return outTable;
+
+        // --- Mode 2: Simple lines: "[Nhóm] Tên - Mã 215.47"
+        const out = [];
+        for (const line of lines) {
+          let group = "Chung";
+          let rest = line;
+          const g = rest.match(/^\s*\[([^\]]+)\]\s*(.+)$/);
+          if (g) {
+            group = g[1].trim() || "Chung";
+            rest = g[2].trim();
+          }
+
+          const m = rest.match(/^(.+?)\s*-\s*([^\s]+)\s+(-?\d[\d.,]*)\s*$/);
+          if (!m) continue;
+          const name = m[1].trim();
+          const empId = m[2].trim();
+          const revenue = parseNumber(m[3]);
+          if (!name || !empId || !Number.isFinite(revenue)) continue;
+          out.push({ id: uid("emp"), name, empId, revenue, group });
+        }
+        return out;
+      }
+
+      function parseSalesText(text, employees, categories) {
+        /**
+         * Supports:
+         * A) Each line: empId | category | amount
+         * B) Blocks:
+         *    Name - empId
+         *    category amount
+         * C) Matrix paste (Phòng ban):
+         *    Phòng ban
+         *    Cat 1
+         *    Cat 2
+         *    ...
+         *    DTLK  DTLK  ... (tab-separated header)
+         *    Tổng  v1    v2   ...
+         *    Name - empId  v1 v2 ...
+         *
+         * Lines with only numbers are ignored.
+         */
+        const empIds = new Set((employees || []).map((e) => e.empId));
+        const norm = (s) =>
+          String(s || "")
+            .trim()
+            .toUpperCase()
+            .replace(/\s+/g, " ");
+
+        // Only keep categories that exist in mục (1) - target ngành hàng
+        const allowedCatByNorm = new Map();
+        for (const c of categories || []) {
+          if (!c?.name) continue;
+          allowedCatByNorm.set(norm(c.name), c.name);
+        }
+        const salesByEmp = {};
+
+        const lines = String(text || "")
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter(Boolean);
+
+        // ---- Mode C: Matrix paste ("Phòng ban" + rows + tab matrix)
+        // Try parse first because it’s the most structured.
+        const idxPB = lines.findIndex((l) => /^phòng\s*ban\b/i.test(l));
+        if (idxPB >= 0) {
+          const matrixCats = [];
+          let headerIdx = -1;
+
+          for (let i = idxPB + 1; i < lines.length; i++) {
+            const l = lines[i];
+            const firstCell = (l.split("\t")[0] || "").trim();
+            if (!firstCell) continue;
+
+            // Header row typically starts with DTLK/SLLK and contains tabs
+            if (/^(DTLK|SLLK)\b/i.test(firstCell) && l.includes("\t")) {
+              headerIdx = i;
+              break;
+            }
+
+            // Category name row (usually no tabs)
+            if (!l.includes("\t")) {
+              matrixCats.push(firstCell);
+            }
+          }
+
+          if (headerIdx >= 0 && matrixCats.length) {
+            for (let i = headerIdx + 1; i < lines.length; i++) {
+              const l = lines[i];
+              if (!l.includes("\t")) continue;
+
+              const cells = l.split("\t").map((c) => c.trim());
+              const rowName = (cells[0] || "").trim();
+              if (!rowName) continue;
+              if (/^tổng$/i.test(rowName)) continue;
+              if (/^bp\b/i.test(rowName)) continue; // BP All In One - ĐMX, etc.
+
+              const m = rowName.match(/^(.+?)\s*-\s*([^\s]+)\s*$/);
+              if (!m) continue;
+              const empId = m[2].trim();
+              if (!empIds.has(empId)) continue; // only map employees already parsed in mục (2)
+
+              for (let col = 0; col < matrixCats.length; col++) {
+                const catRaw = matrixCats[col];
+                const allowed = allowedCatByNorm.get(norm(catRaw));
+                if (!allowed) continue; // filter: only categories kept in mục (1)
+                const v = parseNumber(cells[col + 1] ?? "");
+                if (!Number.isFinite(v)) continue;
+                if (v === 0) continue;
+                if (!salesByEmp[empId]) salesByEmp[empId] = {};
+                salesByEmp[empId][allowed] = (salesByEmp[empId][allowed] || 0) + v;
+              }
+            }
+
+            // If parsed anything, return now (avoid mixing with other heuristics)
+            if (Object.keys(salesByEmp).length) return salesByEmp;
+          }
+        }
+
+        let currentEmpId = null;
+        for (const line of lines) {
+          // Ignore lines that are purely numbers/spaces/punctuation
+          if (/^[\d\s.,;:()]+$/.test(line)) continue;
+
+          const header = line.match(/^(.+?)\s*-\s*([^\s]+)\s*$/);
+          if (header && empIds.has(header[2].trim())) {
+            currentEmpId = header[2].trim();
+            if (!salesByEmp[currentEmpId]) salesByEmp[currentEmpId] = {};
+            continue;
+          }
+
+          // Split by common delimiters
+          const parts = line.split(/\s*[|,\t]\s*/).map((p) => p.trim()).filter(Boolean);
+          if (parts.length >= 3) {
+            // Attempt to find empId in first/second token
+            let empId = null;
+            let cat = null;
+            let amountRaw = null;
+
+            if (empIds.has(parts[0])) {
+              empId = parts[0];
+              cat = parts[1];
+              amountRaw = parts.slice(2).join(" ");
+            } else if (empIds.has(parts[1])) {
+              empId = parts[1];
+              cat = parts[0];
+              amountRaw = parts.slice(2).join(" ");
+            }
+
+            if (empId && cat) {
+              const m = amountRaw.match(/(-?\d[\d.,]*)\s*$/);
+              if (m) {
+                const amt = parseNumber(m[1]);
+                if (Number.isFinite(amt)) {
+                  const allowed = allowedCatByNorm.get(norm(cat));
+                  if (!allowed) continue; // filter by mục (1)
+                  if (amt === 0) continue;
+                  if (!salesByEmp[empId]) salesByEmp[empId] = {};
+                  salesByEmp[empId][allowed] =
+                    (salesByEmp[empId][allowed] || 0) + amt;
+                  continue;
+                }
+              }
+            }
+          }
+
+          // Block mode: category amount (needs currentEmpId)
+          if (currentEmpId) {
+            const m = line.match(/(-?\d[\d.,]*)\s*$/);
+            if (m) {
+              const amt = parseNumber(m[1]);
+              const cat = line.slice(0, m.index).trim();
+              if (cat && Number.isFinite(amt)) {
+                const allowed = allowedCatByNorm.get(norm(cat));
+                if (!allowed) continue; // filter by mục (1)
+                if (amt === 0) continue;
+                if (!salesByEmp[currentEmpId]) salesByEmp[currentEmpId] = {};
+                salesByEmp[currentEmpId][allowed] =
+                  (salesByEmp[currentEmpId][allowed] || 0) + amt;
+              }
+            }
+          }
+        }
+        return salesByEmp;
+      }
+
+      // =========================
+      // Render: Inputs (editable lists)
+      // =========================
+      function renderTargetsList(day) {
+        const el = $("listTargets");
+        if (!day.categories.length) {
+          el.innerHTML =
+            '<div class="note">Chưa có ngành hàng được parse.</div>';
+          return;
+        }
+        el.innerHTML = day.categories
+          .map(
+            (c, idx) => `
+            <div class="list-row" data-type="cat" data-id="${escapeHtml(c.id)}">
+              <input class="mini" data-field="name" value="${escapeHtml(c.name)}" />
+              <input class="mini mono" data-field="target" value="${escapeHtml(String(c.target))}" />
+              <div class="row-actions">
+                <button class="btn ghost small" data-act="up" title="Lên">↑</button>
+                <button class="btn ghost small" data-act="down" title="Xuống">↓</button>
+                <button class="btn danger small" data-act="del" title="Xóa">X</button>
+              </div>
+            </div>
+          `
+          )
+          .join("");
+      }
+
+      function renderEmployeesList(day) {
+        const el = $("listEmployees");
+        if (!day.employees.length) {
+          el.innerHTML = '<div class="note">Chưa có nhân viên được parse.</div>';
+          return;
+        }
+        el.innerHTML = day.employees
+          .map(
+            (e) => `
+            <div class="list-row" data-type="emp" data-id="${escapeHtml(e.id)}" style="grid-template-columns: 1fr 0.55fr 0.55fr auto">
+              <input class="mini" data-field="name" value="${escapeHtml(e.name)}" />
+              <input class="mini mono" data-field="empId" value="${escapeHtml(e.empId)}" />
+              <input class="mini mono" data-field="revenue" value="${escapeHtml(String(e.revenue))}" />
+              <div class="row-actions">
+                <button class="btn danger small" data-act="del" title="Xóa">X</button>
+              </div>
+            </div>
+          `
+          )
+          .join("");
+      }
+
+      // =========================
+      // Render: Grids (tables)
+      // =========================
+      function renderCatsGrid(day) {
+        const tb = $("tbodyCats");
+        if (!day.categories.length) {
+          tb.innerHTML =
+            '<tr><td colspan="4" class="cell-muted">Chưa có dữ liệu.</td></tr>';
+          $("pillGridCats").textContent = "0";
+          return;
+        }
+        $("pillGridCats").textContent = String(day.categories.length);
+        tb.innerHTML = day.categories
+          .map((c, idx) => {
+            return `
+              <tr draggable="true" data-rowtype="cat" data-id="${escapeHtml(c.id)}">
+                <td class="mono" style="display:flex; gap:8px; align-items:center">
+                  <span class="drag" title="Kéo để reorder" aria-hidden="true">☰</span>
+                  ${idx + 1}
+                </td>
+                <td>
+                  <input class="mini" data-grid="cat" data-field="name" data-id="${escapeHtml(
+                    c.id
+                  )}" value="${escapeHtml(c.name)}" />
+                </td>
+                <td>
+                  <input class="mini mono" data-grid="cat" data-field="target" data-id="${escapeHtml(
+                    c.id
+                  )}" value="${escapeHtml(String(c.target))}" />
+                </td>
+                <td>
+                  <div class="cell-actions">
+                    <button class="btn ghost small" data-grid-act="up" data-id="${escapeHtml(
+                      c.id
+                    )}">↑</button>
+                    <button class="btn ghost small" data-grid-act="down" data-id="${escapeHtml(
+                      c.id
+                    )}">↓</button>
+                    <button class="btn danger small" data-grid-act="delcat" data-id="${escapeHtml(
+                      c.id
+                    )}">Xóa</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderEmpsGrid(day) {
+        const tb = $("tbodyEmps");
+        if (!day.employees.length) {
+          tb.innerHTML =
+            '<tr><td colspan="5" class="cell-muted">Chưa có dữ liệu.</td></tr>';
+          $("pillGridEmps").textContent = "0";
+          return;
+        }
+        $("pillGridEmps").textContent = String(day.employees.length);
+        tb.innerHTML = day.employees
+          .map((e, idx) => {
+            return `
+              <tr data-rowtype="emp" data-id="${escapeHtml(e.id)}">
+                <td class="mono">${idx + 1}</td>
+                <td>
+                  <div style="font-weight:800">${escapeHtml(e.name)}</div>
+                  <div class="cell-muted">Nhóm: ${escapeHtml(e.group || "Chung")}</div>
+                </td>
+                <td class="mono">${escapeHtml(e.empId)}</td>
+                <td>
+                  <input class="mini mono" data-grid="emp" data-field="revenue" data-id="${escapeHtml(
+                    e.id
+                  )}" value="${escapeHtml(String(e.revenue))}" />
+                </td>
+                <td>
+                  <div class="cell-actions">
+                    <button class="btn danger small" data-grid-act="delemp" data-id="${escapeHtml(
+                      e.id
+                    )}">Xóa</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderGroupsGrid(day) {
+        const groups = deriveGroups(day.employees, day.hiddenGroups);
+        const tb = $("tbodyGroups");
+        if (!groups.length) {
+          tb.innerHTML =
+            '<tr><td colspan="3" class="cell-muted">Chưa có nhóm.</td></tr>';
+          $("pillGridGroups").textContent = "0";
+          return;
+        }
+        $("pillGridGroups").textContent = String(groups.length);
+
+        // Count employees per group
+        const counts = new Map();
+        for (const e of day.employees) {
+          const g = (e.group || "Chung").trim() || "Chung";
+          if ((day.hiddenGroups || []).includes(g)) continue; // respect hidden groups
+          counts.set(g, (counts.get(g) || 0) + 1);
+        }
+
+        tb.innerHTML = groups
+          .map(
+            (g) => `
+              <tr>
+                <td style="font-weight:800">${escapeHtml(g)}</td>
+                <td class="mono">${counts.get(g) || 0}</td>
+                <td>
+                  <div class="cell-actions">
+                    <button class="btn danger small" data-grid-act="delgroup" data-group="${escapeHtml(
+                      g
+                    )}">Xóa</button>
+                  </div>
+                </td>
+              </tr>
+            `
+          )
+          .join("");
+      }
+
+      function deriveGroups(employees, hiddenGroups) {
+        const set = new Set();
+        for (const e of employees || []) {
+          const g = (e.group || "Chung").trim() || "Chung";
+          set.add(g);
+        }
+        let groups = [...set].sort((a, b) => a.localeCompare(b, "vi"));
+        if (Array.isArray(hiddenGroups) && hiddenGroups.length) {
+          groups = groups.filter((g) => !hiddenGroups.includes(g));
+        }
+        return groups;
+      }
+
+      function renderGroupFilter(day) {
+        const sel = $("selGroupFilter");
+        const groups = deriveGroups(day.employees, day.hiddenGroups);
+        const options = [
+          { value: "__ALL__", label: "Tất cả nhóm" },
+          ...groups.map((g) => ({ value: g, label: g })),
+        ];
+        sel.innerHTML = options
+          .map((o) => `<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`)
+          .join("");
+        sel.value = state.ui.groupFilter || "__ALL__";
+      }
+
+      // =========================
+      // Analysis
+      // =========================
+	      function computeAnalysis(day, storeMonthlyTarget, dateIso) {
+	        const d = new Date(dateIso + "T00:00:00");
+	        const yyyy = d.getFullYear();
+	        const mm = d.getMonth() + 1;
+	        const dd = d.getDate();
+	        const dim = daysInMonth(yyyy, mm);
+	        const progress = dim ? dd / dim : 0;
+
+        // Filter employees
+        const group = state.ui.groupFilter || "__ALL__";
+        let employees = day.employees.slice();
+        if (group !== "__ALL__") {
+          employees = employees.filter((e) => (e.group || "Chung") === group);
+        }
+        if (state.ui.excludeZero) {
+          employees = employees.filter((e) => Number(e.revenue || 0) > 0);
+        }
+
+	        const count = employees.length || 0;
+	        const perPersonTarget = count ? storeMonthlyTarget / count : 0;
+	        const expected = perPersonTarget * progress;
+
+	        // Category completion rule (Số NH H.T) - MUST match "Chi tiết bán":
+	        // - Chỉ tính các ngành hàng thi đua ở mục (1) có target > 0
+	        // - Target ngành hàng theo NV = Target_NH / số NV đang lọc
+	        // - % dự kiến ngành hàng = DT_NH / (Target_NH_theo_NV * tiến độ ngày)
+	        // - 1 ngành hàng "hoàn tất" khi % dự kiến >= 100%
+	        const eligibleCategories = (day.categories || []).filter(
+	          (c) => Number(c?.target || 0) > 0
+	        );
+	        const totalCategories = eligibleCategories.length;
+
+	        // Sales detail per employee per category (đã được filter theo mục 1 ở parser)
+	        const sales = day.sales || {};
+
+	        const rows = employees
+	          .map((e) => {
+		            const revenue = Number(e.revenue || 0);
+		            const empSales = sales[e.empId] || {};
+		            let completedCategories = 0;
+		            for (const cat of eligibleCategories) {
+		              const catTarget = Number(cat.target || 0);
+		              const perPersonCatTarget = count ? catTarget / count : 0;
+		              if (!(perPersonCatTarget > 0)) continue;
+		              const catRevenue = Number(empSales[cat.name] || 0);
+		              const denom = perPersonCatTarget * progress;
+		              if (!(denom > 0)) continue;
+		              const pct = (catRevenue / denom) * 100;
+		              if (pct >= 100) completedCategories++;
+		            }
+
+	            const remaining = perPersonTarget - revenue;
+	            const ratioExpected = expected > 0 ? revenue / expected : 0;
+	            const percentExpected = expected > 0 ? ratioExpected * 100 : 0;
+	            const ok = revenue >= expected;
+
+	            return {
+	              e,
+	              revenue,
+	              completedCategories,
+	              perPersonTarget,
+	              remaining,
+	              expected,
+	              ratioExpected,
+	              percentExpected,
+	              ok,
+	            };
+	          })
+	          .sort((a, b) => b.revenue - a.revenue);
+
+	        return {
+	          progress,
+	          perPersonTarget,
+	          expected,
+	          employeesFiltered: count,
+	          totalCategories,
+	          rows,
+	        };
+      }
+
+      function chunkArray(arr, size) {
+        const out = [];
+        for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+        return out;
+      }
+
+      function computeSalesDetail(day, dateIso) {
+        // Reuse current filters (group + exclude zero) to match analysis view
+        const group = state.ui.groupFilter || "__ALL__";
+        let employees = day.employees.slice();
+        if (group !== "__ALL__") {
+          employees = employees.filter((e) => (e.group || "Chung") === group);
+        }
+        if (state.ui.excludeZero) {
+          employees = employees.filter((e) => Number(e.revenue || 0) > 0);
+        }
+
+        const d = new Date(String(dateIso || state.ui.selectedDate) + "T00:00:00");
+        const yyyy = d.getFullYear();
+        const mm = d.getMonth() + 1;
+        const dd = d.getDate();
+        const dim = daysInMonth(yyyy, mm);
+        const progress = dim ? dd / dim : 0;
+
+        const employeeCount = employees.length || 0;
+        const sales = day.sales || {};
+        const categories = (day.categories || []).filter((c) => Number(c?.target || 0) > 0);
+        const totalCategories = categories.length;
+
+        // Per employee completion: completed if projected% >= 100%
+        // projected% = actual / ((catTarget/employeeCount) * progress)
+        const rows = employees
+          .map((e) => {
+            const empSales = sales[e.empId] || {};
+            let completed = 0;
+            for (const cat of categories) {
+              const perPersonTarget = employeeCount ? Number(cat.target || 0) / employeeCount : 0;
+              const denom = perPersonTarget * progress;
+              if (!(denom > 0)) continue;
+              const actual = Number(empSales[cat.name] || 0);
+              const pct = (actual / denom) * 100;
+              if (pct >= 100) completed++;
+            }
+            return {
+              e,
+              revenue: Number(e.revenue || 0),
+              completed,
+            };
+          })
+          // Sort for sales-detail table: SL NH HT (desc) then DTQĐ (desc)
+          .sort((a, b) => {
+            if (b.completed !== a.completed) return b.completed - a.completed;
+            return b.revenue - a.revenue;
+          });
+
+        // Totals per category
+        const totalsByCat = new Map();
+        for (const cat of categories) totalsByCat.set(cat.name, 0);
+        for (const r of rows) {
+          const empSales = sales[r.e.empId] || {};
+          for (const cat of categories) {
+            const v = Number(empSales[cat.name] || 0);
+            if (Number.isFinite(v)) totalsByCat.set(cat.name, (totalsByCat.get(cat.name) || 0) + v);
+          }
+        }
+
+        // Store-level completion across categories: projected% >= 100%
+        // projected% = sumActual / (catTarget * progress)
+        let storeCompleted = 0;
+        for (const cat of categories) {
+          const sumActual = totalsByCat.get(cat.name) || 0;
+          const denom = Number(cat.target || 0) * progress;
+          if (denom > 0 && Number(sumActual) / denom >= 1) storeCompleted++;
+        }
+
+        const totalRevenue = rows.reduce((s, r) => s + (Number(r.revenue) || 0), 0);
+
+        return {
+          rows,
+          categories,
+          employeeCount,
+          totalCategories,
+          totalsByCat,
+          storeCompleted,
+          totalRevenue,
+          progress,
+        };
+      }
+
+      function renderAnalysis(day) {
+	        const store = getActiveStore();
+	        const dateIso = state.ui.selectedDate;
+	        const monthly = Number(store?.monthlyTarget || 0);
+	        const result = computeAnalysis(day, monthly, dateIso);
+
+	        $("txtPerPerson").textContent = formatNumber(result.perPersonTarget, 2);
+	        $("txtProgress").textContent = `${Math.round(result.progress * 100)}%`;
+	        $("analysisNote").innerHTML =
+	          "<b>Số NH H.T</b> = hoàn tất / tổng ngành hàng thi đua (target &gt; 0). " +
+	          "1 ngành hàng hoàn tất khi <b>% dự kiến ngành hàng</b> &ge; 100% (tính theo tiến độ ngày, khớp bảng Chi tiết bán). " +
+	          "• Màu xanh: doanh thu &ge; chuẩn đạt theo tiến độ ngày. Màu đỏ: thấp hơn.";
+
+        const tb = $("tbodyAnalysis");
+        if (!result.rows.length) {
+          tb.innerHTML =
+            '<tr><td colspan="7" class="cell-muted">Chưa có nhân viên sau khi lọc.</td></tr>';
+          $("pillAnalysis").textContent = "Không có dữ liệu";
+          return;
+        }
+
+	        $("pillAnalysis").textContent = `NV: ${result.employeesFiltered}`;
+	        tb.innerHTML = result.rows
+	          .map((r, idx) => {
+              const rank = idx + 1;
+              const rankBadge =
+                rank === 1
+                  ? '<span class="rank-badge gold" title="Hạng 1"><span class="icon">🏆</span>#1</span>'
+                  : rank === 2
+                    ? '<span class="rank-badge silver" title="Hạng 2"><span class="icon">🥈</span>#2</span>'
+                    : rank === 3
+                      ? '<span class="rank-badge bronze" title="Hạng 3"><span class="icon">🥉</span>#3</span>'
+                      : `<span class="mono" style="font-weight:900">#${rank}</span>`;
+
+	            const pct = Number.isFinite(r.percentExpected) ? r.percentExpected : 0;
+	            const width = clamp(pct, 0, 140); // allow >100% but cap visual
+	            const barClass = r.ok ? "bar" : "bar red";
+	            const tagClass = r.ok ? "tag ok" : "tag bad";
+	            const tagText = r.ok ? "Đạt" : "Chưa đạt";
+
+	            return `
+	              <tr>
+	                <td>${rankBadge}</td>
+	                <td>
+	                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+	                    <div>
+	                      <div style="font-weight:900">${escapeHtml(r.e.name)}</div>
+                      <div class="cell-muted mono">${escapeHtml(r.e.empId)} • Nhóm: ${escapeHtml(
+              r.e.group || "Chung"
+            )}</div>
+                    </div>
+                    <span class="${tagClass}">${tagText}</span>
+                  </div>
+	                </td>
+	                <td class="mono" style="font-weight:900">${r.completedCategories}/${result.totalCategories}</td>
+	                <td class="mono" style="font-weight:900">${formatNumber(r.revenue, 2)}</td>
+	                <td class="mono">${formatNumber(r.perPersonTarget, 2)}</td>
+	                <td class="mono">${formatNumber(r.remaining, 2)}</td>
+	                <td>
+	                  <div style="display:flex; align-items:center; gap:10px">
+                    <div class="progress" title="So với expected theo tiến độ ngày">
+                      <div class="${barClass}" style="width:${width}%"></div>
+                    </div>
+	                    <div class="mono" style="min-width:64px; text-align:right; font-weight:900">
+	                      ${formatNumber(pct, 0)}%
+	                    </div>
+	                  </div>
+	                </td>
+	              </tr>
+	            `;
+	          })
+	          .join("");
+	      }
+
+      // =========================
+      // Sync: textarea <-> state
+      // =========================
+      function syncTextareasFromDay(day) {
+        $("taTargets").value = day.targetText || "";
+        $("taEmployees").value = day.employeeText || "";
+        $("taSales").value = day.salesText || "";
+      }
+
+      function renderSalesDetailTables(day) {
+        const box = $("salesDetailTables");
+        const note = $("salesDetailNote");
+        const pill = $("pillSalesDetail");
+
+        const detail = computeSalesDetail(day, state.ui.selectedDate);
+        pill.textContent = `${detail.totalCategories} NH • ${detail.rows.length} NV`;
+
+        if (!detail.employeeCount || !detail.totalCategories) {
+          note.textContent =
+            "Cần có (1) ngành hàng target và (2) nhân viên + (3) chi tiết bán để lên bảng.";
+          box.innerHTML = "";
+          return;
+        }
+
+        note.innerHTML =
+          "Mỗi ô ngành hàng hiển thị: <b>lũy kế / target</b> (target = Target_NH / số NV đang lọc). " +
+          "<b>% dự kiến</b> = lũy kế / (target * tiến độ ngày). Nếu <b>% ≥ 100%</b> thì màu xanh, ngược lại màu hồng đỏ. " +
+          "(Cùng công thức với <b>Số NH H.T</b> ở bảng phân tích).";
+
+        const chunks = chunkArray(detail.categories, 10);
+        const tablesHtml = chunks
+          .map((catsChunk, idxChunk) => {
+            const theadCats = catsChunk
+              .map((c) => `<th style="width:150px"><div class="th-cat">${escapeHtml(c.name)}</div></th>`)
+              .join("");
+
+            const bodyRows = detail.rows
+              .map((r, idx) => {
+                const rank = idx + 1;
+                const rankBadge =
+                  rank === 1
+                    ? '<span class="rank-badge gold" title="Hạng 1"><span class="icon">🏆</span>#1</span>'
+                    : rank === 2
+                      ? '<span class="rank-badge silver" title="Hạng 2"><span class="icon">🥈</span>#2</span>'
+                      : rank === 3
+                        ? '<span class="rank-badge bronze" title="Hạng 3"><span class="icon">🥉</span>#3</span>'
+                        : `<span class="mono" style="font-weight:900">#${rank}</span>`;
+
+                const empSales = (day.sales || {})[r.e.empId] || {};
+                const cells = catsChunk
+                  .map((cat) => {
+                    const actual = Number(empSales[cat.name] || 0);
+                    const perPersonTarget = detail.employeeCount
+                      ? Number(cat.target || 0) / detail.employeeCount
+                      : 0;
+                    const denom = perPersonTarget * detail.progress;
+                    const pct = denom > 0 ? (actual / denom) * 100 : 0;
+                    const good = pct >= 100;
+                    const cls = good ? "cell-cat good" : "cell-cat bad";
+                    return `
+                      <td class="${cls}">
+                        <div class="mono">${formatNumber(actual, 2)} / ${formatNumber(
+                      perPersonTarget,
+                      2
+                    )}</div>
+                        <div class="pct mono">${formatNumber(pct, 0)}%</div>
+                      </td>
+                    `;
+                  })
+                  .join("");
+
+                return `
+                  <tr>
+                    <td>${rankBadge}</td>
+                    <td>
+                      <div style="font-weight:900">${escapeHtml(r.e.name)} - <span class="mono">${escapeHtml(
+                  r.e.empId
+                )}</span></div>
+                    </td>
+                    <td class="mono" style="font-weight:900; color: var(--red)">${formatNumber(
+                      r.revenue,
+                      2
+                    )}</td>
+                    <td class="mono" style="font-weight:900; color: var(--green)">${r.completed}/${detail.totalCategories}</td>
+                    ${cells}
+                  </tr>
+                `;
+              })
+              .join("");
+
+            // Footer totals
+            const footerCells = catsChunk
+              .map((cat) => {
+                const sumActual = Number(detail.totalsByCat.get(cat.name) || 0);
+                const denom = Number(cat.target || 0) * detail.progress;
+                const pct = denom > 0 ? (sumActual / denom) * 100 : 0;
+                const good = pct >= 100;
+                const cls = good ? "cell-cat good" : "cell-cat bad";
+                return `
+                  <td class="${cls}">
+                    <div class="mono">${formatNumber(sumActual, 2)} / ${formatNumber(
+                  Number(cat.target || 0),
+                  2
+                )}</div>
+                    <div class="pct mono">${formatNumber(pct, 0)}%</div>
+                  </td>
+                `;
+              })
+              .join("");
+
+            const footer = `
+              <tr>
+                <td class="mono" style="font-weight:900">Tổng</td>
+                <td class="mono"></td>
+                <td class="mono" style="font-weight:900; color: var(--red)">${formatNumber(
+                  detail.totalRevenue,
+                  2
+                )}</td>
+                <td class="mono" style="font-weight:900; color: var(--green)">${detail.storeCompleted}/${detail.totalCategories}</td>
+                ${footerCells}
+              </tr>
+            `;
+
+            return `
+              <div class="table-scroll">
+                <table class="table" aria-label="Chi tiết bán (bảng ${idxChunk + 1})">
+                  <thead>
+                    <tr>
+                      <th style="width:60px">Hạng</th>
+                      <th style="width:260px">Nhân viên</th>
+                      <th style="width:110px">DTQĐ</th>
+                      <th style="width:110px">SL NH HT</th>
+                      ${theadCats}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${bodyRows}
+                    ${footer}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          })
+          .join("");
+
+        box.innerHTML = tablesHtml;
+      }
+
+      function syncDayFromTextareas(day) {
+        day.targetText = $("taTargets").value || "";
+        day.employeeText = $("taEmployees").value || "";
+        day.salesText = $("taSales").value || "";
+      }
+
+      function rebuildParsed(day) {
+        // Parse targets + employees
+        day.categories = parseTargetsText(day.targetText);
+        day.employees = parseEmployeesText(day.employeeText);
+
+        // Keep hiddenGroups stable, but remove groups that no longer exist in employees
+        if (!Array.isArray(day.hiddenGroups)) day.hiddenGroups = [];
+        const derivedAll = new Set(deriveGroups(day.employees, []));
+        day.hiddenGroups = day.hiddenGroups.filter((g) => derivedAll.has(g));
+
+        // Parse sales detail
+        day.sales = parseSalesText(day.salesText, day.employees, day.categories);
+        day.updatedAt = Date.now();
+      }
+
+      function refreshAll() {
+        const store = getActiveStore();
+        const day = getActiveDayData(true);
+        if (!store || !day) return;
+
+        // Pills / header hints
+        $("pillTargets").textContent = `${(day.targetText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
+        $("pillEmployees").textContent = `${(day.employeeText || "")
+          .split(/\r?\n/)
+          .filter((l) => l.trim()).length} dòng`;
+        $("pillSales").textContent = `${(day.salesText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
+
+        $("pillStore").textContent = store.name || "Chưa chọn";
+        $("pillStore").title = `Store: ${store.name || ""} • Date: ${state.ui.selectedDate}`;
+
+        $("summaryHint").textContent = `Store: ${store.name} • Ngày: ${state.ui.selectedDate}`;
+        $("txtReportStore").textContent = store.name || "—";
+        $("txtReportStoreChip").textContent = store.name || "—";
+
+        // Editable lists
+        renderTargetsList(day);
+        renderEmployeesList(day);
+
+        // Grids
+        renderCatsGrid(day);
+        renderEmpsGrid(day);
+        renderGroupsGrid(day);
+        renderGroupFilter(day);
+
+        // Analysis
+        renderAnalysis(day);
+        renderSalesDetailTables(day);
+
+        // Monthly target UI
+        $("inpStoreMonthlyTarget").value = String(store.monthlyTarget ?? "");
+      }
+
+      // =========================
+      // Store & Day management
+      // =========================
+      function renderStoreSelect() {
+        const sel = $("selStore");
+        const stores = Object.values(state.stores);
+        sel.innerHTML = stores
+          .map(
+            (s) =>
+              `<option value="${escapeHtml(s.key)}">${escapeHtml(s.name)}</option>`
+          )
+          .join("");
+        if (state.ui.selectedStoreKey && state.stores[state.ui.selectedStoreKey]) {
+          sel.value = state.ui.selectedStoreKey;
+        } else if (stores.length) {
+          state.ui.selectedStoreKey = stores[0].key;
+          sel.value = state.ui.selectedStoreKey;
+        }
+      }
+
+      function setActiveDate(dateIso) {
+        state.ui.selectedDate = dateIso;
+        $("inpDate").value = dateIso;
+        const day = getActiveDayData(true);
+        syncTextareasFromDay(day);
+        rebuildParsed(day);
+        refreshAll();
+        saveToLocalStorage();
+      }
+
+      function setActiveStore(storeKey) {
+        state.ui.selectedStoreKey = storeKey;
+        const store = getActiveStore();
+        if (store) $("inpStoreMonthlyTarget").value = String(store.monthlyTarget ?? "");
+        // Ensure day exists for current date
+        const day = getActiveDayData(true);
+        syncTextareasFromDay(day);
+        rebuildParsed(day);
+        refreshAll();
+        saveToLocalStorage();
+      }
+
+      // =========================
+      // UI Actions
+      // =========================
+      const parseAndRenderDebounced = debounce(() => {
+        const day = getActiveDayData(true);
+        if (!day) return;
+        syncDayFromTextareas(day);
+        rebuildParsed(day);
+        refreshAll();
+      }, 250);
+
+      function attachEvents() {
+        // Clock
+        const tick = () => {
+          const d = new Date();
+          $("clock").textContent = d.toLocaleString("vi-VN", {
+            hour12: false,
+            weekday: "short",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        };
+        tick();
+        window.setInterval(tick, 30_000);
+
+        // Textareas: auto-parse to update grids
+        $("taTargets").addEventListener("input", parseAndRenderDebounced);
+        $("taEmployees").addEventListener("input", parseAndRenderDebounced);
+        $("taSales").addEventListener("input", parseAndRenderDebounced);
+
+        // Parse buttons
+        $("btnParseTargets").addEventListener("click", () => {
+          parseAndRenderDebounced();
+        });
+        $("btnParseEmployees").addEventListener("click", () => {
+          parseAndRenderDebounced();
+        });
+        $("btnParseSales").addEventListener("click", () => {
+          parseAndRenderDebounced();
+        });
+
+        // Store select
+        $("selStore").addEventListener("change", (e) => {
+          setActiveStore(e.target.value);
+        });
+
+        // Add/Edit/Delete store
+        $("btnAddStore").addEventListener("click", () => {
+          const name = window.prompt("Tên siêu thị mới?", "New Store");
+          if (!name) return;
+          const key = uid("store");
+          state.stores[key] = { key, name: name.trim(), monthlyTarget: 0, days: {} };
+          renderStoreSelect();
+          setActiveStore(key);
+          saveToLocalStorage();
+        });
+
+        $("btnEditStore").addEventListener("click", () => {
+          const store = getActiveStore();
+          if (!store) return;
+          const name = window.prompt("Sửa tên siêu thị:", store.name);
+          if (!name) return;
+          store.name = name.trim();
+          renderStoreSelect();
+          refreshAll();
+          saveToLocalStorage();
+        });
+
+        $("btnDeleteStore").addEventListener("click", () => {
+          const store = getActiveStore();
+          if (!store) return;
+          if (!window.confirm(`Xóa siêu thị "${store.name}"? (xóa toàn bộ dữ liệu)`)) return;
+          delete state.stores[store.key];
+          renderStoreSelect();
+          const first = Object.values(state.stores)[0];
+          if (first) setActiveStore(first.key);
+          else {
+            ensureSeedStores();
+            renderStoreSelect();
+            setActiveStore(state.ui.selectedStoreKey);
+          }
+          saveToLocalStorage();
+        });
+
+        // Date picker
+        $("inpDate").addEventListener("change", (e) => {
+          const v = e.target.value || todayISO();
+          setActiveDate(v);
+        });
+
+        // Store monthly target
+        $("inpStoreMonthlyTarget").addEventListener(
+          "input",
+          debounce((e) => {
+            const store = getActiveStore();
+            if (!store) return;
+            store.monthlyTarget = Number(e.target.value || 0);
+            refreshAll();
+            saveToLocalStorage();
+          }, 250)
+        );
+
+        // Delete day data
+        $("btnDeleteDay").addEventListener("click", () => {
+          const store = getActiveStore();
+          if (!store) return;
+          const date = state.ui.selectedDate;
+          if (!store.days[date]) {
+            window.alert("Ngày này chưa có dữ liệu để xóa.");
+            return;
+          }
+          if (!window.confirm(`Xóa dữ liệu ngày ${date}?`)) return;
+          delete store.days[date];
+          const day = getActiveDayData(true);
+          syncTextareasFromDay(day);
+          rebuildParsed(day);
+          refreshAll();
+          saveToLocalStorage();
+        });
+
+        // Back
+        $("btnBack").addEventListener("click", () => {
+          try {
+            history.back();
+          } catch {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        });
+
+        // Analyze & save
+        $("btnAnalyzeSave").addEventListener("click", () => {
+          const day = getActiveDayData(true);
+          if (!day) return;
+
+          // Ensure current textarea content is in state before saving
+          syncDayFromTextareas(day);
+          rebuildParsed(day);
+
+          // Save store/monthly target is already bound to input
+          saveToLocalStorage();
+          refreshAll();
+
+          window.scrollTo({ top: $("analysisCard").offsetTop - 90, behavior: "smooth" });
+        });
+
+        async function captureElementPng(el, filename) {
+          try {
+            const canvas = await window.html2canvas(el, {
+              backgroundColor: "#f3f5f7",
+              scale: window.devicePixelRatio || 2,
+              useCORS: true,
+            });
+            const url = canvas.toDataURL("image/png");
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            a.click();
+          } catch (e) {
+            console.error(e);
+            window.alert(
+              "Không lưu được ảnh. Hãy thử lại (hoặc mở file bằng http server)."
+            );
+          }
+        }
+
+        // Export helper — v4: inject override style, clone trực tiếp vào body
+        async function captureElementsForExport(elements, filename, options = {}) {
+          const els = (elements || []).filter(Boolean);
+          if (!els.length) return;
+
+          // --- Style override: dùng <style> tag inject vào clone để phá hết max-width ---
+          const overrideCSS = `
+            .export-root * { box-sizing: border-box !important; }
+            .export-root, .export-root .container,
+            .export-root .card, .export-root .analysis,
+            .export-root section, .export-root article,
+            .export-root .cards-grid, .export-root .input-wrap,
+            .export-root .grids, .export-root .split-tables {
+              max-width: none !important;
+              width: auto !important;
+              display: block !important;
+              grid-template-columns: unset !important;
+              float: none !important;
+              position: relative !important;
+            }
+            .export-root .table-scroll {
+              overflow: visible !important;
+              max-width: none !important;
+              width: auto !important;
+            }
+            .export-root table {
+              min-width: 0 !important;
+              width: 100% !important;
+            }
+            .export-root .report-header {
+              width: 100% !important;
+              max-width: none !important;
+              box-sizing: border-box !important;
+            }
+          `;
+
+          // --- Tạo wrapper ngoài DOM, dùng position:absolute để html2canvas đọc được ---
+          const wrapper = document.createElement("div");
+          wrapper.className = "export-root";
+          wrapper.style.position = "absolute";
+          wrapper.style.left = "0px";
+          wrapper.style.top = (document.body.scrollHeight + 100) + "px";
+          wrapper.style.width = "1400px";   // set cứng 1400px để bảng tự fill vào
+          wrapper.style.padding = "24px";
+          wrapper.style.background = "#f3f5f7";
+          wrapper.style.zIndex = "0";
+
+          // Inject override style vào wrapper
+          const styleTag = document.createElement("style");
+          styleTag.textContent = overrideCSS;
+          wrapper.appendChild(styleTag);
+
+          // Clone từng element vào wrapper
+          for (const el of els) {
+            const c = el.cloneNode(true);
+            c.style.marginBottom = "16px";
+            wrapper.appendChild(c);
+          }
+
+          document.body.appendChild(wrapper);
+
+          // Đợi reflow đủ lâu
+          await new Promise(r => requestAnimationFrame(r));
+          await new Promise(r => requestAnimationFrame(r));
+          await new Promise(r => setTimeout(r, 80));
+
+          const W = wrapper.offsetWidth;    // = 1400px
+          const H = wrapper.scrollHeight;
+
+          try {
+            const canvas = await window.html2canvas(wrapper, {
+              backgroundColor: "#f3f5f7",
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              logging: false,
+              x: 0,
+              y: 0,
+              scrollX: 0,
+              scrollY: 0,
+              width: W,
+              height: H,
+              windowWidth: W,
+              windowHeight: H,
+            });
+            const url = canvas.toDataURL("image/png");
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            a.click();
+          } catch (err) {
+            console.error("html2canvas error:", err);
+            window.alert("Không lưu được ảnh. Thử lại nhé!");
+          } finally {
+            wrapper.remove();
+          }
+        }
+
+        // Capture only the report sections (no grids)
+        $("btnCaptureAnalysis").addEventListener("click", async () => {
+          await captureElementsForExport(
+            [$("reportHeader"), $("analysisCard")],
+            `phan-tich-${state.ui.selectedDate}.png`,
+            { fitWidth: 1200 }
+          );
+        });
+
+        $("btnCaptureSales").addEventListener("click", async () => {
+          // Capture full width so the "Nhân viên" column never gets cut off
+          await captureElementsForExport(
+            [$("reportHeader"), $("salesDetailCard")],
+            `chi-tiet-ban-${state.ui.selectedDate}.png`,
+            { fitWidth: 1200 }
+          );
+        });
+
+        // ── Editable list/grid: KHÔNG re-render khi đang gõ ──────────
+        // Cập nhật data ngay, chỉ refresh analysis (debounce).
+        // List re-render khi blur (rời ô) để tránh mất focus.
+
+        const refreshAnalysisDebounced = debounce(() => {
+          const day = getActiveDayData(true);
+          if (!day) return;
+          renderCatsGrid(day);
+          renderEmpsGrid(day);
+          renderGroupsGrid(day);
+          renderGroupFilter(day);
+          renderAnalysis(day);
+          renderSalesDetailTables(day);
+          saveToLocalStorage();
+        }, 500);
+
+        // INPUT: chỉ cập nhật data + refresh analysis, KHÔNG đụng list DOM
+        document.addEventListener("input", (e) => {
+          const inp = e.target;
+          if (inp.tagName !== "INPUT") return;
+
+          const row = inp.closest(".list-row");
+          if (!row) return;
+
+          const day   = getActiveDayData(true);
+          if (!day) return;
+
+          const type  = row.getAttribute("data-type");
+          const id    = row.getAttribute("data-id");
+          const field = inp.getAttribute("data-field");
+          if (!type || !id || !field) return;
+
+          if (type === "cat") {
+            const c = day.categories.find((x) => x.id === id);
+            if (!c) return;
+            if (field === "name")   c.name   = inp.value;
+            if (field === "target") { const v = parseNumber(inp.value); if (Number.isFinite(v)) c.target = v; }
+          }
+          if (type === "emp") {
+            const emp = day.employees.find((x) => x.id === id);
+            if (!emp) return;
+            if (field === "name")    emp.name    = inp.value;
+            if (field === "empId")   emp.empId   = inp.value.trim();
+            if (field === "revenue") { const v = parseNumber(inp.value); if (Number.isFinite(v)) emp.revenue = v; }
+          }
+
+          // CHỈ refresh analysis — KHÔNG gọi renderTargetsList / renderEmployeesList
+          refreshAnalysisDebounced();
+        });
+
+        // BLUR: khi rời ô mới re-render list để sync lại hiển thị
+        document.addEventListener("blur", (e) => {
+          const inp = e.target;
+          if (inp.tagName !== "INPUT") return;
+          if (!inp.closest(".list-row")) return;
+          const day = getActiveDayData(true);
+          if (!day) return;
+          renderTargetsList(day);
+          renderEmployeesList(day);
+          saveToLocalStorage();
+        }, true); // useCapture=true để bắt blur bubble
+
+                document.addEventListener("click", (e) => {
+          const btn = e.target.closest("button");
+          if (!btn) return;
+          const day = getActiveDayData(true);
+          if (!day) return;
+
+          // list actions
+          const row = btn.closest(".list-row");
+          if (row && row.dataset.type) {
+            const type = row.dataset.type;
+            const id = row.dataset.id;
+            const act = btn.dataset.act;
+            if (!act) return;
+
+          if (type === "cat") {
+              const idx = day.categories.findIndex((c) => c.id === id);
+              if (idx < 0) return;
+              if (act === "del") day.categories.splice(idx, 1);
+              if (act === "up" && idx > 0) {
+                const [x] = day.categories.splice(idx, 1);
+                day.categories.splice(idx - 1, 0, x);
+              }
+              if (act === "down" && idx < day.categories.length - 1) {
+                const [x] = day.categories.splice(idx, 1);
+                day.categories.splice(idx + 1, 0, x);
+              }
+            }
+
+            if (type === "emp") {
+              const idx = day.employees.findIndex((x) => x.id === id);
+              if (idx < 0) return;
+              if (act === "del") day.employees.splice(idx, 1);
+            }
+
+            // Keep hiddenGroups consistent
+            day.hiddenGroups = (day.hiddenGroups || []).filter((g) =>
+              deriveGroups(day.employees, []).includes(g)
+            );
+            refreshAll();
+            return;
+          }
+
+          // grid actions
+          const gridAct = btn.dataset.gridAct;
+          if (gridAct) {
+            if (gridAct === "delcat" || gridAct === "up" || gridAct === "down") {
+              const id = btn.dataset.id;
+              const idx = day.categories.findIndex((c) => c.id === id);
+              if (idx < 0) return;
+              if (gridAct === "delcat") day.categories.splice(idx, 1);
+              if (gridAct === "up" && idx > 0) {
+                const [x] = day.categories.splice(idx, 1);
+                day.categories.splice(idx - 1, 0, x);
+              }
+              if (gridAct === "down" && idx < day.categories.length - 1) {
+                const [x] = day.categories.splice(idx, 1);
+                day.categories.splice(idx + 1, 0, x);
+              }
+              refreshAll();
+              return;
+            }
+
+            if (gridAct === "delemp") {
+              const id = btn.dataset.id;
+              const idx = day.employees.findIndex((x) => x.id === id);
+              if (idx < 0) return;
+              day.employees.splice(idx, 1);
+              day.hiddenGroups = (day.hiddenGroups || []).filter((g) =>
+                deriveGroups(day.employees, []).includes(g)
+              );
+              refreshAll();
+              return;
+            }
+
+            if (gridAct === "delgroup") {
+              const g = btn.dataset.group;
+              if (!g) return;
+              if (!Array.isArray(day.hiddenGroups)) day.hiddenGroups = [];
+              if (!day.hiddenGroups.includes(g)) day.hiddenGroups.push(g);
+              // If currently filtered by that group -> back to all
+              if (state.ui.groupFilter === g) state.ui.groupFilter = "__ALL__";
+              refreshAll();
+              return;
+            }
+          }
+        });
+
+        // Grid inline edits — KHÔNG gọi refreshAll (gây re-render mất focus)
+        // Chỉ cập nhật data, refresh analysis debounced
+        document.addEventListener("input", (e) => {
+            const inp = e.target.closest("input[data-grid]");
+            if (!inp) return;
+            const day = getActiveDayData(true);
+            if (!day) return;
+            const grid  = inp.dataset.grid;
+            const field = inp.dataset.field;
+            const id    = inp.dataset.id;
+
+            if (grid === "cat") {
+              const c = day.categories.find((x) => x.id === id);
+              if (!c) return;
+              if (field === "name") c.name = inp.value;
+              if (field === "target") {
+                const v = parseNumber(inp.value);
+                if (Number.isFinite(v)) c.target = v;
+              }
+            }
+            if (grid === "emp") {
+              const emp = day.employees.find((x) => x.id === id);
+              if (!emp) return;
+              if (field === "revenue") {
+                const v = parseNumber(inp.value);
+                if (Number.isFinite(v)) emp.revenue = v;
+              }
+            }
+            // Chỉ refresh analysis, KHÔNG renderCatsGrid/renderEmpsGrid
+            refreshAnalysisDebounced();
+          }, true);
+
+        // Grid blur: sync lại grid display sau khi rời ô
+        document.addEventListener("blur", (e) => {
+          const inp = e.target.closest("input[data-grid]");
+          if (!inp) return;
+          const day = getActiveDayData(true);
+          if (!day) return;
+          renderCatsGrid(day);
+          renderEmpsGrid(day);
+          saveToLocalStorage();
+        }, true);
+
+        // Group filter controls
+        $("selGroupFilter").addEventListener("change", (e) => {
+          state.ui.groupFilter = e.target.value;
+          refreshAll();
+          saveToLocalStorage();
+        });
+        $("chkExcludeZero").addEventListener("change", (e) => {
+          state.ui.excludeZero = !!e.target.checked;
+          refreshAll();
+          saveToLocalStorage();
+        });
+
+        // Category drag & drop reorder (simple)
+        let dragId = null;
+        $("tbodyCats").addEventListener("dragstart", (e) => {
+          const tr = e.target.closest('tr[data-rowtype="cat"]');
+          if (!tr) return;
+          dragId = tr.dataset.id;
+          e.dataTransfer.effectAllowed = "move";
+        });
+        $("tbodyCats").addEventListener("dragover", (e) => {
+          const tr = e.target.closest('tr[data-rowtype="cat"]');
+          if (!tr) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+        });
+        $("tbodyCats").addEventListener("drop", (e) => {
+          const tr = e.target.closest('tr[data-rowtype="cat"]');
+          if (!tr) return;
+          e.preventDefault();
+          const dropId = tr.dataset.id;
+          if (!dragId || !dropId || dragId === dropId) return;
+          const day = getActiveDayData(true);
+          if (!day) return;
+          const from = day.categories.findIndex((c) => c.id === dragId);
+          const to = day.categories.findIndex((c) => c.id === dropId);
+          if (from < 0 || to < 0) return;
+          const [x] = day.categories.splice(from, 1);
+          day.categories.splice(to, 0, x);
+          dragId = null;
+          refreshAll();
+        });
+      }
+
+      // =========================
+      // Boot
+      // =========================
+      function boot() {
+        loadFromLocalStorage();
+        ensureSeedStores();
+        renderStoreSelect();
+
+        // Set initial date
+        const initDate = state.ui.selectedDate || todayISO();
+        $("inpDate").value = initDate;
+        state.ui.selectedDate = initDate;
+
+        // Set exclude checkbox
+        $("chkExcludeZero").checked = !!state.ui.excludeZero;
+
+        // Load active store/day
+        const storeKey = $("selStore").value || state.ui.selectedStoreKey;
+        setActiveStore(storeKey);
+        setActiveDate(initDate);
+
+        attachEvents();
+      }
+
+      boot();
+
+      // ── MWG AUTH ──
+      (function(){
+        try {
+          var s = JSON.parse(localStorage.getItem('mwg_session') || '{}');
+          var el = document.getElementById('mwg-nav-username');
+          if (el) el.textContent = s.displayName || s.username || '—';
+        } catch(e) {}
+      })();
+      function mwgLogout() {
+        localStorage.removeItem('mwg_session');
+        window.location.href = './index.html';
+      }
+    </script>
+  </body>
+</html>

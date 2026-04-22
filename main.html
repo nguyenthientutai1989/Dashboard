@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BI - BÁO CÁO KINH DOANH MWG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --panel: rgba(17, 24, 39, 0.68);
+      --panel-hover: rgba(31, 41, 55, 0.82);
+      --line: rgba(255, 255, 255, 0.14);
+      --text: #f8fafc;
+      --muted: rgba(226, 232, 240, 0.78);
+      --accent: #f5c518;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100vh;
+      font-family: "Inter", sans-serif;
+      color: var(--text);
+      background-image: url("https://cdn.mwg.vn/mwg-content/images/truso/truso1.jpg");
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      overflow-y: auto;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.48), rgba(0,0,0,0.7));
+      z-index: 1;
+      pointer-events: none;
+    }
+    .content-wrapper {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 620px);
+      margin: 0 auto;
+      padding: 20px 16px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(10,14,24,0.6);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(8px);
+    }
+    .topbar-user { font-size: 0.82rem; color: var(--muted); }
+    .topbar-user strong { color: var(--accent); }
+    .btn-logout {
+      background: rgba(248,113,113,0.18);
+      border: 1px solid rgba(248,113,113,0.3);
+      color: #fca5a5;
+      font-size: 0.78rem;
+      font-family: "Inter", sans-serif;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 160ms;
+    }
+    .btn-logout:hover { background: rgba(248,113,113,0.3); }
+
+    /* Hero */
+    .hero-card {
+      text-align: center;
+      padding: 22px 24px 18px;
+      background: rgba(10,14,24,0.54);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-family: "Roboto Condensed", sans-serif;
+      font-size: clamp(1.9rem, 5vw, 3rem);
+      line-height: 1;
+      letter-spacing: 0.03em;
+    }
+
+    /* Section title */
+    .section-label {
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Menu buttons */
+    .function-list { display: grid; gap: 10px; }
+    .pill-button {
+      display: block;
+      padding: 14px 20px;
+      border-radius: 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      text-decoration: none;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      transition: transform 160ms, background 160ms, border-color 160ms;
+      cursor: pointer;
+    }
+    .pill-button:hover {
+      transform: translateY(-2px);
+      background: var(--panel-hover);
+      border-color: rgba(245,197,24,0.3);
+    }
+    .pill-main {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .pill-sub {
+      display: block;
+      margin-top: 3px;
+      color: rgba(226,232,240,0.65);
+      font-size: 0.78rem;
+    }
+    .pill-accent .pill-main { color: #fff7d1; }
+    .pill-disabled {
+      cursor: default;
+      pointer-events: none;
+      background: rgba(30,41,59,0.56);
+      border-color: rgba(255,255,255,0.07);
+    }
+    .pill-disabled .pill-sub { color: #fbbf24; font-weight: 600; }
+    .pill-admin { border-color: rgba(245,197,24,0.25); }
+    .pill-admin .pill-main { color: var(--accent); }
+
+    /* Admin panel */
+    .admin-panel {
+      background: rgba(10,14,24,0.68);
+      border: 1px solid rgba(245,197,24,0.2);
+      border-radius: 18px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      display: none;
+    }
+    .admin-panel.open { display: block; }
+    .admin-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    /* Create user form */
+    .user-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .fi { display: flex; flex-direction: column; gap: 5px; }
+    .fi label {
+      font-size: 0.73rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+    .fi input {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.07);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-family: "Inter", sans-serif;
+      outline: none;
+      transition: border-color 160ms;
+    }
+    .fi input:focus { border-color: rgba(245,197,24,0.45); }
+    .fi input::placeholder { color: rgba(255,255,255,0.25); }
+    .btn-add {
+      padding: 11px;
+      border-radius: 9px;
+      border: none;
+      background: var(--accent);
+      color: #1a1000;
+      font-size: 0.88rem;
+      font-weight: 700;
+      font-family: "Inter", sans-serif;
+      cursor: pointer;
+      transition: opacity 160ms;
+    }
+    .btn-add:hover { opacity: 0.88; }
+    .form-msg {
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      border-radius: 7px;
+      text-align: center;
+      display: none;
+    }
+    .form-msg.ok { background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.3); color: #6ee7b7; }
+    .form-msg.err { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3); color: #fca5a5; }
+
+    /* User list */
+    .user-list-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .user-table { width: 100%; border-collapse: collapse; }
+    .user-table th {
+      font-size: 0.73rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.45);
+      text-align: left;
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .user-table td {
+      font-size: 0.83rem;
+      padding: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+    .no-users {
+      text-align: center;
+      padding: 14px 0;
+      color: rgba(255,255,255,0.35);
+      font-size: 0.82rem;
+    }
+    .btn-del {
+      background: rgba(248,113,113,0.18);
+      border: 1px solid rgba(248,113,113,0.25);
+      color: #fca5a5;
+      font-size: 0.73rem;
+      font-family: "Inter", sans-serif;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 160ms;
+    }
+    .btn-del:hover { background: rgba(248,113,113,0.3); }
+
+    .footer-note {
+      text-align: center;
+      color: rgba(255,255,255,0.35);
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <main class="content-wrapper">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <span class="topbar-user">Xin chào, <strong id="display-name">...</strong></span>
+      <button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero-card">
+      <p class="eyebrow">MWG Business Intelligence</p>
+      <h1>BI - BÁO CÁO KINH DOANH MWG</h1>
+    </section>
+
+    <p class="section-label">Chọn chức năng</p>
+
+    <!-- Menu -->
+    <div class="function-list">
+      <a class="pill-button pill-accent" href="./dashboard_luy_ke.html">
+        <span class="pill-main">BI Doanh thu lũy kế theo siêu thị</span>
+        <span class="pill-sub">Mở trang BI lũy kế để nhập dữ liệu và tính toán</span>
+      </a>
+      <div class="pill-button pill-disabled">
+        <span class="pill-main">BI Doanh thu theo nhân viên</span>
+        <span class="pill-sub">Đang cập nhật</span>
+      </div>
+      <a class="pill-button" href="./dashboard_sieu_thi.html">
+        <span class="pill-main">BI Doanh thu realtime</span>
+        <span class="pill-sub">Mở dashboard siêu thị realtime để thao tác nhanh</span>
+      </a>
+      <a class="pill-button" href="./dashboard_ban_kem.html">
+        <span class="pill-main">🎧 BI Bán Kèm</span>
+        <span class="pill-sub">Thống kê phụ kiện · đồng hồ · pin sạc · camera · SIM theo nhân viên</span>
+      </a>
+      <a class="pill-button" href="./Suc_khoe_NV.html">
+        <span class="pill-main">💪 Sức khoẻ nhân viên</span>
+        <span class="pill-sub">Phân tích hiệu suất bán hàng · đánh giá theo ngành hàng</span>
+      </a>
+
+      <!-- Admin only button -->
+      <div class="pill-button pill-admin" id="admin-btn" onclick="toggleAdmin()" style="display:none;">
+        <span class="pill-main">⚙ Quản lý tài khoản</span>
+        <span class="pill-sub">Tạo / xoá tài khoản người dùng</span>
+      </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="admin-panel">
+      <p class="admin-title">Quản lý tài khoản người dùng</p>
+
+      <div class="user-form">
+        <div class="form-row">
+          <div class="fi">
+            <label for="new-username">Tên đăng nhập</label>
+            <input type="text" id="new-username" placeholder="VD: 12345">
+          </div>
+          <div class="fi">
+            <label for="new-display">Tên hiển thị</label>
+            <input type="text" id="new-display" placeholder="VD: Nguyễn Văn A">
+          </div>
+        </div>
+        <div class="fi">
+          <label for="new-pass">Mật khẩu</label>
+          <input type="text" id="new-pass" placeholder="Nhập mật khẩu cho tài khoản này">
+        </div>
+        <button class="btn-add" onclick="addUser()">Tạo tài khoản</button>
+        <div class="form-msg" id="form-msg"></div>
+      </div>
+
+      <p class="user-list-title">Danh sách tài khoản đã cấp</p>
+      <div id="user-list-container"></div>
+    </div>
+
+    <p class="footer-note">Trang chủ điều hướng BI local</p>
+  </main>
+
+  <script>
+    // ─── CONFIG ────────────────────────────────────────────
+    const API_URL = "https://script.google.com/macros/s/AKfycbyqrqGQlBBUBwWHK-lIn_L701DDADeYoyJqbs9wFT-kta_-K5mu78qS3n6GYFso0UtS/exec";
+    let session = null;
+
+    // ─── INIT ──────────────────────────────────────────────
+    function init() {
+      const raw = localStorage.getItem("mwg_session");
+      if (!raw) { window.location.href = "./index.html"; return; }
+      try { session = JSON.parse(raw); } catch { window.location.href = "./index.html"; return; }
+      document.getElementById("display-name").textContent = session.displayName || session.username;
+      // role "AD" = admin (từ API), "admin" = legacy
+      if (session.role === "AD" || session.role === "admin") {
+        document.getElementById("admin-btn").style.display = "block";
+        loadUserList();
+      }
+    }
+
+    // ─── LOGOUT ────────────────────────────────────────────
+    function doLogout() {
+      localStorage.removeItem("mwg_session");
+      window.location.href = "./index.html";
+    }
+
+    function toggleAdmin() {
+      document.getElementById("admin-panel").classList.toggle("open");
+    }
+
+    // ─── ADD USER → gọi API register ───────────────────────
+    async function addUser() {
+      const uEl = document.getElementById("new-username");
+      const pEl = document.getElementById("new-pass");
+      const dEl = document.getElementById("new-display");
+      const btnEl = document.querySelector(".btn-add");
+      const u = uEl.value.trim();
+      const p = pEl.value.trim();
+      const d = dEl.value.trim();
+
+      if (!u || !p) { showMsg("Vui lòng nhập đủ tên đăng nhập và mật khẩu.", "err"); return; }
+
+      // Disable nút khi đang gọi API
+      btnEl.disabled = true;
+      btnEl.textContent = "Đang tạo...";
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newUser: u, newPass: p, displayName: d || u })
+        });
+        const data = await res.json();
+
+        if (data.status === "success") {
+          uEl.value = ""; pEl.value = ""; dEl.value = "";
+          showMsg("✓ Tạo tài khoản thành công!", "ok");
+          loadUserList(); // reload danh sách từ API
+        } else if (data.status === "duplicate") {
+          showMsg("Tên đăng nhập này đã tồn tại.", "err");
+        } else {
+          showMsg(data.message || "Tạo tài khoản thất bại.", "err");
+        }
+      } catch (err) {
+        showMsg("Lỗi kết nối máy chủ.", "err");
+        console.error("Register error:", err);
+      } finally {
+        btnEl.disabled = false;
+        btnEl.textContent = "Tạo tài khoản";
+      }
+    }
+
+    // ─── DELETE USER → gọi API delete ──────────────────────
+    async function deleteUser(username) {
+      if (!confirm(`Xoá tài khoản "${username}"?`)) return;
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "delete", targetUser: username })
+        });
+        const data = await res.json();
+        if (data.status === "success") {
+          showMsg("Đã xoá tài khoản.", "ok");
+          loadUserList();
+        } else {
+          showMsg(data.message || "Không xoá được.", "err");
+        }
+      } catch (err) {
+        showMsg("Lỗi kết nối máy chủ.", "err");
+        console.error("Delete error:", err);
+      }
+    }
+
+    // ─── LOAD USER LIST từ API ──────────────────────────────
+    async function loadUserList() {
+      const c = document.getElementById("user-list-container");
+      c.innerHTML = '<p class="no-users" style="color:rgba(255,255,255,0.4);">Đang tải...</p>';
+      try {
+        const res = await fetch(`${API_URL}?action=list`);
+        const data = await res.json();
+        if (data.status === "success" && Array.isArray(data.users)) {
+          renderUserList(data.users);
+        } else {
+          c.innerHTML = '<p class="no-users">Không tải được danh sách.</p>';
+        }
+      } catch (err) {
+        c.innerHTML = '<p class="no-users">Lỗi kết nối.</p>';
+        console.error("Load users error:", err);
+      }
+    }
+
+    function renderUserList(users) {
+      const c = document.getElementById("user-list-container");
+      if (!users.length) {
+        c.innerHTML = '<p class="no-users">Chưa có tài khoản nào được tạo.</p>';
+        return;
+      }
+      let html = '<table class="user-table"><thead><tr><th>Tên đăng nhập</th><th>Tên hiển thị</th><th>Vai trò</th><th></th></tr></thead><tbody>';
+      users.forEach(u => {
+        const roleBadge = u.role === "AD"
+          ? '<span style="background:rgba(245,197,24,.2);color:#f5c518;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;">Admin</span>'
+          : '<span style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);padding:2px 8px;border-radius:5px;font-size:11px;">User</span>';
+        html += `<tr>
+          <td>${esc(u.username)}</td>
+          <td>${esc(u.displayName || "—")}</td>
+          <td>${roleBadge}</td>
+          <td><button class="btn-del" onclick="deleteUser('${esc(u.username)}')">Xoá</button></td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      c.innerHTML = html;
+    }
+
+    function showMsg(text, type) {
+      const el = document.getElementById("form-msg");
+      el.textContent = text;
+      el.className = "form-msg " + type;
+      el.style.display = "block";
+      setTimeout(() => { el.style.display = "none"; }, 3500);
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    }
+
+    init();
+  </script>
+</body>
+</html>
