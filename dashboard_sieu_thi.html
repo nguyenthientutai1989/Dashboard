@@ -179,6 +179,30 @@ textarea:focus{outline:none;border-color:#0066cc;}
 .footer{text-align:center;margin-top:7px;font-size:10px;color:#999;padding-bottom:2px;}
 .footer b{color:#e84a5f;font-weight:700;}
 .empty{color:#aaa;font-size:12px;text-align:center;padding:24px;background:#fff;border-radius:8px;}
+
+/* ── BẢNG ICT + BÁN KÈM ── */
+.ict-wrap{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;margin-top:0;}
+.ict-box{background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e0e0e0;box-shadow:0 2px 8px rgba(0,0,0,0.07);}
+.ict-title{font-size:10px;font-weight:800;letter-spacing:.5px;text-align:center;padding:6px 8px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:5px;}
+.ict-title.ict{background:linear-gradient(90deg,#1565c0,#1976d2);color:#fff;}
+.ict-title.bk{background:linear-gradient(90deg,#e53935,#f4511e);color:#fff;}
+.ict-table{width:100%;border-collapse:collapse;}
+.ict-table th{font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;padding:4px 8px;text-align:left;}
+.ict-table th.r{text-align:right;}
+.ict-table thead tr.ict-head-ict{background:#1565c0;}
+.ict-table thead tr.ict-head-bk{background:#e53935;}
+.ict-table td{font-size:10.5px;padding:5px 8px;border-bottom:1px solid #f0f0f0;color:#333;}
+.ict-table td.r{text-align:right;}
+.ict-table td.num{font-weight:800;color:#1565c0;text-align:right;}
+.ict-table td.num-bk{font-weight:800;color:#e53935;text-align:right;}
+.ict-table td.pct{font-weight:800;text-align:right;font-size:12px;}
+.ict-table tr:last-child td{border-bottom:none;}
+.ict-table tbody tr:nth-child(odd){background:#fafafa;}
+.ict-table tbody tr:nth-child(even){background:#fff;}
+.ict-note{font-size:9px;color:#e53935;text-align:center;padding:4px 6px;font-style:italic;background:#fff8f8;border-top:1px solid #ffe0e0;}
+.pct-hi{color:#2e7d32;}
+.pct-mid{color:#f57c00;}
+.pct-lo{color:#c62828;}
 </style>
 </head>
 <body>
@@ -352,6 +376,119 @@ function makeRow(g){
   </div>`;
 }
 
+const ICT_MAP = [
+  { label:'Điện Thoại', keys:['smartphone','điện thoại di động','điện thoai','nnh điện thoại mới','điện thoại mới'] },
+  { label:'Tablet',     keys:['tablet','nnh tablet'] },
+  { label:'Laptop',     keys:['laptop','nnh laptop'] },
+  { label:'Máy Cũ',     keys:['máy cũ','nnh máy cũ'] },
+  { label:'Đồng Hồ',   keys:['đồng hồ','nnh đồng hồ'] },
+  { label:'Wearable',   keys:['wearable','nnh wearable'] },
+];
+
+const BK_MAP = [
+  { label:'Pin sạc DP',  keys:['pin sạc dự phòng'] },
+  { label:'Cáp, Sạc',   keys:['cáp','sạc/ adapter','bộ sạc'] },
+  { label:'Tai Nghe',    keys:['tai nghe bluetooth','tai nghe dây','tai nghe'] },
+  { label:'Camera',      keys:['camera ip'] },
+  { label:'Sim',         keys:['nnh sim','sim số'] },
+];
+
+function extractICTandBK(raw){
+  const lines = raw.trim().split('\n');
+  const rowData = [];
+  for(const line of lines){
+    const c = line.split('\t');
+    if(!c[0]||!c[0].trim()) continue;
+    const name = c[0].trim();
+    if(name.toLowerCase()==='tổng'||c[0].toLowerCase().startsWith('nhóm')) continue;
+    rowData.push({
+      name: name.toLowerCase(),
+      raw:  name,
+      sl:   parseFloat(c[1])||0,
+      dt:   parseFloat(c[2])||0,
+      tgt:  parseFloat(c[3])||0,
+    });
+  }
+
+  const ictRows = ICT_MAP.map(cat=>{
+    let sl=0, dt=0, tgt=0;
+    for(const row of rowData){
+      if(cat.keys.some(k=>row.name.includes(k))){ sl+=row.sl; dt+=row.dt; tgt+=row.tgt; }
+    }
+    return {label:cat.label, sl, dt, tgt};
+  }).filter(r=>r.sl>0||r.tgt>0);
+
+  const ICT_BASE = ['Điện Thoại','Tablet','Laptop'];
+  const totICT = ictRows.filter(r=>ICT_BASE.includes(r.label)).reduce((s,r)=>s+r.sl,0);
+
+  const bkRows = BK_MAP.map(cat=>{
+    let sl=0;
+    for(const row of rowData){
+      if(cat.keys.some(k=>row.name.includes(k))) sl+=row.sl;
+    }
+    const pct = totICT>0 ? Math.round(sl/totICT*100) : null;
+    return {label:cat.label, sl, pct};
+  }).filter(r=>r.sl>0);
+
+  return {ictRows, bkRows, totICT};
+}
+
+function pctColor(p){
+  if(p===null||isNaN(p)) return '';
+  if(p>=50) return 'pct-hi';
+  if(p>=30) return 'pct-mid';
+  return 'pct-lo';
+}
+
+function buildICTTable(ictRows, totICT){
+  if(!ictRows.length) return '';
+  const rows = ictRows.map(r=>`
+    <tr>
+      <td><b>${r.label}</b></td>
+      <td class="num">${r.sl}</td>
+      <td class="num">${r.dt.toFixed(2)}</td>
+    </tr>`).join('');
+  return `
+    <div class="ict-box">
+      <div class="ict-title ict">📱 Ngành Hàng ICT</div>
+      <table class="ict-table">
+        <thead><tr class="ict-head-ict">
+          <th>Nhóm Hàng</th>
+          <th class="r">Số Lượng</th>
+          <th class="r">Doanh Thu</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${totICT>0?`<div class="ict-note">Tổng ICT (ĐT+Tablet+Laptop): <b style="color:#1565c0">${totICT}</b> máy</div>`:''}
+    </div>`;
+}
+
+function buildBKTable(bkRows, totICT){
+  if(!bkRows.length) return '';
+  const rows = bkRows.map(r=>{
+    const cls=pctColor(r.pct);
+    return `
+    <tr>
+      <td><b>${r.label}</b></td>
+      <td class="num-bk">${r.sl}</td>
+      <td class="pct ${cls}">${r.pct!==null?r.pct+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="ict-box">
+      <div class="ict-title bk">🎧 Bán Kèm</div>
+      <table class="ict-table">
+        <thead><tr class="ict-head-bk">
+          <th>Bán Kèm</th>
+          <th class="r">Số Lượng</th>
+          <th class="r">% KT/ICT</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="ict-note">Đo lường trên Điện Thoại, Tablet, Laptop</div>
+    </div>`;
+}
+
 function build(){
   const raw1=document.getElementById('d1').value.trim();
   const raw2=document.getElementById('d2').value.trim();
@@ -365,6 +502,14 @@ function build(){
   const now=new Date();
   const timeStr=now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
   const dateStr=now.toLocaleDateString('vi-VN');
+
+  // Trích ICT + Bán Kèm từ Vùng 1
+  const ex = raw1 ? extractICTandBK(raw1) : {ictRows:[],bkRows:[],totICT:0};
+  const ictHtml = buildICTTable(ex.ictRows, ex.totICT);
+  const bkHtml  = buildBKTable(ex.bkRows, ex.totICT);
+  const ictWrap = (ictHtml||bkHtml)
+    ? `<div class="ict-wrap">${ictHtml||'<div></div>'}${bkHtml||'<div></div>'}</div>`
+    : '';
 
   document.getElementById('db').innerHTML=`
     <div class="top-cards">
@@ -386,6 +531,7 @@ function build(){
         <div class="tc-val">${nhomDat}/${items.length}</div>
       </div>
     </div>
+    ${ictWrap}
     ${items.length>0
       ?`<div class="grid2">
           <div class="gcol">${leftItems.map(makeRow).join('')}</div>
