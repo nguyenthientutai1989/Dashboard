@@ -712,7 +712,15 @@ async function exportDashboardAsImage() {
       backgroundColor: "#eef3f7",
       scale: 2,
       useCORS: true,
+      allowTaint: true,   // cho phép canvas bị taint (tránh crash do Google Fonts)
       logging: false,
+      onclone: function(clonedDoc) {
+        // Swap Google Fonts → system font trong bản clone trước khi chụp
+        // Tránh lỗi taint khi chạy file:// hoặc khi font chưa load xong
+        const style = clonedDoc.createElement("style");
+        style.textContent = "* { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif !important; }";
+        clonedDoc.head.appendChild(style);
+      }
     });
 
     const link = document.createElement("a");
@@ -723,7 +731,9 @@ async function exportDashboardAsImage() {
 
     setStatus(`Đã tạo ảnh dashboard cho ngày ${fileDate}.`);
   } catch (error) {
-    setStatus("Không thể tạo ảnh dashboard. Hãy thử lại sau khi phân tích dữ liệu.", true);
+    // Log lỗi thực để dễ debug
+    console.error("Export error:", error);
+    setStatus("Không thể tạo ảnh: " + (error && error.message ? error.message : String(error)), true);
   } finally {
     exportButton.disabled = false;
   }

@@ -320,7 +320,8 @@ function parseV1(raw){
     if(c[0].trim().toLowerCase()==='tổng'&&c.length>=5){
       totalDT  = parseFloat(c[2])||0;
       totalTgt = parseFloat(c[3])||0;
-      totalPct = parseFloat((c[4]||'0').replace('%','').replace(',','.'))||0;
+      // Tính lại % HT từ DT thực / Target thay vì đọc cột (tránh sai khi target thay đổi)
+      totalPct = totalTgt>0 ? Math.round(totalDT/totalTgt*100) : 0;
       tgPct    = parseFloat((c[6]||'0').replace('%','').replace(',','.'))||0;
       break;
     }
@@ -395,35 +396,53 @@ const BK_MAP = [
 
 function extractICTandBK(raw){
   const lines = raw.trim().split('\n');
-  const rowData = [];
+
+  // rowICT: CHỈ dòng NNH (dòng cha) — tránh cộng đôi với dòng con
+  const rowICT = [];
+  // rowBK: TẤT CẢ dòng (kể cả dòng con) — để bắt được pin sạc, tai nghe, sim...
+  const rowBK  = [];
+
   for(const line of lines){
     const c = line.split('\t');
     if(!c[0]||!c[0].trim()) continue;
-    const name = c[0].trim();
-    if(name.toLowerCase()==='tổng'||c[0].toLowerCase().startsWith('nhóm')) continue;
-    rowData.push({
-      name: name.toLowerCase(),
-      raw:  name,
+    const name    = c[0].trim();
+    const nameLow = name.toLowerCase();
+    if(nameLow==='tổng') continue;
+    if(nameLow.startsWith('nhóm ngành')) continue;
+
+    const row = {
+      name: nameLow,
       sl:   parseFloat(c[1])||0,
       dt:   parseFloat(c[2])||0,
       tgt:  parseFloat(c[3])||0,
-    });
+    };
+
+    // ICT: chỉ dòng NNH để tránh double count
+    if(nameLow.startsWith('nnh ') || nameLow==='n/a'){
+      rowICT.push(row);
+    }
+
+    // BK: tất cả dòng (kể cả dòng con như "Pin sạc dự phòng", "Tai Nghe Bluetooth"...)
+    rowBK.push(row);
   }
 
+  // Tính ICT từ rowICT
   const ictRows = ICT_MAP.map(cat=>{
     let sl=0, dt=0, tgt=0;
-    for(const row of rowData){
+    for(const row of rowICT){
       if(cat.keys.some(k=>row.name.includes(k))){ sl+=row.sl; dt+=row.dt; tgt+=row.tgt; }
     }
-    return {label:cat.label, sl, dt, tgt};
+    const pct = tgt>0 ? Math.round(dt/tgt*100) : 0;
+    return {label:cat.label, sl, dt, tgt, pct};
   }).filter(r=>r.sl>0||r.tgt>0);
 
   const ICT_BASE = ['Điện Thoại','Tablet','Laptop'];
   const totICT = ictRows.filter(r=>ICT_BASE.includes(r.label)).reduce((s,r)=>s+r.sl,0);
 
+  // Tính BK từ rowBK (đọc cả dòng con)
   const bkRows = BK_MAP.map(cat=>{
     let sl=0;
-    for(const row of rowData){
+    for(const row of rowBK){
       if(cat.keys.some(k=>row.name.includes(k))) sl+=row.sl;
     }
     const pct = totICT>0 ? Math.round(sl/totICT*100) : null;
@@ -442,20 +461,26 @@ function pctColor(p){
 
 function buildICTTable(ictRows, totICT){
   if(!ictRows.length) return '';
-  const rows = ictRows.map(r=>`
-    <tr>
+  const rows = ictRows.map(r=>{
+    const pctCol = r.tgt>0
+      ? `<td class="pct ${r.pct>=100?'pct-hi':r.pct>=70?'pct-mid':'pct-lo'}">${r.pct}%</td>`
+      : `<td class="pct">—</td>`;
+    return `<tr>
       <td><b>${r.label}</b></td>
       <td class="num">${r.sl}</td>
-      <td class="num">${r.dt.toFixed(2)}</td>
-    </tr>`).join('');
+      <td class="num">${r.dt.toFixed(1)}</td>
+      ${pctCol}
+    </tr>`;
+  }).join('');
   return `
     <div class="ict-box">
       <div class="ict-title ict">📱 Ngành Hàng ICT</div>
       <table class="ict-table">
         <thead><tr class="ict-head-ict">
           <th>Nhóm Hàng</th>
-          <th class="r">Số Lượng</th>
+          <th class="r">SL</th>
           <th class="r">Doanh Thu</th>
+          <th class="r">% HT</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
