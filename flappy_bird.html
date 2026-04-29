@@ -30,9 +30,54 @@ canvas{
 .stat-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:2px;}
 .stat-val{font-size:22px;font-weight:700;color:#fff;}
 #ui-best .stat-val{color:#f5c518;}
+
+:root{--nav-h:50px;}
+.mwg-nav{
+  position:fixed;top:0;left:0;right:0;height:var(--nav-h);
+  background:rgba(10,14,24,0.95);border-bottom:1px solid rgba(255,255,255,.1);
+  backdrop-filter:blur(14px);z-index:9999;
+  display:flex;align-items:center;padding:0 16px;gap:8px;
+  font-family:sans-serif;
+}
+.nav-brand{display:flex;align-items:center;gap:8px;text-decoration:none;margin-right:auto;}
+.nav-badge{background:#f5c518;color:#111;font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:5px;}
+.nav-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.8);}
+.nav-chip{font-size:10px;color:rgba(255,255,255,.4);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);padding:3px 10px;border-radius:20px;}
+.nav-user{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.5);margin-right:8px;}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.5);}
+.nav-user strong{color:#f5c518;}
+.nav-btn{display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:600;font-family:sans-serif;cursor:pointer;border:1px solid transparent;text-decoration:none;transition:all 140ms;white-space:nowrap;}
+.btn-home{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.8);}
+.btn-home:hover{background:rgba(255,255,255,.13);color:#fff;}
+.btn-logout{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#fca5a5;}
+.btn-logout:hover{background:rgba(239,68,68,.2);}
+@media(max-width:480px){.nav-name,.nav-chip,.nav-user{display:none;}.nav-btn{padding:5px 9px;}}
 </style>
 </head>
 <body>
+
+<!-- AUTH GUARD -->
+<script>
+(function(){
+  var s=localStorage.getItem('mwg_session');
+  if(!s){window.location.replace('./index.html');}
+})();
+</script>
+
+<!-- NAVBAR -->
+<nav class="mwg-nav">
+  <a class="nav-brand" href="./main.html">
+    <span class="nav-badge">MWG</span>
+    <span class="nav-name">Business Intelligence</span>
+  </a>
+  <span class="nav-chip">🐦 Flappy Bird</span>
+  <div class="nav-user">
+    <span class="nav-dot"></span>
+    Xin chào, <strong id="nav-user-nm">—</strong>
+  </div>
+  <a class="nav-btn btn-home" href="./main.html">⌂ Trang chủ</a>
+  <button class="nav-btn btn-logout" onclick="mwgLogout()">↩ Đăng xuất</button>
+</nav>
 
 <canvas id="game" width="360" height="560"></canvas>
 <div id="ui">
@@ -479,6 +524,19 @@ function loop(){
 }
 
 loop();
+
+// MWG Auth
+(function(){
+  try{
+    var s=JSON.parse(localStorage.getItem('mwg_session')||'{}');
+    var el=document.getElementById('nav-user-nm');
+    if(el) el.textContent=s.displayName||s.username||'—';
+  }catch(e){}
+})();
+function mwgLogout(){
+  localStorage.removeItem('mwg_session');
+  window.location.href='./index.html';
+}
 </script>
 </body>
 </html>
