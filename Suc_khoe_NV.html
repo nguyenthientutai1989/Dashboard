@@ -2308,16 +2308,57 @@
         day.updatedAt = Date.now();
       }
 
+      // ── FOCUS SAVE / RESTORE ──────────────────────────────────────
+      function saveFocus() {
+        const el = document.activeElement;
+        if (!el || el.tagName !== "INPUT") return null;
+        // Xác định container chứa input (list-row hoặc data-grid)
+        const listRow = el.closest("[data-type][data-id]");
+        return {
+          dataId:    el.dataset.id    || (listRow && listRow.dataset.id)    || null,
+          dataField: el.dataset.field || el.dataset.field                   || null,
+          dataGrid:  el.dataset.grid  || null,
+          dataType:  (listRow && listRow.dataset.type) || null,
+          selStart:  el.selectionStart,
+          selEnd:    el.selectionEnd,
+          value:     el.value,
+        };
+      }
+
+      function restoreFocus(saved) {
+        if (!saved || !saved.dataField) return;
+        let inp = null;
+        if (saved.dataGrid && saved.dataId) {
+          // Grid input: [data-grid][data-field][data-id]
+          inp = document.querySelector(
+            `input[data-grid="${saved.dataGrid}"][data-field="${saved.dataField}"][data-id="${saved.dataId}"]`
+          );
+        } else if (saved.dataType && saved.dataId) {
+          // List-row input
+          const row = document.querySelector(
+            `[data-type="${saved.dataType}"][data-id="${saved.dataId}"]`
+          );
+          if (row) inp = row.querySelector(`input[data-field="${saved.dataField}"]`);
+        }
+        if (!inp) return;
+        // Khôi phục giá trị nếu bị reset về rỗng sau render
+        if (inp.value === "" && saved.value !== "") inp.value = saved.value;
+        inp.focus();
+        try { inp.setSelectionRange(saved.selStart, saved.selEnd); } catch(_) {}
+      }
+
+      // safeRender: lưu focus → chạy callback render → restore focus
+      function safeRender(fn) {
+        const saved = saveFocus();
+        fn();
+        if (saved) restoreFocus(saved);
+      }
+      // ─────────────────────────────────────────────────────────────
+
       function refreshAll() {
         const store = getActiveStore();
         const day = getActiveDayData(true);
         if (!store || !day) return;
-
-        // Skip re-render list/grid nếu user đang focus vào input trong đó
-        const af = document.activeElement;
-        const editingInPlace = af && af.tagName === "INPUT" && (
-          af.closest(".list-row") || af.dataset.grid
-        );
 
         $("pillTargets").textContent = `${(day.targetText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
         $("pillEmployees").textContent = `${(day.employeeText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
@@ -2329,12 +2370,13 @@
         $("txtReportStore").textContent = store.name || "—";
         $("txtReportStoreChip").textContent = store.name || "—";
 
-        if (!editingInPlace) {
+        // Dùng safeRender để render list/grid mà không làm mất focus
+        safeRender(() => {
           renderTargetsList(day);
           renderEmployeesList(day);
           renderCatsGrid(day);
           renderEmpsGrid(day);
-        }
+        });
 
         renderGroupsGrid(day);
         renderGroupFilter(day);
@@ -2683,17 +2725,7 @@
         // Cập nhật data ngay, chỉ refresh analysis (debounce).
         // List re-render khi blur (rời ô) để tránh mất focus.
 
-        const refreshAnalysisDebounced = debounce(() => {
-          const day = getActiveDayData(true);
-          if (!day) return;
-          renderCatsGrid(day);
-          renderEmpsGrid(day);
-          renderGroupsGrid(day);
-          renderGroupFilter(day);
-          renderAnalysis(day);
-          renderSalesDetailTables(day);
-          saveToLocalStorage();
-        }, 500);
+        // refreshAnalysisDebounced removed — dùng refreshAll + safeRender thay thế
 
         // INPUT: chỉ cập nhật data + refresh analysis, KHÔNG đụng list DOM
         document.addEventListener("input", (e) => {
@@ -2725,21 +2757,10 @@
             if (field === "revenue") { const v = parseNumber(inp.value); if (Number.isFinite(v)) emp.revenue = v; }
           }
 
-          // CHỈ refresh analysis — KHÔNG gọi renderTargetsList / renderEmployeesList
-          refreshAnalysisDebounced();
-        });
-
-        // BLUR: khi rời ô mới re-render list để sync lại hiển thị
-        document.addEventListener("blur", (e) => {
-          const inp = e.target;
-          if (inp.tagName !== "INPUT") return;
-          if (!inp.closest(".list-row")) return;
-          const day = getActiveDayData(true);
-          if (!day) return;
-          renderTargetsList(day);
-          renderEmployeesList(day);
+          // Dùng safeRender để refreshAll không làm mất focus
+          refreshAll();
           saveToLocalStorage();
-        }, true); // useCapture=true để bắt blur bubble
+        });
 
                 document.addEventListener("click", (e) => {
           const btn = e.target.closest("button");
@@ -2856,20 +2877,10 @@
                 if (Number.isFinite(v)) emp.revenue = v;
               }
             }
-            // Chỉ refresh analysis, KHÔNG renderCatsGrid/renderEmpsGrid
-            refreshAnalysisDebounced();
+            // Dùng safeRender thông qua refreshAll
+            refreshAll();
+            saveToLocalStorage();
           }, true);
-
-        // Grid blur: sync lại grid display sau khi rời ô
-        document.addEventListener("blur", (e) => {
-          const inp = e.target.closest("input[data-grid]");
-          if (!inp) return;
-          const day = getActiveDayData(true);
-          if (!day) return;
-          renderCatsGrid(day);
-          renderEmpsGrid(day);
-          saveToLocalStorage();
-        }, true);
 
         // Group filter controls
         $("selGroupFilter").addEventListener("change", (e) => {
