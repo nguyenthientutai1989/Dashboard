@@ -408,7 +408,7 @@
 
       .grids {
         display: grid;
-        grid-template-columns: 1fr 1fr 0.8fr;
+        grid-template-columns: 1fr 1fr;
         gap: 16px;
       }
 
@@ -416,6 +416,21 @@
         .grids {
           grid-template-columns: 1fr;
         }
+      }
+
+      /* Ẩn Grid nhóm thi đua (giữ code nhưng không hiển thị) */
+      #cardGridGroups {
+        display: none;
+      }
+
+      /* Tăng chiều cao hiển thị cho 2 grid chính */
+      #cardGridCats .card-body {
+        max-height: clamp(560px, 78vh, 980px);
+        overflow-y: auto;
+      }
+      #cardGridEmps .card-body {
+        max-height: clamp(520px, 72vh, 900px);
+        overflow-y: auto;
       }
 
 	      .table {
@@ -427,6 +442,48 @@
 	        border: 1px solid rgba(17, 24, 39, 0.12);
 	        min-width: 760px; /* enable horizontal scroll when content is long */
 	      }
+
+      /* Grid cats/emps: không ép min-width lớn để tránh tạo scrollbar ngang */
+      .table.table-cats,
+      .table.table-emps {
+        min-width: 0;
+      }
+
+      /* Input trong bảng: giống style list-row */
+      .table .mini {
+        width: 100%;
+        border: 1px solid rgba(17, 24, 39, 0.12);
+        border-radius: 12px;
+        padding: 8px 10px;
+        font: inherit;
+        background: white;
+        outline: none;
+        min-width: 0;
+      }
+      .table .mini:focus {
+        border-color: rgba(37, 99, 235, 0.45);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+
+      /* Thu gọn cột tên + cho xuống dòng để không kéo dài thanh cuộn */
+      .table.table-cats thead th:nth-child(2),
+      .table.table-cats tbody td:nth-child(2) {
+        width: 260px;
+        max-width: 260px;
+        white-space: normal !important;
+        word-break: break-word;
+      }
+      .table.table-emps thead th:nth-child(2),
+      .table.table-emps tbody td:nth-child(2) {
+        width: 280px;
+        max-width: 280px;
+        white-space: normal !important;
+        word-break: break-word;
+      }
+
+      .table.table-emps tbody td:nth-child(2) .cell-muted {
+        white-space: normal !important;
+      }
 
       .table thead th {
         background: linear-gradient(180deg, rgba(249, 115, 22, 0.9), var(--orange));
@@ -451,6 +508,36 @@
       .table thead th,
       .table tbody td {
         white-space: nowrap;
+      }
+
+      /* Grid ngành hàng: target cell hiển thị gọn theo chiều dọc (không kéo ngang phải cuộn) */
+      .cat-target-col,
+      .cat-target-cell {
+        white-space: normal !important;
+      }
+      .cat-target {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+        min-width: 0;
+      }
+      .cat-target-row {
+        display: grid;
+        grid-template-columns: 58px minmax(0, 1fr);
+        gap: 8px;
+        align-items: center;
+      }
+      .cat-target-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.25px;
+      }
+      .cat-target-meta {
+        font-size: 12px;
+        color: var(--slate);
+        font-weight: 800;
       }
 
       .th-cat {
@@ -1050,19 +1137,19 @@
 
         <div class="grids">
           <!-- Grid ngành hàng -->
-          <article class="card">
+          <article class="card" id="cardGridCats">
             <div class="card-header">
               <h3>Grid ngành hàng</h3>
               <span class="pill" id="pillGridCats">0</span>
             </div>
             <div class="card-body" style="padding-top: 10px">
               <div class="table-scroll">
-                <table class="table" aria-label="Grid ngành hàng">
+                <table class="table table-cats" aria-label="Grid ngành hàng">
                   <thead>
                     <tr>
                       <th style="width: 44px">#</th>
-                      <th>Tên ngành hàng</th>
-                      <th style="width: 140px">Target</th>
+                      <th style="width: 260px">Tên ngành hàng</th>
+                      <th class="cat-target-col" style="width: 220px">Target (gốc / % / cuối)</th>
                       <th style="width: 156px; text-align: right">Hành động</th>
                     </tr>
                   </thead>
@@ -1076,18 +1163,18 @@
           </article>
 
           <!-- Grid nhân viên -->
-          <article class="card">
+          <article class="card" id="cardGridEmps">
             <div class="card-header">
               <h3>Grid nhân viên</h3>
               <span class="pill" id="pillGridEmps">0</span>
             </div>
             <div class="card-body" style="padding-top: 10px">
               <div class="table-scroll">
-                <table class="table" aria-label="Grid nhân viên">
+                <table class="table table-emps" aria-label="Grid nhân viên">
                   <thead>
                     <tr>
                       <th style="width: 44px">#</th>
-                      <th>Nhân viên</th>
+                      <th style="width: 280px">Nhân viên</th>
                       <th style="width: 110px">Mã</th>
                       <th style="width: 150px">Doanh thu</th>
                       <th style="width: 160px; text-align: right">Hành động</th>
@@ -1104,7 +1191,7 @@
           </article>
 
           <!-- Grid nhóm thi đua -->
-          <article class="card">
+          <article class="card" id="cardGridGroups">
             <div class="card-header">
               <h3>Grid nhóm thi đua</h3>
               <span class="pill" id="pillGridGroups">0</span>
@@ -1251,6 +1338,16 @@
           .replaceAll("'", "&#039;");
       }
 
+      function normKey(s) {
+        return String(s || "")
+          .trim()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replaceAll("Đ", "D")
+          .replaceAll("đ", "d")
+          .toUpperCase();
+      }
+
       function formatNumber(n, digits = 2) {
         if (!Number.isFinite(n)) return "0";
         const opts =
@@ -1286,6 +1383,19 @@
         // Only dot (or none)
         const v = Number.parseFloat(token);
         return Number.isFinite(v) ? v : NaN;
+      }
+
+      function normalizeBoostPct(v) {
+        const n = Number(v);
+        if (!Number.isFinite(n)) return 120;
+        // giới hạn để tránh nhập sai quá lớn/âm
+        return clamp(n, 0, 500);
+      }
+
+      function effectiveCategoryTarget(cat) {
+        const base = Number(cat?.target || 0);
+        const pct = normalizeBoostPct(cat?.boostPct);
+        return (base * pct) / 100;
       }
 
       function debounce(fn, ms = 300) {
@@ -1328,6 +1438,16 @@
         };
       }
 
+      function ensureDayDefaults(day) {
+        if (!day || typeof day !== "object") return;
+        if (!Array.isArray(day.categories)) day.categories = [];
+        for (const c of day.categories) {
+          if (!c || typeof c !== "object") continue;
+          if (!("boostPct" in c)) c.boostPct = 120;
+          c.boostPct = normalizeBoostPct(c.boostPct);
+        }
+      }
+
       function ensureSeedStores() {
         // Seed 1 store for first-time user (similar to screenshot)
         if (Object.keys(state.stores).length) return;
@@ -1350,7 +1470,9 @@
         if (!store) return null;
         const date = state.ui.selectedDate;
         if (!store.days[date] && createIfMissing) store.days[date] = emptyDayData();
-        return store.days[date] || null;
+        const day = store.days[date] || null;
+        ensureDayDefaults(day);
+        return day;
       }
 
       // =========================
@@ -1427,7 +1549,12 @@
           }
 
           if (Number.isFinite(targetValue)) {
-            outTable.push({ id: uid("cat"), name: categoryName, target: targetValue });
+            outTable.push({
+              id: uid("cat"),
+              name: categoryName,
+              target: targetValue,
+              boostPct: 120, // mặc định 120%
+            });
           }
         }
 
@@ -1442,7 +1569,7 @@
           if (!Number.isFinite(target)) continue;
           const name = line.slice(0, m.index).trim();
           if (!name) continue;
-          out.push({ id: uid("cat"), name, target });
+          out.push({ id: uid("cat"), name, target, boostPct: 120 });
         }
         return out;
       }
@@ -1757,6 +1884,9 @@
         $("pillGridCats").textContent = String(day.categories.length);
         tb.innerHTML = day.categories
           .map((c, idx) => {
+            const baseTarget = Number(c.target || 0);
+            const pct = normalizeBoostPct(c.boostPct);
+            const finalTarget = (baseTarget * pct) / 100;
             return `
               <tr draggable="true" data-rowtype="cat" data-id="${escapeHtml(c.id)}">
                 <td class="mono" style="display:flex; gap:8px; align-items:center">
@@ -1768,10 +1898,22 @@
                     c.id
                   )}" value="${escapeHtml(c.name)}" />
                 </td>
-                <td>
-                  <input class="mini mono" data-grid="cat" data-field="target" data-id="${escapeHtml(
-                    c.id
-                  )}" value="${escapeHtml(String(c.target))}" />
+                <td class="cat-target-cell">
+                  <div class="cat-target">
+                    <div class="cat-target-row">
+                      <div class="cat-target-label">Gốc</div>
+                      <input class="mini mono" data-grid="cat" data-field="target" data-id="${escapeHtml(
+                        c.id
+                      )}" value="${escapeHtml(String(c.target ?? ""))}" />
+                    </div>
+                    <div class="cat-target-row">
+                      <div class="cat-target-label">%</div>
+                      <input class="mini mono" data-grid="cat" data-field="boostPct" data-id="${escapeHtml(
+                        c.id
+                      )}" value="${escapeHtml(String(c.boostPct ?? 120))}" />
+                    </div>
+                    <div class="cat-target-meta mono">Cuối: ${formatNumber(finalTarget, 2)}</div>
+                  </div>
                 </td>
                 <td>
                   <div class="cell-actions">
@@ -1937,7 +2079,7 @@
 		            const empSales = sales[e.empId] || {};
 		            let completedCategories = 0;
 		            for (const cat of eligibleCategories) {
-		              const catTarget = Number(cat.target || 0);
+		              const catTarget = effectiveCategoryTarget(cat);
 		              const perPersonCatTarget = count ? catTarget / count : 0;
 		              if (!(perPersonCatTarget > 0)) continue;
 		              const catRevenue = Number(empSales[cat.name] || 0);
@@ -2012,7 +2154,9 @@
             const empSales = sales[e.empId] || {};
             let completed = 0;
             for (const cat of categories) {
-              const perPersonTarget = employeeCount ? Number(cat.target || 0) / employeeCount : 0;
+              const perPersonTarget = employeeCount
+                ? effectiveCategoryTarget(cat) / employeeCount
+                : 0;
               const denom = perPersonTarget * progress;
               if (!(denom > 0)) continue;
               const actual = Number(empSales[cat.name] || 0);
@@ -2043,11 +2187,11 @@
         }
 
         // Store-level completion across categories: projected% >= 100%
-        // projected% = sumActual / (catTarget * progress)
+        // projected% = sumActual / (catTargetCuoi * progress)
         let storeCompleted = 0;
         for (const cat of categories) {
           const sumActual = totalsByCat.get(cat.name) || 0;
-          const denom = Number(cat.target || 0) * progress;
+          const denom = effectiveCategoryTarget(cat) * progress;
           if (denom > 0 && Number(sumActual) / denom >= 1) storeCompleted++;
         }
 
@@ -2073,10 +2217,7 @@
 
 	        $("txtPerPerson").textContent = formatNumber(result.perPersonTarget, 2);
 	        $("txtProgress").textContent = `${Math.round(result.progress * 100)}%`;
-	        $("analysisNote").innerHTML =
-	          "<b>Số NH H.T</b> = hoàn tất / tổng ngành hàng thi đua (target &gt; 0). " +
-	          "1 ngành hàng hoàn tất khi <b>% dự kiến ngành hàng</b> &ge; 100% (tính theo tiến độ ngày, khớp bảng Chi tiết bán). " +
-	          "• Màu xanh: doanh thu &ge; chuẩn đạt theo tiến độ ngày. Màu đỏ: thấp hơn.";
+	        $("analysisNote").innerHTML = "";
 
         const tb = $("tbodyAnalysis");
         if (!result.rows.length) {
@@ -2163,10 +2304,7 @@
           return;
         }
 
-        note.innerHTML =
-          "Mỗi ô ngành hàng hiển thị: <b>lũy kế / target</b> (target = Target_NH / số NV đang lọc). " +
-          "<b>% dự kiến</b> = lũy kế / (target * tiến độ ngày). Nếu <b>% ≥ 100%</b> thì màu xanh, ngược lại màu hồng đỏ. " +
-          "(Cùng công thức với <b>Số NH H.T</b> ở bảng phân tích).";
+        note.innerHTML = "";
 
         const chunks = chunkArray(detail.categories, 10);
         const tablesHtml = chunks
@@ -2192,7 +2330,7 @@
                   .map((cat) => {
                     const actual = Number(empSales[cat.name] || 0);
                     const perPersonTarget = detail.employeeCount
-                      ? Number(cat.target || 0) / detail.employeeCount
+                      ? effectiveCategoryTarget(cat) / detail.employeeCount
                       : 0;
                     const denom = perPersonTarget * detail.progress;
                     const pct = denom > 0 ? (actual / denom) * 100 : 0;
@@ -2295,7 +2433,24 @@
 
       function rebuildParsed(day) {
         // Parse targets + employees
+        const prevCats = Array.isArray(day.categories) ? day.categories : [];
+        const prevByName = new Map(
+          prevCats
+            .filter((c) => c && typeof c === "object")
+            .map((c) => [normKey(c.name), c])
+        );
+
         day.categories = parseTargetsText(day.targetText);
+        // Preserve stable id + boostPct (để không mất focus và giữ % target)
+        for (const c of day.categories) {
+          const prev = prevByName.get(normKey(c.name));
+          if (prev) {
+            if (prev.id) c.id = prev.id;
+            if ("boostPct" in prev) c.boostPct = normalizeBoostPct(prev.boostPct);
+          }
+          if (!("boostPct" in c)) c.boostPct = 120;
+          c.boostPct = normalizeBoostPct(c.boostPct);
+        }
         day.employees = parseEmployeesText(day.employeeText);
 
         // Keep hiddenGroups stable, but remove groups that no longer exist in employees
@@ -2316,7 +2471,7 @@
         const listRow = el.closest("[data-type][data-id]");
         return {
           dataId:    el.dataset.id    || (listRow && listRow.dataset.id)    || null,
-          dataField: el.dataset.field || el.dataset.field                   || null,
+          dataField: el.dataset.field || null,
           dataGrid:  el.dataset.grid  || null,
           dataType:  (listRow && listRow.dataset.type) || null,
           selStart:  el.selectionStart,
@@ -2341,17 +2496,27 @@
           if (row) inp = row.querySelector(`input[data-field="${saved.dataField}"]`);
         }
         if (!inp) return;
-        // Khôi phục giá trị nếu bị reset về rỗng sau render
-        if (inp.value === "" && saved.value !== "") inp.value = saved.value;
-        inp.focus();
-        try { inp.setSelectionRange(saved.selStart, saved.selEnd); } catch(_) {}
+        // Khôi phục giá trị đang gõ (tránh bị mất data khi re-render)
+        if (typeof saved.value === "string" && inp.value !== saved.value) inp.value = saved.value;
+        inp.focus({ preventScroll: true });
+        try {
+          if (
+            Number.isFinite(saved.selStart) &&
+            Number.isFinite(saved.selEnd) &&
+            typeof inp.setSelectionRange === "function"
+          ) {
+            inp.setSelectionRange(saved.selStart, saved.selEnd);
+          }
+        } catch (_) {}
       }
 
       // safeRender: lưu focus → chạy callback render → restore focus
       function safeRender(fn) {
         const saved = saveFocus();
         fn();
-        if (saved) restoreFocus(saved);
+        if (!saved) return;
+        // Đợi browser apply DOM changes xong rồi mới restore selection/caret
+        requestAnimationFrame(() => restoreFocus(saved));
       }
       // ─────────────────────────────────────────────────────────────
 
@@ -2370,20 +2535,22 @@
         $("txtReportStore").textContent = store.name || "—";
         $("txtReportStoreChip").textContent = store.name || "—";
 
-        // Dùng safeRender để render list/grid mà không làm mất focus
+        // Dùng safeRender để re-render mà không làm mất focus/caret
         safeRender(() => {
           renderTargetsList(day);
           renderEmployeesList(day);
           renderCatsGrid(day);
           renderEmpsGrid(day);
+          renderGroupsGrid(day);
+          renderGroupFilter(day);
+          renderAnalysis(day);
+          renderSalesDetailTables(day);
         });
 
-        renderGroupsGrid(day);
-        renderGroupFilter(day);
-        renderAnalysis(day);
-        renderSalesDetailTables(day);
-
-        $("inpStoreMonthlyTarget").value = String(store.monthlyTarget ?? "");
+        const monthlyInp = $("inpStoreMonthlyTarget");
+        if (document.activeElement !== monthlyInp) {
+          monthlyInp.value = String(store.monthlyTarget ?? "");
+        }
       }
 
       // =========================
@@ -2867,6 +3034,10 @@
               if (field === "target") {
                 const v = parseNumber(inp.value);
                 if (Number.isFinite(v)) c.target = v;
+              }
+              if (field === "boostPct") {
+                const v = parseNumber(inp.value);
+                if (Number.isFinite(v)) c.boostPct = v;
               }
             }
             if (grid === "emp") {
