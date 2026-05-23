@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BI Hệ số quy đổi — MWG</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+	      :root {
+	        --bg: #eef3f7;
+	        --panel: #ffffff;
+	        --line: #dde6ef;
+	        --text: #19324a;
+	        --muted: #6c8095;
+	        --danger: #e53935;
+	        --good: #22a06b;
+	        --shadow: 0 18px 38px rgba(17, 45, 78, 0.08);
+	        --accent: #f5c518;
+	        --nav-h: 52px;
+	        --nav-bg: rgba(10, 14, 24, 0.92);
+	        --nav-border: rgba(255, 255, 255, 0.1);
+	        --radius: 20px;
+	        --radius-sm: 14px;
+
+	        /* Theme accents (randomized on Analyze) */
+	        --heroA: #166534;
+	        --heroB: #16a34a;
+	        --theadA: rgba(249, 115, 22, 0.95);
+	        --theadB: #f97316;
+	      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding-top: calc(var(--nav-h) + 10px);
+        font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+        color: var(--text);
+        background: radial-gradient(
+            circle at top left,
+            rgba(22, 137, 203, 0.12),
+            transparent 25%
+          ),
+          radial-gradient(
+            circle at bottom right,
+            rgba(207, 23, 35, 0.08),
+            transparent 22%
+          ),
+          linear-gradient(180deg, #f6f9fc 0%, #edf2f7 100%);
+      }
+
+      /* Navbar */
+      .mwg-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--nav-h);
+        background: var(--nav-bg);
+        border-bottom: 1px solid var(--nav-border);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        gap: 0;
+      }
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        text-decoration: none;
+        margin-right: auto;
+      }
+      .nav-brand-badge {
+        background: var(--accent);
+        color: #111;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        padding: 3px 8px;
+        border-radius: 5px;
+        line-height: 1;
+      }
+      .nav-brand-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.85);
+        letter-spacing: 0.02em;
+      }
+      .nav-page-badge {
+        font-size: 10px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 3px 9px;
+        border-radius: 20px;
+        margin-right: 10px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .nav-user {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-right: 10px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .nav-user-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #4ade80;
+        box-shadow: 0 0 6px rgba(74, 222, 128, 0.6);
+      }
+      .nav-user strong {
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 7px 13px;
+        border-radius: 7px;
+        font-size: 11.5px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 140ms, transform 140ms;
+        border: 1px solid transparent;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+      }
+      .nav-btn:active {
+        transform: scale(0.97);
+      }
+      .btn-home {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.8);
+        margin-right: 6px;
+      }
+      .btn-home:hover {
+        background: rgba(255, 255, 255, 0.13);
+        color: #fff;
+      }
+      .btn-logout {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.25);
+        color: #fca5a5;
+      }
+      .btn-logout:hover {
+        background: rgba(239, 68, 68, 0.22);
+        color: #fff;
+      }
+
+      .shell {
+        width: min(1320px, calc(100vw - 28px));
+        margin: 0 auto;
+        padding: 16px 0 36px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+
+      .head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .kicker {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 6px 0 0;
+        font-size: 22px;
+        letter-spacing: 0.02em;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 220px;
+        gap: 12px;
+        align-items: start;
+      }
+      @media (max-width: 900px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 220px;
+        resize: vertical;
+        font: inherit;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: #fbfdff;
+        padding: 12px 14px;
+        outline: none;
+      }
+
+      .btn-row {
+        display: grid;
+        gap: 10px;
+      }
+      button {
+        border: 0;
+        border-radius: 12px;
+        padding: 11px 12px;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .btn-primary {
+        background: linear-gradient(90deg, #0f7ab7, #30a8dd);
+        color: white;
+      }
+      .btn-secondary {
+        background: rgba(25, 50, 74, 0.08);
+        border: 1px solid rgba(25, 50, 74, 0.12);
+        color: #264256;
+      }
+      .btn-danger {
+        background: rgba(229, 57, 53, 0.1);
+        border: 1px solid rgba(229, 57, 53, 0.25);
+        color: var(--danger);
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .status {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      /* Capture area */
+      .capture {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .capture-header {
+        background: linear-gradient(90deg, var(--heroA), var(--heroB));
+        color: white;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .capture-header h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .chip {
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+      }
+      thead th {
+        position: sticky;
+        top: 0;
+        background: linear-gradient(180deg, var(--theadA), var(--theadB));
+        color: white;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 10px 10px;
+        white-space: nowrap;
+      }
+      tbody td {
+        padding: 10px 10px;
+        border-top: 1px solid rgba(17, 24, 39, 0.08);
+        font-size: 13px;
+        background: white;
+        vertical-align: middle;
+      }
+      tbody tr:nth-child(odd) td {
+        background: rgba(2, 132, 199, 0.06);
+      }
+      tbody tr:nth-child(even) td {
+        background: rgba(148, 163, 184, 0.06);
+      }
+
+      /* Row highlights */
+      tr.top1 td {
+        background: rgba(250, 204, 21, 0.18) !important;
+      }
+      tr.top2 td {
+        background: rgba(148, 163, 184, 0.16) !important;
+      }
+      tr.top3 td {
+        background: rgba(251, 191, 36, 0.14) !important;
+      }
+      tr.bottom-weak td {
+        background: rgba(229, 57, 53, 0.08) !important;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 900;
+        font-size: 12px;
+        border: 1px solid rgba(25, 50, 74, 0.12);
+        background: rgba(255, 255, 255, 0.75);
+        white-space: nowrap;
+      }
+      .badge .ico {
+        font-size: 14px;
+        line-height: 1;
+      }
+
+      .mono {
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum";
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+          "Courier New", monospace;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 12px;
+      }
+
+      .right {
+        text-align: right;
+      }
+
+      .pill-del {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(229, 57, 53, 0.25);
+        background: rgba(229, 57, 53, 0.08);
+        color: var(--danger);
+        font-weight: 900;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .pill-del:active {
+        transform: translateY(1px);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- AUTH GUARD -->
+    <script>
+      (function () {
+        const s = localStorage.getItem("mwg_session");
+        if (!s) window.location.replace("./index.html");
+      })();
+    </script>
+
+    <nav class="mwg-nav">
+      <a class="nav-brand" href="./main.html">
+        <span class="nav-brand-badge">MWG</span>
+        <span class="nav-brand-name">Business Intelligence</span>
+      </a>
+      <span class="nav-page-badge">Hệ số QĐ</span>
+      <div class="nav-user">
+        <span class="nav-user-dot"></span>
+        <span>Đăng nhập: <strong id="nav-username">—</strong></span>
+      </div>
+      <a class="nav-btn btn-home" href="./main.html">⌂ Trang chủ</a>
+      <button class="nav-btn btn-logout" id="btnLogout" type="button">↩ Đăng xuất</button>
+    </nav>
+
+    <main class="shell">
+      <section class="panel">
+        <div class="head">
+          <div>
+            <div class="kicker">Phân tích hệ số quy đổi</div>
+            <h1>Dashboard hệ số quy đổi theo nhân viên</h1>
+            <div class="status" id="statusText">Dán bảng raw vào ô bên dưới rồi bấm “Phân tích”.</div>
+          </div>
+        </div>
+
+        <div class="controls" style="margin-top: 14px">
+          <div>
+            <textarea
+              id="rawInput"
+              placeholder="Dán bảng dạng tab/space.\nVí dụ:\nVõ Thành Long - 37354\t822.76\t1,204.56\t0.46\t263\t4.58"
+            ></textarea>
+            <div class="status">
+              Gợi ý: Có thể dán cả block, hệ thống sẽ tự bỏ dòng header + “Tổng”.
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn-primary" id="btnAnalyze" type="button">Phân tích</button>
+            <button class="btn-secondary" id="btnExport" type="button">Tạo ảnh</button>
+            <button class="btn-danger" id="btnResetHidden" type="button">Bỏ ẩn NV</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel capture" id="captureRoot" aria-label="Khu vực xuất ảnh">
+        <div class="capture-header">
+          <h2>Bảng hệ số quy đổi</h2>
+          <div class="chip" id="chipMeta">0 NV</div>
+        </div>
+        <div class="table-wrap">
+          <table aria-label="Bảng hệ số quy đổi">
+            <thead>
+              <tr>
+                <th style="width: 54px">STT</th>
+                <th>Họ tên</th>
+                <th style="width: 110px">Mã số</th>
+                <th class="right" style="width: 150px">DT thực</th>
+                <th class="right" style="width: 150px">DT quy đổi</th>
+                <th class="right" style="width: 130px">Hiệu quả</th>
+                <th class="no-export" style="width: 96px; text-align: right">Ẩn</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Navbar: set username
+      (function () {
+        try {
+          const s = JSON.parse(localStorage.getItem("mwg_session") || "{}");
+          document.getElementById("nav-username").textContent =
+            s.displayName || s.username || "—";
+        } catch (e) {}
+      })();
+
+      document.getElementById("btnLogout").addEventListener("click", () => {
+        localStorage.removeItem("mwg_session");
+        window.location.href = "./index.html";
+      });
+
+      const LS_KEY = "he-so-quy-doi:v1";
+      const $ = (id) => document.getElementById(id);
+
+      function formatNumber(n, digits = 2) {
+        if (!Number.isFinite(n)) return "0";
+        const opts =
+          digits === 0
+            ? { maximumFractionDigits: 0 }
+            : { minimumFractionDigits: 0, maximumFractionDigits: digits };
+        return n.toLocaleString("vi-VN", opts);
+      }
+
+      function parseNumber(raw) {
+        const s = String(raw ?? "").trim().replace(/\s+/g, "");
+        if (!s) return NaN;
+        const m = s.match(/-?[\d.,]+/);
+        if (!m) return NaN;
+        const token = m[0];
+        const cleaned = token.includes(".") ? token.replaceAll(",", "") : token.replaceAll(",", "");
+        const v = Number.parseFloat(cleaned);
+        return Number.isFinite(v) ? v : NaN;
+      }
+
+      function splitColumns(line) {
+        if (line.includes("\t")) return line.split("\t").map((x) => x.trim());
+        return line.split(/\s{2,}/).map((x) => x.trim());
+      }
+
+      function parseNameAndId(s) {
+        const raw = String(s || "").trim();
+        const m = raw.match(/^(.*?)(?:\s*-\s*(\d+))\s*$/);
+        if (m) return { name: m[1].trim(), empId: m[2].trim() };
+        return { name: raw, empId: "" };
+      }
+
+      const state = {
+        rows: [],
+        hiddenEmpIds: new Set(),
+      };
+
+      const PALETTES = [
+        {
+          heroA: "#166534",
+          heroB: "#16a34a",
+          theadA: "rgba(249, 115, 22, 0.95)",
+          theadB: "#f97316",
+        },
+        {
+          heroA: "#0f766e",
+          heroB: "#14b8a6",
+          theadA: "rgba(37, 99, 235, 0.95)",
+          theadB: "#2563eb",
+        },
+        {
+          heroA: "#6d28d9",
+          heroB: "#a78bfa",
+          theadA: "rgba(234, 88, 12, 0.95)",
+          theadB: "#ea580c",
+        },
+        {
+          heroA: "#0f172a",
+          heroB: "#334155",
+          theadA: "rgba(16, 185, 129, 0.92)",
+          theadB: "#10b981",
+        },
+      ];
+
+      function applyRandomTheme() {
+        const p = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+        if (!p) return;
+        const root = document.documentElement;
+        root.style.setProperty("--heroA", p.heroA);
+        root.style.setProperty("--heroB", p.heroB);
+        root.style.setProperty("--theadA", p.theadA);
+        root.style.setProperty("--theadB", p.theadB);
+      }
+
+      function loadHidden() {
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.hiddenEmpIds)) {
+            state.hiddenEmpIds = new Set(parsed.hiddenEmpIds.map(String));
+          }
+        } catch (e) {}
+      }
+
+      function saveHidden() {
+        try {
+          localStorage.setItem(
+            LS_KEY,
+            JSON.stringify({ hiddenEmpIds: Array.from(state.hiddenEmpIds) })
+          );
+        } catch (e) {}
+      }
+
+      function parseRowsFromText(text) {
+        const lines = String(text || "")
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter(Boolean);
+
+        const out = [];
+        for (const line of lines) {
+          // skip headers / totals
+          if (/^nhân viên\b/i.test(line)) continue;
+          if (/^tổng\b/i.test(line)) continue;
+
+          const cols = splitColumns(line);
+          if (cols.length < 6) continue;
+
+          const { name, empId } = parseNameAndId(cols[0]);
+          const dtThuc = parseNumber(cols[1]);
+          const dtQuyDoi = parseNumber(cols[2]);
+          const hieuQuaRaw = parseNumber(cols[3]);
+
+          if (!name) continue;
+          if (!Number.isFinite(dtThuc) && !Number.isFinite(dtQuyDoi)) continue;
+
+          out.push({
+            name,
+            empId,
+            dtThuc: Number.isFinite(dtThuc) ? dtThuc : 0,
+            dtQuyDoi: Number.isFinite(dtQuyDoi) ? dtQuyDoi : 0,
+            // Hiệu quả hiển thị theo %: DTQĐ / DTLK
+            // Input có thể là 0.46 (tức +46%), nhưng hiển thị cần là 146% theo ratio.
+            hieuQuaPct:
+              dtThuc > 0 && Number.isFinite(dtThuc) && Number.isFinite(dtQuyDoi)
+                ? (dtQuyDoi / dtThuc) * 100
+                : Number.isFinite(hieuQuaRaw)
+                  ? (1 + hieuQuaRaw) * 100
+                  : 0,
+          });
+        }
+        return out;
+      }
+
+      function render() {
+        const tbody = $("tbody");
+        const visible = state.rows.filter(
+          (r) => !state.hiddenEmpIds.has(String(r.empId || r.name))
+        );
+        $("chipMeta").textContent = `${visible.length} NV`;
+        const weakStart = Math.max(0, visible.length - 5);
+
+        tbody.innerHTML = visible
+          .map((r, idx) => {
+            const key = String(r.empId || r.name);
+            const isWeak = idx >= weakStart;
+            const cls =
+              idx === 0
+                ? "top1"
+                : idx === 1
+                  ? "top2"
+                  : idx === 2
+                    ? "top3"
+                    : isWeak
+                      ? "bottom-weak"
+                      : "";
+
+            const rankCell =
+              idx === 0
+                ? '<span class="badge"><span class="ico">🏆</span>#1</span>'
+                : idx === 1
+                  ? '<span class="badge"><span class="ico">🥈</span>#2</span>'
+                  : idx === 2
+                    ? '<span class="badge"><span class="ico">🥉</span>#3</span>'
+                    : `<span class="mono" style="font-weight:900">#${idx + 1}</span>`;
+            return `
+              <tr class="${cls}">
+                <td>${rankCell}</td>
+                <td>
+                  <div style="font-weight:900">${escapeHtml(r.name)}</div>
+                  <div class="muted mono">${escapeHtml(r.empId || "—")}</div>
+                </td>
+                <td class="mono">${escapeHtml(r.empId || "—")}</td>
+                <td class="right mono" style="font-weight:900">${formatNumber(r.dtThuc, 2)}</td>
+                <td class="right mono" style="font-weight:900">${formatNumber(r.dtQuyDoi, 2)}</td>
+                <td class="right mono" style="font-weight:900; color:${r.hieuQuaPct >= 100 ? "var(--good)" : "var(--danger)"}">${formatNumber(r.hieuQuaPct, 0)}%</td>
+                <td class="right no-export">
+                  <button class="pill-del no-export" data-hide="${escapeHtml(
+                    key
+                  )}" title="Ẩn nhân viên này">Ẩn</button>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function collectInlineCssText() {
+        let cssText = "";
+        for (const sheet of Array.from(document.styleSheets || [])) {
+          try {
+            const rules = sheet.cssRules;
+            if (!rules) continue;
+            for (const rule of Array.from(rules)) cssText += rule.cssText + "\n";
+          } catch (e) {}
+        }
+        return cssText;
+      }
+
+      async function exportCaptureAsImage() {
+        if (!window.html2canvas) {
+          $("statusText").textContent = "Không tải được thư viện tạo ảnh.";
+          return;
+        }
+        const capture = $("captureRoot");
+        const cssSnapshot = collectInlineCssText();
+        $("btnExport").disabled = true;
+        try {
+          $("statusText").textContent = "Đang tạo ảnh...";
+          const canvas = await window.html2canvas(capture, {
+            backgroundColor: "#eef3f7",
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+            onclone: function (clonedDoc) {
+              const mount =
+                clonedDoc.head || clonedDoc.body || clonedDoc.documentElement;
+              if (!mount) return;
+              const style = clonedDoc.createElement("style");
+              style.textContent =
+                "*{font-family:'Be Vietnam Pro',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif!important;}";
+              mount.appendChild(style);
+              if (cssSnapshot) {
+                const styleAll = clonedDoc.createElement("style");
+                styleAll.textContent = cssSnapshot;
+                mount.appendChild(styleAll);
+              }
+
+              // Khi chụp ảnh: ẩn toàn bộ cột/nút "Ẩn" để nhìn gọn.
+              const styleHide = clonedDoc.createElement("style");
+              styleHide.textContent = ".no-export{display:none!important;}";
+              mount.appendChild(styleHide);
+            },
+          });
+          const a = document.createElement("a");
+          a.download = `he-so-quy-doi-${new Date().toISOString().slice(0, 10)}.png`;
+          a.href = canvas.toDataURL("image/png");
+          a.click();
+          $("statusText").textContent = "Đã tạo ảnh.";
+        } catch (e) {
+          console.error(e);
+          $("statusText").textContent =
+            "Không thể tạo ảnh: " + (e && e.message ? e.message : String(e));
+        } finally {
+          $("btnExport").disabled = false;
+        }
+      }
+
+      // Events
+      loadHidden();
+
+      $("btnAnalyze").addEventListener("click", () => {
+        applyRandomTheme();
+        const rows = parseRowsFromText($("rawInput").value);
+        state.rows = rows
+          .filter((r) => r.empId && !/^BP\b/i.test(r.name)) // bỏ 2 dòng BP + Tổng
+          .sort((a, b) => (b.hieuQuaPct || 0) - (a.hieuQuaPct || 0));
+        $("statusText").textContent = `Đã parse ${state.rows.length} dòng nhân viên.`;
+        render();
+      });
+
+      $("btnExport").addEventListener("click", exportCaptureAsImage);
+
+      $("btnResetHidden").addEventListener("click", () => {
+        state.hiddenEmpIds.clear();
+        saveHidden();
+        render();
+        $("statusText").textContent = "Đã bỏ ẩn toàn bộ nhân viên.";
+      });
+
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-hide]");
+        if (!btn) return;
+        const key = btn.getAttribute("data-hide");
+        if (!key) return;
+        state.hiddenEmpIds.add(String(key));
+        saveHidden();
+        render();
+        $("statusText").textContent = "Đã ẩn nhân viên.";
+      });
+
+      // Initial render
+      render();
+    </script>
+  </body>
+</html>
