@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Top Best Seller - BI MWG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #667085;
+      --line: #e6ebf2;
+      --soft: #f8fafc;
+      --blue: #2364aa;
+      --red: #e45143;
+      --green: #1b9a42;
+      --teal: #1e9a9a;
+      --gold: #f6b73c;
+      --shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+      --nav-h: 52px;
+      --font: "Be Vietnam Pro", system-ui, sans-serif;
+      --mono: "JetBrains Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding-top: var(--nav-h);
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(35, 100, 170, 0.10), transparent 28%),
+        linear-gradient(180deg, #fbfcfe 0%, var(--bg) 100%);
+    }
+
+    .mwg-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--nav-h);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px;
+      background: rgba(10, 14, 24, 0.94);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+      backdrop-filter: blur(14px);
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-right: auto;
+      color: #fff;
+      text-decoration: none;
+    }
+    .nav-brand-badge {
+      background: #f5c518;
+      color: #111;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 5px;
+      letter-spacing: 0.08em;
+    }
+    .nav-brand-name { font-size: 13px; font-weight: 800; }
+    .nav-page-badge {
+      font-size: 10px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.55);
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 3px 9px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.55);
+    }
+    .nav-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 8px rgba(74, 222, 128, 0.7);
+    }
+    .nav-user strong { color: #f5c518; }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 32px;
+      padding: 7px 13px;
+      border-radius: 7px;
+      font-family: var(--font);
+      font-size: 11.5px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .btn-home {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.82);
+    }
+    .btn-logout {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.25);
+      color: #fca5a5;
+    }
+
+    .shell {
+      width: min(1180px, calc(100vw - 28px));
+      margin: 0 auto;
+      padding: 18px 0 42px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .kicker {
+      margin: 0 0 5px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+    }
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+    .status {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 230px;
+      resize: vertical;
+      border: 1px solid #d6deea;
+      border-radius: 10px;
+      background: #fbfdff;
+      color: var(--text);
+      padding: 12px;
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.55;
+      outline: none;
+    }
+    textarea:focus {
+      border-color: rgba(35, 100, 170, 0.55);
+      box-shadow: 0 0 0 4px rgba(35, 100, 170, 0.08);
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .btn-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    button {
+      font-family: var(--font);
+      border: 0;
+    }
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+      min-height: 38px;
+      padding: 9px 15px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: #111827;
+      color: #fff;
+    }
+    .btn-secondary {
+      background: #eef4ff;
+      color: var(--blue);
+      border-color: #cfe0ff;
+    }
+    .btn-danger {
+      background: #fff1f2;
+      color: #e11d48;
+      border-color: #fecdd3;
+    }
+    .btn-secondary:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 12px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #dce5f1;
+      background: #fff;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .chip.off {
+      opacity: 0.45;
+      background: #f3f4f6;
+      text-decoration: line-through;
+    }
+    .chip span {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    @media (max-width: 850px) {
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--soft);
+      padding: 11px 12px;
+    }
+    .stat-label {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .stat-value {
+      margin-top: 5px;
+      color: var(--blue);
+      font-family: var(--mono);
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .capture {
+      padding: 0;
+      overflow: hidden;
+    }
+    .capture-board {
+      background: #fff;
+      border-radius: 18px;
+      padding: 28px 32px 18px;
+    }
+    .capture-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 20px;
+    }
+    .title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .title-emoji {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      font-size: 20px;
+    }
+    .capture-title {
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+    .camera-mark {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      color: #111827;
+      font-size: 20px;
+    }
+    .seller-list {
+      border-top: 1px solid transparent;
+    }
+    .seller-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: 84px minmax(0, 1fr) 86px;
+      align-items: center;
+      gap: 22px;
+      min-height: 138px;
+      padding: 18px 0;
+      border-bottom: 1px solid #edf0f4;
+    }
+    .avatar {
+      width: 66px;
+      height: 66px;
+      border-radius: 18px;
+      border: 1px solid #edf0f4;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    }
+    .avatar svg {
+      width: 32px;
+      height: 32px;
+      stroke: #111827;
+      stroke-width: 2.5;
+      fill: none;
+    }
+    .seller-name {
+      display: block;
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 900;
+      letter-spacing: 0;
+      color: #121821;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rank-1 .seller-name { color: var(--red); }
+    .rank-2 .seller-name { color: var(--green); }
+    .rank-3 .seller-name { color: var(--teal); }
+    .metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 22px;
+      margin-top: 6px;
+      color: #5e6673;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .metrics b {
+      color: var(--blue);
+      font-weight: 900;
+    }
+    .rank-mark {
+      justify-self: end;
+      min-width: 62px;
+      text-align: center;
+      color: #111827;
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 900;
+    }
+    .honor {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      font-size: 33px;
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+    }
+    .honor.gold { background: #fff7ed; border: 1px solid #fed7aa; }
+    .honor.silver { background: #f8fafc; border: 1px solid #d7dde8; }
+    .honor.bronze { background: #fff1f2; border: 1px solid #fecdd3; }
+
+    .empty {
+      padding: 42px 0;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .detail-wrap {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: auto;
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      min-width: 920px;
+      border-collapse: collapse;
+    }
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      text-align: left;
+      font-size: 12px;
+      vertical-align: middle;
+    }
+    th:last-child,
+    td:last-child { border-right: 0; }
+    th {
+      background: #f8fafc;
+      color: #475467;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    td.num,
+    th.num {
+      text-align: right;
+      font-family: var(--mono);
+    }
+    tbody tr:hover { background: #fbfdff; }
+
+    #captureMount {
+      position: fixed;
+      left: -9999px;
+      top: 0;
+      width: 900px;
+      background: #fff;
+    }
+
+    @media (max-width: 720px) {
+      .mwg-nav { padding: 0 10px; }
+      .nav-page-badge,
+      .nav-user { display: none; }
+      .capture-board { padding: 22px 18px 12px; }
+      .capture-title { font-size: 22px; }
+      .seller-row {
+        grid-template-columns: 58px minmax(0, 1fr) 54px;
+        gap: 12px;
+        min-height: 116px;
+      }
+      .avatar { width: 50px; height: 50px; border-radius: 14px; }
+      .seller-name { font-size: 17px; }
+      .metrics { font-size: 12px; gap: 6px 10px; }
+      .rank-mark { font-size: 18px; min-width: 44px; }
+      .honor { width: 42px; height: 42px; font-size: 24px; border-radius: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    (function () {
+      if (!localStorage.getItem("mwg_session")) window.location.replace("./index.html");
+    })();
+  </script>
+
+  <nav class="mwg-nav">
+    <a class="nav-brand" href="./main.html">
+      <span class="nav-brand-badge">MWG</span>
+      <span class="nav-brand-name">Business Intelligence</span>
+    </a>
+    <span class="nav-page-badge">Top Seller</span>
+    <span class="nav-user"><span class="nav-dot"></span>Đăng nhập: <strong id="navUsername">—</strong></span>
+    <a class="nav-btn btn-home" href="./main.html">Trang chủ</a>
+    <button class="nav-btn btn-logout" id="btnLogout" type="button">Đăng xuất</button>
+  </nav>
+
+  <main class="shell">
+    <section class="panel">
+      <div class="head">
+        <div>
+          <p class="kicker">Phân tích doanh thu quy đổi</p>
+          <h1>Top Best Seller theo nhân viên</h1>
+          <div class="status" id="statusText">Dán dữ liệu xuất bán vào ô bên dưới rồi bấm Phân tích.</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" id="btnExport" type="button" disabled>Chụp ảnh</button>
+          <button class="btn-danger" id="btnResetHidden" type="button">Bỏ ẩn NV</button>
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <textarea id="rawInput" placeholder="Dán full dữ liệu export tại đây..."></textarea>
+        <div class="toolbar">
+          <div class="btn-row">
+            <button class="btn-primary" id="btnAnalyze" type="button">Phân tích</button>
+            <button class="btn-secondary" id="btnClear" type="button">Xóa dữ liệu</button>
+          </div>
+          <div class="status" id="parseMeta">0 dòng dữ liệu</div>
+        </div>
+      </div>
+
+      <div class="stats" id="statsGrid"></div>
+      <div class="chips" id="employeeChips"></div>
+    </section>
+
+    <section class="panel capture" id="captureRoot">
+      <div class="capture-board">
+        <div class="capture-head">
+          <div class="title-wrap">
+            <div class="title-emoji">🏆</div>
+            <div>
+              <div class="capture-title">TOP BEST SELLER</div>
+              <div class="status" id="captureMeta">0 nhân viên</div>
+            </div>
+          </div>
+          <div class="camera-mark">📷</div>
+        </div>
+        <div class="seller-list" id="sellerList">
+          <div class="empty">Chưa có dữ liệu phân tích.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="head">
+        <div>
+          <p class="kicker">Chi tiết kiểm tra</p>
+          <h1>Bảng tính theo nhân viên</h1>
+        </div>
+      </div>
+      <div class="detail-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:64px">Hạng</th>
+              <th>Nhân viên</th>
+              <th class="num">Dòng hợp lệ</th>
+              <th class="num">DT thực</th>
+              <th class="num">DT Q.Đ</th>
+              <th class="num">% Q.Đ</th>
+              <th class="num">% đóng góp</th>
+              <th class="num">Ẩn</th>
+            </tr>
+          </thead>
+          <tbody id="detailBody">
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px">Chưa có dữ liệu.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="captureMount"></div>
+
+  <script>
+    const C = {
+      loaiYCX: "Loại YCX",
+      hinhThucXuat: "Hình thức xuất",
+      ttThu: "Trạng thái thu tiền",
+      ttXuat: "Trạng thái xuất",
+      ttGiao: "Trạng thái giao hàng",
+      ttHuy: "Trạng thái hủy",
+      nguoiTao: "Người tạo",
+      soLuong: "Số lượng",
+      giaBan1: "Giá bán_1",
+      nganhHang: "Ngành hàng",
+      nhomHang: "Nhóm hàng",
+      trangThaiHoSo: "Trạng thái hồ sơ",
+      tinhTrangNhapTra: "Tình trạng nhập trả của sản phẩm đổi với sản phẩm chính",
+      sieuThi: "Siêu thị xuất",
+    };
+
+    const CATEGORY_RATES = {
+      sim: 5.45,
+      baoHiem: 4.18,
+      phuKienTienIch: 3.37,
+      phuKienTrangTri: 3.37,
+      loaViTinh: 3.37,
+      vas: 3.30,
+      matKinh: 3.07,
+      dongHoThoiTrang: 3.00,
+      wearable: 3.00,
+      it: 2.00,
+      dungCuNhaBep: 1.92,
+      dienGiaDung: 1.85,
+      mayLocNuoc: 1.85,
+      giaDungLapDat: 1.85,
+      loaKaraoke: 1.29,
+      laptop: 1.20,
+      tablet: 1.20,
+      theCaoDienTu: 1.00,
+      macDinh: 1.00,
+    };
+
+    const LS_KEY = "top-best-seller:hidden:v1";
+    const $ = (id) => document.getElementById(id);
+    const state = { employees: [], hiddenKeys: new Set(), meta: null };
+
+    function norm(s) {
+      return String(s || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replaceAll("Đ", "D")
+        .replaceAll("đ", "d")
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function parseNumber(raw) {
+      const text = String(raw ?? "").trim().replace(/\s/g, "");
+      if (!text) return 0;
+      const m = text.match(/-?[\d.,]+/);
+      if (!m) return 0;
+      let s = m[0];
+      const dot = s.lastIndexOf(".");
+      const comma = s.lastIndexOf(",");
+      if (dot !== -1 && comma !== -1) {
+        const decimal = dot > comma ? "." : ",";
+        const thousand = decimal === "." ? "," : ".";
+        s = s.replaceAll(thousand, "");
+        if (decimal === ",") s = s.replace(",", ".");
+      } else if (comma !== -1) {
+        const parts = s.split(",");
+        if (parts.length > 2) s = parts.join("");
+        else if ((parts[1] || "").length === 3 && (parts[0] || "").length > 3) s = parts.join("");
+        else s = (parts[0] || "") + "." + (parts[1] || "");
+      } else if (dot !== -1) {
+        const parts = s.split(".");
+        if (parts.length > 2) s = parts.join("");
+        else if ((parts[1] || "").length === 3 && (parts[0] || "").length > 3) s = parts.join("");
+      }
+      const n = Number(s);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function splitTsvLine(line) {
+      return String(line || "").split("\t").map((v) => v.trim());
+    }
+
+    function buildHeaderMap(headerLine) {
+      const headers = splitTsvLine(headerLine);
+      const map = new Map();
+      headers.forEach((h, i) => map.set(norm(h), i));
+      return { headers, map };
+    }
+
+    function col(row, headerMap, name) {
+      const idx = headerMap.get(norm(name));
+      return idx === undefined ? "" : (row[idx] || "").trim();
+    }
+
+    function parseEmployee(raw) {
+      const text = String(raw || "").trim();
+      const m = text.match(/^(\d+)\s*-\s*(.+)$/);
+      if (m) return { id: m[1].trim(), name: m[2].trim(), key: m[1].trim() };
+      return { id: "", name: text || "Không rõ NV", key: text || "unknown" };
+    }
+
+    function isValidRow(row, headerMap) {
+      const loai = norm(col(row, headerMap, C.loaiYCX));
+      const nganh = norm(col(row, headerMap, C.nganhHang));
+      if (!loai || loai.includes("online")) return false;
+      if (nganh.includes("464 -") && nganh.includes("giao dich airtime")) return false;
+      if (col(row, headerMap, C.ttThu) !== "Đã thu") return false;
+      if (col(row, headerMap, C.ttXuat) !== "Đã xuất") return false;
+      if (col(row, headerMap, C.ttGiao) !== "Đã giao") return false;
+      if (col(row, headerMap, C.ttHuy) !== "Chưa hủy") return false;
+      const nhapTra = col(row, headerMap, C.tinhTrangNhapTra);
+      if (nhapTra && nhapTra !== "Chưa trả") return false;
+      return true;
+    }
+
+    function categoryRate(row, headerMap) {
+      const nganhRaw = col(row, headerMap, C.nganhHang);
+      const nhomRaw = col(row, headerMap, C.nhomHang);
+      const nganh = norm(nganhRaw);
+      const nhom = norm(nhomRaw);
+
+      if (nganh.includes("344 -") && nganh.includes("the cao dien tu")) return { rate: CATEGORY_RATES.theCaoDienTu, label: "Thẻ cào điện tử" };
+      if (nganh.includes("664 -") && nganh.includes("sim online")) {
+        if (nhom.includes("1891 -") && nhom.includes("sim online")) return { rate: CATEGORY_RATES.sim, label: "Sim" };
+        return null;
+      }
+      if (nganh.includes("164 -") && nganh.includes("vas")) {
+        if (nhom.includes("571 -") && nhom.includes("udd")) return { rate: CATEGORY_RATES.vas, label: "VAS" };
+        if (nhom.includes("4479 -") && nhom.includes("bao hiem")) return { rate: CATEGORY_RATES.baoHiem, label: "Bảo hiểm" };
+        return { rate: CATEGORY_RATES.vas, label: "VAS" };
+      }
+      if (nganh.includes("16 -") && nganh.includes("phu kien")) return { rate: CATEGORY_RATES.phuKienTienIch, label: "Phụ kiện tiện ích" };
+      if (nganh.includes("184 -") && nganh.includes("phu kien")) return { rate: CATEGORY_RATES.phuKienTrangTri, label: "Phụ kiện trang trí" };
+      if (nganh.includes("1274 -") && nganh.includes("dong ho")) return { rate: CATEGORY_RATES.dongHoThoiTrang, label: "Đồng Hồ Thời Trang" };
+      if (nganh.includes("22 -") || nhom.includes("laptop")) return { rate: CATEGORY_RATES.laptop, label: "Laptop" };
+      if (nhom.includes("tablet") || nhom.includes("ipad")) return { rate: CATEGORY_RATES.tablet, label: "Tablet" };
+      if (nganh.includes("bao hiem") || nhom.includes("bao hiem")) return { rate: CATEGORY_RATES.baoHiem, label: "Bảo hiểm" };
+      if (nganh.includes("loa vi tinh") || nhom.includes("loa vi tinh")) return { rate: CATEGORY_RATES.loaViTinh, label: "Loa vi tính" };
+      if (nganh.includes("mat kinh") || nhom.includes("mat kinh")) return { rate: CATEGORY_RATES.matKinh, label: "Mắt kính" };
+      if (nganh.includes("wearable") || nhom.includes("wearable")) return { rate: CATEGORY_RATES.wearable, label: "Wearable" };
+      if (nganh.includes("it") || nhom.includes("it")) return { rate: CATEGORY_RATES.it, label: "IT" };
+      if (nganh.includes("dung cu nha bep") || nhom.includes("dung cu nha bep")) return { rate: CATEGORY_RATES.dungCuNhaBep, label: "Dụng cụ nhà bếp" };
+      if (nganh.includes("dien gia dung") || nhom.includes("dien gia dung")) return { rate: CATEGORY_RATES.dienGiaDung, label: "Điện gia dụng" };
+      if (nganh.includes("may loc nuoc") || nhom.includes("may loc nuoc")) return { rate: CATEGORY_RATES.mayLocNuoc, label: "Máy lọc nước" };
+      if (nganh.includes("gia dung lap dat") || nhom.includes("gia dung lap dat")) return { rate: CATEGORY_RATES.giaDungLapDat, label: "Gia dụng lắp đặt" };
+      if (nganh.includes("loa karaoke") || nhom.includes("loa karaoke")) return { rate: CATEGORY_RATES.loaKaraoke, label: "Loa Karaoke" };
+      return { rate: CATEGORY_RATES.macDinh, label: nganhRaw || "Mặc định" };
+    }
+
+    function isInstallment(row, headerMap) {
+      const loai = norm(col(row, headerMap, C.loaiYCX));
+      return loai.includes("tra gop") || loai.includes("tra cham");
+    }
+
+    function analyze() {
+      const raw = $("rawInput").value.trim();
+      if (!raw) {
+        setStatus("Chưa có dữ liệu để phân tích.");
+        return;
+      }
+      const lines = raw.split(/\r?\n/).filter((line) => line.trim());
+      if (lines.length < 2) {
+        setStatus("Dữ liệu chưa đủ dòng header và dòng chi tiết.");
+        return;
+      }
+
+      const { map } = buildHeaderMap(lines[0]);
+      const required = [C.loaiYCX, C.nguoiTao, C.giaBan1, C.nganhHang, C.nhomHang];
+      const missing = required.filter((name) => !map.has(norm(name)));
+      if (missing.length) {
+        setStatus("Thiếu cột: " + missing.join(", "));
+        return;
+      }
+
+      const employees = new Map();
+      let validRows = 0;
+      let skippedRows = 0;
+      let storeName = "";
+
+      for (let i = 1; i < lines.length; i += 1) {
+        const row = splitTsvLine(lines[i]);
+        if (row.length < 10) continue;
+        if (!isValidRow(row, map)) {
+          skippedRows += 1;
+          continue;
+        }
+        const category = categoryRate(row, map);
+        if (!category) {
+          skippedRows += 1;
+          continue;
+        }
+        const creator = parseEmployee(col(row, map, C.nguoiTao));
+        if (!creator.name || /^admin$/i.test(creator.name) || /^administrator$/i.test(creator.name)) {
+          skippedRows += 1;
+          continue;
+        }
+
+        const revenue = parseNumber(col(row, map, C.giaBan1));
+        if (revenue <= 0) {
+          skippedRows += 1;
+          continue;
+        }
+        const installmentMultiplier = isInstallment(row, map) ? 1.3 : 1;
+        const converted = revenue * category.rate * installmentMultiplier;
+        const key = creator.key || creator.name;
+
+        if (!employees.has(key)) {
+          employees.set(key, {
+            key,
+            id: creator.id,
+            name: creator.name,
+            actual: 0,
+            converted: 0,
+            rows: 0,
+            categories: new Map(),
+          });
+        }
+        const emp = employees.get(key);
+        emp.actual += revenue;
+        emp.converted += converted;
+        emp.rows += 1;
+        emp.categories.set(category.label, (emp.categories.get(category.label) || 0) + converted);
+        if (!storeName) storeName = col(row, map, C.sieuThi);
+        validRows += 1;
+      }
+
+      const totalActual = Array.from(employees.values()).reduce((sum, emp) => sum + emp.actual, 0);
+      const list = Array.from(employees.values())
+        .map((emp) => ({
+          ...emp,
+          convertPct: emp.actual > 0 ? (emp.converted / emp.actual) * 100 : 0,
+          contributionPct: totalActual > 0 ? (emp.actual / totalActual) * 100 : 0,
+        }))
+        .sort((a, b) => b.converted - a.converted);
+
+      state.employees = list;
+      state.meta = { validRows, skippedRows, totalActual, totalConverted: list.reduce((s, e) => s + e.converted, 0), storeName };
+      persistRaw(raw);
+      renderAll();
+      $("btnExport").disabled = list.length === 0;
+      setStatus(`Đã phân tích ${validRows} dòng hợp lệ, bỏ qua ${skippedRows} dòng.`);
+    }
+
+    function visibleEmployees() {
+      return state.employees.filter((emp) => !state.hiddenKeys.has(emp.key));
+    }
+
+    function renderAll() {
+      renderStats();
+      renderChips();
+      renderBestSeller();
+      renderDetailTable();
+    }
+
+    function renderStats() {
+      const meta = state.meta || { validRows: 0, totalActual: 0, totalConverted: 0, skippedRows: 0 };
+      const visible = visibleEmployees();
+      const html = [
+        ["NV hiển thị", `${visible.length}/${state.employees.length}`, "người"],
+        ["Dòng hợp lệ", formatNumber(meta.validRows, 0), "giao dịch"],
+        ["DT thực", formatMoney(meta.totalActual), "tổng siêu thị"],
+        ["DT Q.Đ", formatMoney(meta.totalConverted), "đã nhân hệ số"],
+      ]
+        .map(([label, value, sub]) => `
+          <div class="stat">
+            <div class="stat-label">${label}</div>
+            <div class="stat-value">${value}</div>
+            <div class="status">${sub}</div>
+          </div>
+        `)
+        .join("");
+      $("statsGrid").innerHTML = html;
+      $("parseMeta").textContent = `${meta.validRows || 0} dòng hợp lệ · ${meta.skippedRows || 0} dòng bỏ qua`;
+      $("captureMeta").textContent = `${visible.length} nhân viên${meta.storeName ? " · " + meta.storeName : ""}`;
+    }
+
+    function renderChips() {
+      $("employeeChips").innerHTML = state.employees
+        .map((emp) => {
+          const hidden = state.hiddenKeys.has(emp.key);
+          return `<button class="chip ${hidden ? "off" : ""}" data-toggle="${escapeHtml(emp.key)}">${escapeHtml(emp.name)} <span>${escapeHtml(emp.id || "")}</span></button>`;
+        })
+        .join("");
+    }
+
+    function renderBestSeller() {
+      const list = visibleEmployees();
+      if (!list.length) {
+        $("sellerList").innerHTML = '<div class="empty">Chưa có dữ liệu phân tích.</div>';
+        return;
+      }
+      $("sellerList").innerHTML = list
+        .map((emp, idx) => {
+          const rank = idx + 1;
+          return `
+            <div class="seller-row rank-${rank}">
+              <div class="avatar">${userIcon()}</div>
+              <div>
+                <span class="seller-name">${escapeHtml(emp.id ? `${emp.id} - ${emp.name}` : emp.name)}</span>
+                <div class="metrics">
+                  <span>THỰC: <b>${formatMoney(emp.actual)}</b></span>
+                  <span>Q.Đ: <b>${formatMoney(emp.converted)}</b></span>
+                  <span>% QĐ: <b>${formatNumber(emp.convertPct, 0)}%</b></span>
+                  <span>Đ.Góp: <b>${formatNumber(emp.contributionPct, 1)}%</b></span>
+                </div>
+              </div>
+              <div class="rank-mark">${rankMark(rank)}</div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function renderDetailTable() {
+      const list = visibleEmployees();
+      if (!list.length) {
+        $("detailBody").innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px">Chưa có dữ liệu.</td></tr>';
+        return;
+      }
+      $("detailBody").innerHTML = list
+        .map((emp, idx) => `
+          <tr>
+            <td><strong>#${idx + 1}</strong></td>
+            <td><strong>${escapeHtml(emp.name)}</strong><div class="status">${escapeHtml(emp.id || "Không mã")}</div></td>
+            <td class="num">${formatNumber(emp.rows, 0)}</td>
+            <td class="num">${formatMoney(emp.actual)}</td>
+            <td class="num">${formatMoney(emp.converted)}</td>
+            <td class="num">${formatNumber(emp.convertPct, 1)}%</td>
+            <td class="num">${formatNumber(emp.contributionPct, 1)}%</td>
+            <td class="num"><button class="chip" data-toggle="${escapeHtml(emp.key)}">Ẩn</button></td>
+          </tr>
+        `)
+        .join("");
+    }
+
+    function rankMark(rank) {
+      if (rank === 1) return '<span class="honor gold">🏆</span>';
+      if (rank === 2) return '<span class="honor silver">🥈</span>';
+      if (rank === 3) return '<span class="honor bronze">🥉</span>';
+      return `#${rank}`;
+    }
+
+    function userIcon() {
+      return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.25"></circle><path d="M5.5 20c.7-4 3-6 6.5-6s5.8 2 6.5 6"></path></svg>';
+    }
+
+    function formatNumber(n, digits = 1) {
+      return Number(n || 0).toLocaleString("vi-VN", { maximumFractionDigits: digits, minimumFractionDigits: digits > 0 ? 0 : 0 });
+    }
+
+    function formatMoney(n) {
+      const value = Number(n || 0);
+      const abs = Math.abs(value);
+      if (abs >= 1_000_000_000) return `${formatNumber(value / 1_000_000_000, 1)} Tỷ`;
+      if (abs >= 1_000_000) return `${formatNumber(value / 1_000_000, 1)} Tr`;
+      if (abs >= 1_000) return `${formatNumber(value / 1_000, 1)} K`;
+      return formatNumber(value, 0);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function setStatus(text) {
+      $("statusText").textContent = text;
+    }
+
+    function saveHidden() {
+      localStorage.setItem(LS_KEY, JSON.stringify(Array.from(state.hiddenKeys)));
+    }
+
+    function loadHidden() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (raw) state.hiddenKeys = new Set(JSON.parse(raw).map(String));
+      } catch (e) {}
+    }
+
+    function persistRaw(raw) {
+      try { localStorage.setItem("top-best-seller:raw:v1", raw); } catch (e) {}
+    }
+
+    function loadRaw() {
+      try {
+        const raw = localStorage.getItem("top-best-seller:raw:v1");
+        if (raw) $("rawInput").value = raw;
+      } catch (e) {}
+    }
+
+    async function exportImage() {
+      const target = $("captureRoot");
+      const btn = $("btnExport");
+      btn.disabled = true;
+      btn.textContent = "Đang chụp...";
+      try {
+        const canvas = await html2canvas(target, {
+          scale: 2,
+          backgroundColor: "#ffffff",
+          useCORS: true,
+          logging: false,
+        });
+        const link = document.createElement("a");
+        link.download = `top-best-seller-${new Date().toISOString().slice(0, 10)}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        setStatus("Đã tạo ảnh Top Best Seller.");
+      } catch (err) {
+        console.error(err);
+        setStatus("Không thể tạo ảnh: " + (err && err.message ? err.message : String(err)));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Chụp ảnh";
+      }
+    }
+
+    function initSession() {
+      try {
+        const session = JSON.parse(localStorage.getItem("mwg_session") || "{}");
+        $("navUsername").textContent = session.displayName || session.username || "—";
+      } catch (e) {}
+    }
+
+    document.addEventListener("click", (event) => {
+      const toggle = event.target.closest("[data-toggle]");
+      if (!toggle) return;
+      const key = toggle.getAttribute("data-toggle");
+      if (!key) return;
+      if (state.hiddenKeys.has(key)) state.hiddenKeys.delete(key);
+      else state.hiddenKeys.add(key);
+      saveHidden();
+      renderAll();
+    });
+
+    $("btnAnalyze").addEventListener("click", analyze);
+    $("btnExport").addEventListener("click", exportImage);
+    $("btnResetHidden").addEventListener("click", () => {
+      state.hiddenKeys.clear();
+      saveHidden();
+      renderAll();
+      setStatus("Đã bỏ ẩn toàn bộ nhân viên.");
+    });
+    $("btnClear").addEventListener("click", () => {
+      $("rawInput").value = "";
+      localStorage.removeItem("top-best-seller:raw:v1");
+      state.employees = [];
+      state.meta = null;
+      $("btnExport").disabled = true;
+      renderAll();
+      setStatus("Đã xóa dữ liệu đang dán.");
+    });
+    $("btnLogout").addEventListener("click", () => {
+      localStorage.removeItem("mwg_session");
+      window.location.href = "./index.html";
+    });
+
+    loadHidden();
+    initSession();
+    loadRaw();
+    renderAll();
+  </script>
+</body>
+</html>
