@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>DocScan AI – BI MWG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #f5c518;
+    --text: #f8fafc;
+    --muted: rgba(226, 232, 240, 0.78);
+    --panel: rgba(10, 14, 24, 0.70);
+    --panel-hover: rgba(31, 41, 55, 0.82);
+    --line: rgba(255, 255, 255, 0.12);
+    --blue: #378ADD;
+    --blue-dark: #185FA5;
+    --green: #34d399;
+    --red-soft: rgba(248,113,113,0.18);
+    --red-border: rgba(248,113,113,0.3);
+    --red-text: #fca5a5;
+  }
+
+  html, body {
+    min-height: 100vh;
+    font-family: "Inter", sans-serif;
+    color: var(--text);
+    background-image: url("https://cdn.mwg.vn/mwg-content/images/truso/truso1.jpg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+
+  .overlay {
+    position: fixed; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.52), rgba(0,0,0,0.72));
+    z-index: 1; pointer-events: none;
+  }
+
+  .page {
+    position: relative; z-index: 2;
+    width: min(100%, 480px);
+    margin: 0 auto;
+    padding: 16px 14px calc(env(safe-area-inset-bottom, 0px) + 28px);
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  /* ── Topbar ── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(10,14,24,0.6);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .back-btn {
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.08); border: 1px solid var(--line);
+    color: var(--muted); font-size: 0.8rem; font-family: "Inter", sans-serif;
+    font-weight: 600; padding: 5px 12px; border-radius: 20px;
+    cursor: pointer; text-decoration: none;
+    transition: background 160ms;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.14); }
+  .topbar-user { font-size: 0.82rem; color: var(--muted); }
+  .topbar-user strong { color: var(--accent); }
+  .btn-logout {
+    background: var(--red-soft); border: 1px solid var(--red-border);
+    color: var(--red-text); font-size: 0.78rem; font-family: "Inter", sans-serif;
+    font-weight: 600; padding: 6px 14px; border-radius: 20px; cursor: pointer;
+    transition: background 160ms;
+  }
+  .btn-logout:hover { background: rgba(248,113,113,0.3); }
+
+  /* ── Hero ── */
+  .hero {
+    text-align: center;
+    padding: 18px 20px 14px;
+    background: rgba(10,14,24,0.54);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    backdrop-filter: blur(10px);
+  }
+  .eyebrow {
+    font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(255,255,255,0.5); font-weight: 700; margin-bottom: 5px;
+  }
+  .hero h1 {
+    font-family: "Roboto Condensed", sans-serif;
+    font-size: clamp(1.5rem, 5vw, 2.2rem);
+    line-height: 1; letter-spacing: 0.03em;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero-sub { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-top: 6px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: rgba(255,255,255,0.5);
+  }
+
+  /* ── API Key ── */
+  .api-section { padding: 14px 16px; }
+  .field-label {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 7px;
+  }
+  .api-input {
+    width: 100%; padding: 11px 14px;
+    background: rgba(255,255,255,0.07); color: var(--text);
+    border: 1px solid rgba(255,255,255,0.14); border-radius: 9px;
+    font-size: 0.9rem; font-family: "Inter", sans-serif; outline: none;
+    transition: border-color 160ms;
+  }
+  .api-input:focus { border-color: rgba(245,197,24,0.45); }
+  .api-input::placeholder { color: rgba(255,255,255,0.25); }
+  .api-hint { font-size: 0.72rem; color: rgba(255,255,255,0.35); margin-top: 6px; }
+
+  /* ── Upload zone ── */
+  .upload-zone {
+    margin: 14px 16px;
+    border: 1.5px dashed rgba(255,255,255,0.22);
+    border-radius: 14px;
+    padding: 32px 16px;
+    text-align: center; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .upload-zone:active { border-color: var(--accent); background: rgba(245,197,24,0.06); }
+  .upload-icon {
+    width: 52px; height: 52px;
+    background: rgba(245,197,24,0.12); border-radius: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 26px; margin-bottom: 12px;
+  }
+  .upload-label { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+  .upload-sub { font-size: 0.78rem; color: rgba(255,255,255,0.45); }
+
+  /* ── Button row ── */
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px 16px; }
+  .action-btn {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 12px 8px; font-size: 0.88rem; font-weight: 700;
+    font-family: "Inter", sans-serif;
+    border-radius: 10px; border: 1px solid var(--line);
+    cursor: pointer; transition: transform 0.1s, opacity 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: -0.1px;
+  }
+  .action-btn:active { transform: scale(0.96); opacity: 0.8; }
+  .btn-cam { background: var(--accent); color: #1a1000; border-color: var(--accent); }
+  .btn-gallery { background: rgba(255,255,255,0.1); color: var(--text); }
+
+  /* ── Filter chips ── */
+  .filter-scroll {
+    display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 14px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .filter-scroll::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0; padding: 5px 14px; font-size: 0.78rem; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 20px;
+    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
+  }
+  .chip.active { background: var(--accent); color: #1a1000; border-color: var(--accent); }
+
+  /* ── Canvas ── */
+  .canvas-wrap {
+    background: #0d0d0d; min-height: 160px;
+    display: flex; align-items: center; justify-content: center; position: relative;
+  }
+  #scanCanvas { display: block; max-width: 100%; max-height: 440px; }
+  .corners { position: absolute; inset: 10px; pointer-events: none; }
+  .corner { position: absolute; width: 18px; height: 18px; border-color: #4FFFB0; border-style: solid; }
+  .corner.tl { top:0; left:0; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+  .corner.tr { top:0; right:0; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
+  .corner.bl { bottom:0; left:0; border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
+  .corner.br { bottom:0; right:0; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+
+  /* ── Progress ── */
+  .prog-track { height: 2px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--blue); width: 0; transition: width 0.5s ease; }
+  .prog-fill.pulse { animation: prog-anim 1.4s ease-in-out infinite; }
+  @keyframes prog-anim {
+    0%   { width:0%;  margin-left:0%; }
+    50%  { width:55%; margin-left:25%; }
+    100% { width:0%;  margin-left:100%; }
+  }
+
+  /* ── Status ── */
+  .status-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 16px; font-size: 0.8rem; color: rgba(255,255,255,0.5);
+  }
+  .s-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.2); flex-shrink: 0; transition: background 0.3s; }
+  .s-dot.active { background: var(--blue); }
+  .s-dot.done   { background: #34d399; }
+  .s-dot.error  { background: #f87171; }
+
+  /* ── OCR Toggle ── */
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-top: 1px solid var(--line);
+  }
+  .toggle-info .tl { font-size: 0.9rem; font-weight: 600; }
+  .toggle-info .ts { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .ios-sw {
+    width: 51px; height: 31px; background: rgba(255,255,255,0.18);
+    border-radius: 15.5px; position: relative; cursor: pointer; border: none;
+    transition: background 0.25s; flex-shrink: 0; -webkit-tap-highlight-color: transparent;
+  }
+  .ios-sw.on { background: #34d399; }
+  .ios-sw::after {
+    content: ''; position: absolute;
+    width: 27px; height: 27px; background: #fff; border-radius: 50%;
+    top: 2px; left: 2px; transition: left 0.25s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  }
+  .ios-sw.on::after { left: 22px; }
+
+  /* ── OCR result ── */
+  .ocr-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 16px; border-bottom: 1px solid var(--line);
+  }
+  .ocr-title { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+  .copy-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 14px; font-size: 0.78rem; font-weight: 700;
+    background: rgba(245,197,24,0.15); color: var(--accent);
+    border: 1px solid rgba(245,197,24,0.3); border-radius: 20px;
+    cursor: pointer; transition: transform 0.1s; -webkit-tap-highlight-color: transparent;
+  }
+  .copy-btn:active { transform: scale(0.95); }
+  .copy-btn.done { background: rgba(52,211,153,0.15); color: #34d399; border-color: rgba(52,211,153,0.3); }
+  .ocr-body {
+    padding: 14px 16px; font-size: 0.9rem; line-height: 1.7;
+    color: var(--text); white-space: pre-wrap; word-break: break-word; min-height: 68px;
+  }
+  .ocr-body.ph { color: rgba(255,255,255,0.3); font-style: italic; }
+  .ocr-loading { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.5); }
+  .dots { display: flex; gap: 4px; }
+  .dots span {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--blue);
+    animation: db 1.1s infinite;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.18s; }
+  .dots span:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes db { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-7px)} }
+
+  /* ── Action bottom row ── */
+  .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .b-btn {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 12px 8px; font-size: 0.85rem; font-weight: 700;
+    font-family: "Inter", sans-serif; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--panel);
+    color: var(--text); cursor: pointer; backdrop-filter: blur(6px);
+    transition: transform 0.1s, background 0.1s; -webkit-tap-highlight-color: transparent;
+  }
+  .b-btn:active { transform: scale(0.96); }
+  .b-btn:hover { background: var(--panel-hover); }
+  .b-btn.primary { background: var(--accent); color: #1a1000; border-color: var(--accent); }
+  .b-btn.primary:hover { opacity: 0.9; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="overlay"></div>
+
+<div class="page">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-btn" href="./main.html">← Quay lại</a>
+      <span class="topbar-user">Xin chào, <strong id="display-name">...</strong></span>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <p class="eyebrow">MWG Business Intelligence</p>
+    <h1>Doc<span>Scan</span> AI</h1>
+    <p class="hero-sub">Scan tài liệu · Đọc chữ tự động · Sao chép nhanh</p>
+  </div>
+
+  <!-- API Key -->
+  <div class="card">
+    <div class="card-header">
+      <span>🔑 Anthropic API Key</span>
+      <span id="key-status" style="font-size:0.72rem;color:rgba(255,255,255,0.3);">Chưa nhập</span>
+    </div>
+    <div class="api-section">
+      <div class="field-label">API Key (dùng cho tính năng OCR)</div>
+      <input class="api-input" type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off" spellcheck="false" oninput="onKeyInput()">
+      <div class="api-hint">Key lưu trên máy bạn, không gửi đi đâu ngoài Anthropic API.</div>
+    </div>
+  </div>
+
+  <!-- Upload / Camera -->
+  <div class="card">
+    <div class="card-header">📸 Chọn ảnh tài liệu</div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📁</div>
+      <div class="upload-label">Nhấn để chọn ảnh</div>
+      <div class="upload-sub">Hoá đơn · Hợp đồng · Ghi chú · Bảng biểu</div>
+    </div>
+    <div class="btn-row">
+      <button class="action-btn btn-cam" onclick="document.getElementById('camInput').click()">📷 Chụp ảnh</button>
+      <button class="action-btn btn-gallery" onclick="document.getElementById('fileInput').click()">🖼 Thư viện</button>
+    </div>
+  </div>
+  <input type="file" id="fileInput" accept="image/*" style="display:none">
+  <input type="file" id="camInput"  accept="image/*" capture="environment" style="display:none">
+
+  <!-- Filter chips -->
+  <div class="filter-scroll hidden" id="filterRow">
+    <div class="chip active" onclick="applyFilter('original',this)">Gốc</div>
+    <div class="chip" onclick="applyFilter('scan',this)">Scan trắng đen</div>
+    <div class="chip" onclick="applyFilter('enhance',this)">Tăng sắc nét</div>
+    <div class="chip" onclick="applyFilter('auto',this)">Auto contrast</div>
+  </div>
+
+  <!-- Preview + OCR toggle -->
+  <div class="card hidden" id="previewCard">
+    <div class="card-header">
+      <span>🔲 Bản scan</span>
+      <span id="scanBadge" style="color:rgba(255,255,255,0.3);">–</span>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="scanCanvas"></canvas>
+      <div class="corners">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+      </div>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    <div class="status-row">
+      <div class="s-dot" id="sDot"></div>
+      <span id="sText">Đang xử lý…</span>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="tl">📝 Đọc chữ (OCR)</div>
+        <div class="ts">AI trích xuất nội dung văn bản từ ảnh</div>
+      </div>
+      <button class="ios-sw" id="ocrSw" onclick="toggleOCR()" aria-label="Bật/tắt OCR"></button>
+    </div>
+  </div>
+
+  <!-- OCR result -->
+  <div class="card hidden" id="ocrCard">
+    <div class="ocr-header">
+      <span class="ocr-title">📋 Nội dung đọc được</span>
+      <button class="copy-btn" id="copyBtn" onclick="copyText()">📋 Sao chép</button>
+    </div>
+    <div class="ocr-body ph" id="ocrBody">Chưa có nội dung.</div>
+  </div>
+
+  <!-- Bottom actions -->
+  <div class="bottom-row hidden" id="bottomRow">
+    <button class="b-btn" onclick="resetAll()">↩ Scan mới</button>
+    <button class="b-btn primary" onclick="downloadScan()">💾 Lưu ảnh</button>
+  </div>
+
+</div><!-- .page -->
+
+<script>
+  /* ── AUTH GUARD ──────────────────────────────────────── */
+  let session = null;
+  (function () {
+    try {
+      const raw = localStorage.getItem("mwg_session");
+      if (!raw) { window.location.href = "./index.html"; return; }
+      session = JSON.parse(raw);
+      if (!session || !session.username) { window.location.href = "./index.html"; return; }
+      document.getElementById("display-name").textContent = session.displayName || session.username;
+    } catch (e) {
+      window.location.href = "./index.html";
+    }
+  })();
+
+  function doLogout() {
+    localStorage.removeItem("mwg_session");
+    window.location.href = "./index.html";
+  }
+
+  /* ── STATE ───────────────────────────────────────────── */
+  let origImg = null;
+  let ocrOn = false;
+  let ocrText = '';
+  let scannedUrl = null;
+  let currentFilter = 'original';
+
+  const $ = id => document.getElementById(id);
+
+  /* ── API KEY ─────────────────────────────────────────── */
+  function onKeyInput() {
+    const v = $('apiKey').value.trim();
+    $('key-status').textContent = v ? '✓ Đã nhập' : 'Chưa nhập';
+    $('key-status').style.color = v ? '#34d399' : 'rgba(255,255,255,0.3)';
+  }
+
+  /* ── FILE INPUT ──────────────────────────────────────── */
+  $('fileInput').addEventListener('change', e => loadFile(e.target.files[0]));
+  $('camInput').addEventListener('change',  e => loadFile(e.target.files[0]));
+  $('uploadZone').addEventListener('dragover', e => e.preventDefault());
+  $('uploadZone').addEventListener('drop', e => { e.preventDefault(); loadFile(e.dataTransfer.files[0]); });
+
+  function loadFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = e => {
+      const img = new Image();
+      img.onload = () => { origImg = img; doProcess('original'); };
+      img.src = e.target.result;
+    };
+    r.readAsDataURL(file);
+    // reset filter chips
+    currentFilter = 'original';
+    document.querySelectorAll('.chip').forEach((c,i) => c.classList.toggle('active', i===0));
+  }
+
+  /* ── PROCESS ─────────────────────────────────────────── */
+  function doProcess(filter) {
+    $('previewCard').classList.remove('hidden');
+    $('filterRow').classList.remove('hidden');
+    $('ocrCard').classList.add('hidden');
+    $('bottomRow').classList.add('hidden');
+    ocrText = ''; scannedUrl = null;
+
+    const pf = $('progFill');
+    pf.style.width = '0'; pf.classList.add('pulse');
+    setStatus('Đang xử lý ảnh…', 'active');
+
+    const canvas = $('scanCanvas');
+    const maxW = 380, maxH = 460;
+    let w = origImg.width, h = origImg.height;
+    const r = Math.min(maxW/w, maxH/h, 1);
+    w = Math.round(w*r); h = Math.round(h*r);
+    canvas.width = w; canvas.height = h;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(origImg, 0, 0, w, h);
+    applyFilterToCtx(filter, ctx, w, h);
+    scannedUrl = canvas.toDataURL('image/jpeg', 0.94);
+    $('scanBadge').textContent = w + ' × ' + h;
+
+    setTimeout(() => {
+      pf.classList.remove('pulse'); pf.style.width = '100%';
+      setStatus('Xử lý hoàn tất ✓', 'done');
+      $('bottomRow').classList.remove('hidden');
+      if (ocrOn) runOCR();
+    }, 700);
+  }
+
+  function setStatus(t, s) {
+    $('sText').textContent = t;
+    $('sDot').className = 's-dot' + (s ? ' '+s : '');
+  }
+
+  /* ── FILTERS ─────────────────────────────────────────── */
+  function applyFilter(mode, chipEl) {
+    if (chipEl) {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chipEl.classList.add('active');
+      currentFilter = mode;
+    }
+    if (!origImg) return;
+    const canvas = $('scanCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(origImg, 0, 0, canvas.width, canvas.height);
+    applyFilterToCtx(mode, ctx, canvas.width, canvas.height);
+    scannedUrl = canvas.toDataURL('image/jpeg', 0.94);
+  }
+
+  function applyFilterToCtx(mode, ctx, w, h) {
+    if (mode === 'original') return;
+    const id = ctx.getImageData(0, 0, w, h);
+    const d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      let r=d[i], g=d[i+1], b=d[i+2];
+      if (mode === 'scan') {
+        let lum = 0.299*r + 0.587*g + 0.114*b;
+        lum = Math.min(255, (lum-128)*1.4 + 148);
+        d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,lum));
+      } else if (mode === 'enhance') {
+        let lum = 0.299*r + 0.587*g + 0.114*b;
+        const s=1.25; r=lum+s*(r-lum); g=lum+s*(g-lum); b=lum+s*(b-lum);
+        const f=1.15; r=(r-128)*f+128; g=(g-128)*f+128; b=(b-128)*f+128;
+        d[i]=Math.max(0,Math.min(255,r)); d[i+1]=Math.max(0,Math.min(255,g)); d[i+2]=Math.max(0,Math.min(255,b));
+      } else if (mode === 'auto') {
+        let lum = 0.299*r + 0.587*g + 0.114*b;
+        lum = Math.min(255, (lum-40)*(255/200)+10);
+        d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,lum));
+      }
+    }
+    ctx.putImageData(id, 0, 0);
+  }
+
+  /* ── OCR TOGGLE ──────────────────────────────────────── */
+  function toggleOCR() {
+    ocrOn = !ocrOn;
+    $('ocrSw').classList.toggle('on', ocrOn);
+    if (ocrOn && scannedUrl) {
+      $('ocrCard').classList.remove('hidden');
+      if (!ocrText) runOCR();
+    } else {
+      $('ocrCard').classList.add('hidden');
+    }
+  }
+
+  /* ── OCR via Claude API ──────────────────────────────── */
+  async function runOCR() {
+    const apiKey = $('apiKey').value.trim();
+    if (!apiKey) {
+      $('ocrCard').classList.remove('hidden');
+      $('ocrBody').className = 'ocr-body ph';
+      $('ocrBody').textContent = '⚠️ Vui lòng nhập API Key Anthropic ở trên để dùng tính năng OCR.';
+      return;
+    }
+
+    $('ocrCard').classList.remove('hidden');
+    $('ocrBody').className = 'ocr-body';
+    $('ocrBody').innerHTML = '<div class="ocr-loading"><div class="dots"><span></span><span></span><span></span></div> Đang đọc chữ bằng AI…</div>';
+
+    const base64 = $('scanCanvas').toDataURL('image/jpeg', 0.85).split(',')[1];
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-calls': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 2000,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+              { type: 'text', text: 'Hãy đọc và trích xuất toàn bộ nội dung văn bản có trong ảnh tài liệu này. Giữ nguyên cấu trúc dòng và đoạn văn. Chỉ trả về phần văn bản thuần tuý, không thêm giải thích hay chú thích.' }
+            ]
+          }]
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        throw new Error(err?.error?.message || 'HTTP ' + res.status);
+      }
+      const data = await res.json();
+      ocrText = (data.content||[]).map(b=>b.text||'').join('').trim() || '(Không tìm thấy văn bản trong ảnh)';
+      $('ocrBody').className = 'ocr-body';
+      $('ocrBody').textContent = ocrText;
+    } catch(err) {
+      $('ocrBody').className = 'ocr-body ph';
+      $('ocrBody').textContent = '❌ Lỗi: ' + err.message;
+    }
+  }
+
+  /* ── COPY ────────────────────────────────────────────── */
+  function copyText() {
+    if (!ocrText) return;
+    navigator.clipboard.writeText(ocrText).then(() => {
+      const b = $('copyBtn');
+      b.className = 'copy-btn done'; b.textContent = '✅ Đã sao chép';
+      setTimeout(() => { b.className = 'copy-btn'; b.textContent = '📋 Sao chép'; }, 2200);
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = ocrText; ta.style.cssText='position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    });
+  }
+
+  /* ── DOWNLOAD ────────────────────────────────────────── */
+  function downloadScan() {
+    if (!scannedUrl) return;
+    const a = document.createElement('a');
+    a.href = scannedUrl;
+    a.download = 'scan_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.jpg';
+    a.click();
+  }
+
+  /* ── RESET ───────────────────────────────────────────── */
+  function resetAll() {
+    origImg=null; ocrText=''; scannedUrl=null; currentFilter='original'; ocrOn=false;
+    $('ocrSw').classList.remove('on');
+    $('previewCard').classList.add('hidden');
+    $('ocrCard').classList.add('hidden');
+    $('bottomRow').classList.add('hidden');
+    $('filterRow').classList.add('hidden');
+    $('fileInput').value=''; $('camInput').value='';
+    document.querySelectorAll('.chip').forEach((c,i)=>c.classList.toggle('active',i===0));
+    const pf=$('progFill'); pf.style.width='0'; pf.classList.remove('pulse');
+  }
+</script>
+</body>
+</html>
