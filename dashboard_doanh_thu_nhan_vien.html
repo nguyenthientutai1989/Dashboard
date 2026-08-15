@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sức Khỏe Nhân Viên</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+/* ============================================================
+   MWG ECOSYSTEM NAV — đồng bộ giao diện thanh điều hướng với
+   các trang khác trong hệ thống (main.html, dashboard_*.html)
+   ============================================================ */
+:root{ --nav-h: 52px; }
+body{ padding-top: var(--nav-h); }
+.mwg-nav{
+  position:fixed; top:0; left:0; right:0; height:var(--nav-h); z-index:500;
+  display:flex; align-items:center; gap:10px; padding:0 20px;
+  background:rgba(10,14,24,0.94); border-bottom:1px solid rgba(255,255,255,0.10);
+  backdrop-filter:blur(14px); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+.nav-brand{ display:flex; align-items:center; gap:9px; margin-right:auto; color:#fff; text-decoration:none; }
+.nav-brand-badge{ background:#f5c518; color:#111; font-size:10px; font-weight:900; padding:3px 8px; border-radius:5px; letter-spacing:.08em; }
+.nav-brand-name{ font-size:13px; font-weight:800; }
+.nav-page-badge{
+  font-size:10px; font-weight:800; color:rgba(255,255,255,.55); background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12); padding:3px 9px; border-radius:999px;
+  text-transform:uppercase; letter-spacing:.06em;
+}
+.nav-user{ display:flex; align-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,.55); }
+.nav-dot{ width:7px; height:7px; border-radius:50%; background:#4ade80; box-shadow:0 0 8px rgba(74,222,128,.7); }
+.nav-user strong{ color:#f5c518; }
+.nav-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:32px;
+  padding:7px 13px; border-radius:7px; font-size:11.5px; font-weight:700; text-decoration:none;
+  cursor:pointer; border:1px solid transparent; white-space:nowrap; font-family:inherit;
+}
+.nav-btn.btn-home{ background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.12); color:rgba(255,255,255,.82); }
+.nav-btn.btn-logout{ background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.25); color:#fca5a5; }
+@media (max-width:640px){ .nav-page-badge, .nav-user{ display:none; } }
+
+/* ============================================================
+   SỨC KHỎE NHÂN VIÊN — design tokens & base styles
+   Concept: "vitals monitor" — cool clinical paper background,
+   teal primary (monitor glow), mono digits for readouts, a
+   heartbeat/ECG line as the signature motif in the header.
+   ============================================================ */
+:root{
+  --ink:#101826;
+  --ink-soft:#3A4553;
+  --muted:#6B7684;
+  --faint:#94A0AC;
+  --paper:#EEF2F4;
+  --panel:#FFFFFF;
+  --panel-2:#F7F9FA;
+  --line:#DDE4E8;
+  --line-soft:#E9EEF1;
+
+  --primary:#0E7490;
+  --primary-dark:#0B5D74;
+  --primary-100:#E3F1F4;
+  --primary-50:#F1F8FA;
+
+  --good:#1F9D63;
+  --good-100:#E4F6ED;
+  --bad:#DC4C4C;
+  --bad-100:#FBEAEA;
+  --warn:#C57A11;
+  --warn-100:#FBF1E1;
+  --accent2:#6D5BD0;
+  --accent2-100:#EEEBFA;
+
+  --radius-lg:18px;
+  --radius-md:12px;
+  --radius-sm:8px;
+  --shadow-1: 0 1px 2px rgba(16,24,38,.05), 0 1px 1px rgba(16,24,38,.03);
+  --shadow-2: 0 8px 24px rgba(16,24,38,.08), 0 2px 6px rgba(16,24,38,.05);
+  --shadow-3: 0 20px 48px rgba(16,24,38,.16);
+
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font-ui);
+  background:var(--paper);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  font-size:14px;
+  line-height:1.5;
+}
+h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:-0.01em;}
+p{margin:0;}
+button{font-family:inherit;}
+::selection{background:var(--primary-100);}
+
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+
+a{color:var(--primary);text-decoration:none;}
+
+/* ---------- App shell ---------- */
+#app{min-height:100vh;display:flex;flex-direction:column;}
+
+.topbar{
+  position:sticky;top:var(--nav-h);z-index:40;
+  background:linear-gradient(180deg,#0F2530 0%, #123542 100%);
+  color:#fff;
+  padding:18px 28px;
+  overflow:hidden;
+}
+.topbar-inner{
+  position:relative;z-index:2;
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+  max-width:1400px;margin:0 auto;
+}
+.brand{display:flex;align-items:center;gap:14px;}
+.brand-mark{
+  width:42px;height:42px;border-radius:12px;
+  background:rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.18);
+  font-size:20px;
+}
+.brand-title{font-size:19px;font-weight:800;letter-spacing:.01em;color:#fff;}
+.brand-sub{font-size:12.5px;color:#AFD9E4;margin-top:2px;}
+.topbar-status{
+  display:flex;align-items:center;gap:18px;font-size:12.5px;color:#CFE7EC;
+  flex-wrap:wrap;justify-content:flex-end;
+}
+.status-chip{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+  padding:6px 12px;border-radius:999px;
+}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--faint);}
+.status-dot.on{background:#3DDC97;box-shadow:0 0 0 3px rgba(61,220,151,.25);}
+.status-dot.off{background:#E9967A;}
+
+.ecg-wrap{position:absolute;inset:0;opacity:.35;pointer-events:none;}
+.ecg-line{stroke:#4FD3E8;stroke-width:1.6;fill:none;stroke-dasharray:1400;stroke-dashoffset:1400;animation:ecgdraw 5.5s linear infinite;}
+@keyframes ecgdraw{
+  0%{stroke-dashoffset:1400;}
+  60%{stroke-dashoffset:0;}
+  100%{stroke-dashoffset:-1400;}
+}
+
+.tabbar{
+  display:flex;gap:4px;padding:0 28px;background:#fff;
+  border-bottom:1px solid var(--line);position:sticky;top:calc(var(--nav-h) + 78px);z-index:35;
+  overflow-x:auto;
+}
+.tabbar-inner{display:flex;gap:2px;max-width:1400px;margin:0 auto;width:100%;}
+.tab-btn{
+  border:none;background:transparent;padding:14px 16px;font-size:13.5px;font-weight:600;
+  color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+}
+.tab-btn:hover{color:var(--ink);}
+.tab-btn.active{color:var(--primary-dark);border-bottom-color:var(--primary);}
+.tab-badge{
+  background:var(--bad);color:#fff;font-size:10.5px;font-weight:700;
+  border-radius:999px;padding:1px 6px;min-width:16px;text-align:center;
+}
+
+main{flex:1;max-width:1400px;margin:0 auto;padding:24px 28px 80px;width:100%;}
+
+/* ---------- Cards ---------- */
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-1);
+}
+.card-pad{padding:20px 22px;}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+.card-title{font-size:15px;font-weight:700;}
+.card-sub{font-size:12.5px;color:var(--muted);margin-top:2px;}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);
+  font-size:13.5px;font-weight:600;padding:10px 16px;cursor:pointer;transition:.15s ease;
+}
+.btn:hover{background:var(--panel-2);border-color:#C9D3D9;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);}
+.btn-primary:disabled:hover{background:var(--primary);}
+.btn-lg{padding:14px 26px;font-size:14.5px;border-radius:12px;}
+.btn-ghost{background:transparent;border-color:transparent;}
+.btn-ghost:hover{background:var(--panel-2);}
+.btn-danger-outline{color:var(--bad);border-color:#F3CACA;}
+.btn-danger-outline:hover{background:var(--bad-100);}
+.btn-block{width:100%;}
+.btn-sm{padding:7px 12px;font-size:12.5px;border-radius:8px;}
+.icon-btn{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:#fff;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);
+}
+.icon-btn:hover{background:var(--panel-2);color:var(--ink);}
+
+/* ---------- Upload view ---------- */
+.hero{max-width:760px;margin:8px auto 28px;text-align:center;}
+.hero h2{font-size:24px;}
+.hero p{color:var(--muted);margin-top:8px;font-size:14px;}
+
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:980px;margin:0 auto;}
+@media (max-width: 760px){.upload-grid{grid-template-columns:1fr;}}
+
+.dropzone{
+  border:2px dashed var(--line);border-radius:var(--radius-lg);
+  background:var(--panel);padding:26px 20px;text-align:center;cursor:pointer;
+  transition:.15s ease;position:relative;min-height:230px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+}
+.dropzone:hover{border-color:var(--primary);background:var(--primary-50);}
+.dropzone.dragover{border-color:var(--primary);background:var(--primary-100);}
+.dropzone.filled{border-style:solid;border-color:var(--good);background:var(--good-100);}
+.dropzone.erroring{border-style:solid;border-color:var(--bad);background:var(--bad-100);}
+.dz-label{font-size:11.5px;font-weight:800;letter-spacing:.08em;color:var(--primary-dark);text-transform:uppercase;}
+.dz-icon{font-size:30px;}
+.dz-title{font-weight:700;font-size:14.5px;}
+.dz-hint{color:var(--muted);font-size:12.5px;}
+.dz-file{
+  margin-top:6px;background:#fff;border:1px solid var(--line);border-radius:10px;
+  padding:8px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;max-width:100%;
+}
+.dz-file .fname{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;}
+input[type=file]{display:none;}
+
+.upload-actions{max-width:980px;margin:22px auto 0;display:flex;flex-direction:column;align-items:center;gap:12px;}
+.progress-wrap{width:100%;max-width:420px;height:8px;background:var(--line-soft);border-radius:999px;overflow:hidden;}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--primary),#38B4CC);width:0%;transition:width .2s ease;}
+.progress-text{font-size:12.5px;color:var(--muted);}
+
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--muted);
+}
+.empty-state .ico{font-size:40px;margin-bottom:10px;}
+
+/* ---------- KPI grid ---------- */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:22px;}
+@media (max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr);}}
+@media (max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+.kpi-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-md);
+  padding:16px 16px;position:relative;overflow:hidden;
+}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.kpi-icon{font-size:17px;}
+.kpi-label{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;}
+.kpi-value{font-family:var(--font-mono);font-size:21px;font-weight:700;letter-spacing:-0.01em;}
+.kpi-delta{font-size:12px;margin-top:6px;font-weight:700;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;}
+.kpi-delta.up{color:var(--good);background:var(--good-100);}
+.kpi-delta.down{color:var(--bad);background:var(--bad-100);}
+.kpi-delta.flat{color:var(--muted);background:var(--panel-2);}
+.kpi-tip{
+  position:absolute;top:12px;right:12px;color:var(--faint);cursor:help;font-size:12px;
+}
+
+/* ---------- Charts grid ---------- */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media (max-width:980px){.chart-grid{grid-template-columns:1fr;}}
+.chart-card{height:340px;display:flex;flex-direction:column;}
+.chart-canvas-wrap{flex:1;position:relative;}
+
+/* ---------- Table ---------- */
+.table-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.search-input{
+  flex:1;min-width:180px;border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:13.5px;
+  background:var(--panel-2);
+}
+.search-input:focus{outline:2px solid var(--primary-100);border-color:var(--primary);background:#fff;}
+select.filter-select{
+  border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;background:#fff;color:var(--ink);
+}
+.table-scroll{overflow-x:auto;border:1px solid var(--line-soft);border-radius:var(--radius-md);}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px;}
+thead th{
+  text-align:left;padding:11px 12px;background:var(--panel-2);color:var(--muted);
+  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;
+  border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;position:sticky;top:0;
+}
+thead th:hover{color:var(--ink);}
+thead th .sort-arrow{opacity:.4;margin-left:3px;}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--line-soft);white-space:nowrap;}
+tbody tr{cursor:pointer;transition:background .1s;}
+tbody tr:hover{background:var(--primary-50);}
+tbody tr:last-child td{border-bottom:none;}
+td.num{font-family:var(--font-mono);text-align:right;font-variant-numeric:tabular-nums;}
+th.num{text-align:right;}
+.emp-name-cell{display:flex;flex-direction:column;}
+.emp-name{font-weight:700;}
+.emp-code{font-size:11px;color:var(--faint);}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;}
+.pill.up{color:var(--good);background:var(--good-100);}
+.pill.down{color:var(--bad);background:var(--bad-100);}
+.pill.flat{color:var(--muted);background:var(--panel-2);}
+.pill.warn{color:var(--warn);background:var(--warn-100);}
+.pill.new{color:var(--accent2);background:var(--accent2-100);}
+
+/* ---------- Badges & misc ---------- */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
+.badge-review{background:var(--warn-100);color:var(--warn);}
+.badge-excluded{background:var(--bad-100);color:var(--bad);}
+.badge-mapped{background:var(--good-100);color:var(--good);}
+.badge-manual{background:var(--accent2-100);color:var(--accent2);}
+.tooltip-icon{color:var(--faint);cursor:help;font-size:12px;border-bottom:1px dotted var(--faint);}
+
+.toast-stack{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:10px;max-width:340px;}
+.toast{
+  background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-size:13px;
+  box-shadow:var(--shadow-3);display:flex;align-items:flex-start;gap:10px;animation:toastin .2s ease;
+}
+.toast.success{background:#0E5C3B;}
+.toast.error{background:#7A2323;}
+.toast.info{background:#173142;}
+@keyframes toastin{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ---------- Overlay panel (employee detail) ---------- */
+.overlay-backdrop{
+  position:fixed;top:var(--nav-h);left:0;right:0;bottom:0;background:rgba(15,23,32,.5);z-index:100;
+  display:flex;justify-content:flex-end;
+}
+.overlay-panel{
+  width:min(880px,100%);background:var(--paper);height:100%;overflow-y:auto;
+  box-shadow:var(--shadow-3);animation:panelin .22s ease;
+}
+@keyframes panelin{from{transform:translateX(40px);opacity:.6;}to{transform:translateX(0);opacity:1;}}
+.overlay-header{
+  position:sticky;top:0;z-index:5;background:#0F2530;color:#fff;padding:18px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.overlay-body{padding:22px 24px 60px;}
+
+/* Modal (center) */
+.modal-backdrop{
+  position:fixed;top:var(--nav-h);left:0;right:0;bottom:0;background:rgba(15,23,32,.5);z-index:150;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.modal-box{
+  background:#fff;border-radius:var(--radius-lg);max-width:720px;width:100%;
+  max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-3);animation:modalin .18s ease;
+}
+@keyframes modalin{from{opacity:0;transform:scale(.97);}to{opacity:1;transform:scale(1);}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);}
+.modal-body{padding:20px 22px;}
+.modal-foot{padding:16px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
+
+/* ---------- Loading ---------- */
+.loading-overlay{
+  position:fixed;top:var(--nav-h);left:0;right:0;bottom:0;background:rgba(238,242,244,.92);z-index:300;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+}
+.spinner{width:46px;height:46px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--primary);animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:14px;color:var(--ink-soft);font-weight:600;}
+
+/* ---------- Row explain drawer content ---------- */
+.explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line-soft);border-radius:var(--radius-md);overflow:hidden;}
+.explain-row{display:contents;}
+.explain-row .k{padding:10px 14px;background:var(--panel-2);color:var(--muted);font-size:12.5px;border-bottom:1px solid var(--line-soft);}
+.explain-row .v{padding:10px 14px;font-weight:600;font-size:13px;border-bottom:1px solid var(--line-soft);font-family:var(--font-mono);}
+.explain-formula{
+  margin-top:14px;background:var(--primary-50);border:1px solid var(--primary-100);border-radius:var(--radius-md);
+  padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--primary-dark);
+}
+
+/* ---------- Section groups on health/detail page ---------- */
+.section-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:26px 0 12px;}
+.section-title:first-child{margin-top:0;}
+
+.cat-bar-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-soft);}
+.cat-bar-row:last-child{border-bottom:none;}
+.cat-name{width:150px;flex-shrink:0;font-weight:600;font-size:13px;}
+.cat-bar-track{flex:1;height:9px;background:var(--line-soft);border-radius:999px;overflow:hidden;}
+.cat-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--primary),#38B4CC);}
+.cat-meta{width:190px;flex-shrink:0;text-align:right;font-size:12px;color:var(--muted);font-family:var(--font-mono);}
+
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:760px){.insight-grid{grid-template-columns:1fr;}}
+.insight-card{border-radius:var(--radius-md);padding:16px;border:1px solid var(--line);}
+.insight-card h4{font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.insight-card ul{margin:0;padding-left:18px;font-size:13px;color:var(--ink-soft);}
+.insight-card li{margin-bottom:5px;}
+.insight-strength{background:var(--good-100);border-color:#CDEDDB;}
+.insight-improve{background:var(--warn-100);border-color:#F4E0BB;}
+.insight-trend{background:var(--primary-50);border-color:var(--primary-100);}
+.insight-note{background:var(--accent2-100);border-color:#DBD5F5;}
+
+/* ---------- Data quality ---------- */
+.dq-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+@media (max-width:900px){.dq-grid{grid-template-columns:repeat(2,1fr);}}
+.dq-cell{
+  border:1px solid var(--line);border-radius:var(--radius-md);padding:14px;cursor:pointer;background:#fff;
+  transition:.12s;
+}
+.dq-cell:hover{border-color:var(--primary);box-shadow:var(--shadow-1);}
+.dq-cell .n{font-family:var(--font-mono);font-size:19px;font-weight:700;}
+.dq-cell .l{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* ---------- Mapping admin ---------- */
+.map-row-grid{display:grid;grid-template-columns:1.4fr 1.1fr 1fr .9fr .9fr 1.6fr;gap:10px;align-items:center;padding:11px 4px;border-bottom:1px solid var(--line-soft);font-size:13px;}
+.map-row-grid.head{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line);}
+.map-select, .map-input{border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12.5px;width:100%;background:#fff;}
+
+/* ---------- Checkbox list (health render modal) ---------- */
+.check-list{max-height:280px;overflow-y:auto;border:1px solid var(--line-soft);border-radius:var(--radius-md);padding:6px;}
+.check-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;}
+.check-item:hover{background:var(--panel-2);}
+.check-item input{width:16px;height:16px;}
+
+.report-card-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:16px;}
+.report-thumb{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;text-align:center;}
+.report-thumb img{width:100%;display:block;}
+.report-thumb .rt-name{padding:8px;font-size:11.5px;font-weight:700;}
+.report-thumb .rt-actions{padding:0 8px 8px;}
+
+.growth-up{color:var(--good);}
+.growth-down{color:var(--bad);}
+.growth-flat{color:var(--muted);}
+
+.footer-note{max-width:1400px;margin:0 auto;padding:0 28px 30px;color:var(--faint);font-size:11.5px;text-align:center;}
+
+</style>
+</head>
+<body>
+<script>
+  (function () {
+    if (!localStorage.getItem("mwg_session")) window.location.replace("./index.html");
+  })();
+</script>
+
+<nav class="mwg-nav">
+  <a class="nav-brand" href="./main.html">
+    <span class="nav-brand-badge">MWG</span>
+    <span class="nav-brand-name">Business Intelligence</span>
+  </a>
+  <span class="nav-page-badge">Doanh thu NV</span>
+  <span class="nav-user"><span class="nav-dot"></span>Đăng nhập: <strong id="navUsername">—</strong></span>
+  <a class="nav-btn btn-home" href="./main.html">Trang chủ</a>
+  <button class="nav-btn btn-logout" id="btnNavLogout" type="button">Đăng xuất</button>
+</nav>
+
+<div id="app">
+
+  <div class="topbar">
+    <div class="ecg-wrap">
+      <svg viewBox="0 0 1400 90" preserveAspectRatio="none" width="100%" height="90">
+        <polyline class="ecg-line" points="0,45 120,45 150,45 165,15 180,75 195,45 260,45 290,45 310,20 325,70 340,45 420,45 1400,45"/>
+      </svg>
+    </div>
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">🩺</div>
+        <div>
+          <div class="brand-title">SỨC KHỎE NHÂN VIÊN</div>
+          <div class="brand-sub">Phân tích hiệu quả bán hàng &amp; doanh thu quy đổi</div>
+        </div>
+      </div>
+      <div class="topbar-status" id="topStatus"></div>
+    </div>
+  </div>
+
+  <div class="tabbar" id="tabbar" style="display:none;">
+    <div class="tabbar-inner">
+      <button class="tab-btn active" data-tab="overview">📊 Tổng quan</button>
+      <button class="tab-btn" data-tab="employees">👥 Bảng nhân viên</button>
+      <button class="tab-btn" data-tab="dataquality">🔍 Kiểm tra dữ liệu</button>
+      <div style="flex:1;"></div>
+      <button class="tab-btn" id="btnHealthRenderTop" style="color:var(--primary-dark);font-weight:800;">🩺 RENDER SỨC KHỎE NHÂN VIÊN</button>
+      <button class="tab-btn" id="btnResetAll" style="color:var(--muted);">↺ Tải dữ liệu khác</button>
+    </div>
+  </div>
+
+  <main>
+    <!-- ============ UPLOAD VIEW ============ -->
+    <div id="view-upload">
+      <div class="hero">
+        <h2>Bắt đầu phân tích sức khỏe bán hàng</h2>
+        <p>Tải lên 2 file Excel doanh thu (tháng trước &amp; tháng hiện tại) để tính Doanh thu quy đổi theo hệ số Ngành hàng &amp; Hình thức xuất, so sánh theo từng nhân viên. Dữ liệu được xử lý hoàn toàn trên trình duyệt của bạn — không tải lên server.</p>
+      </div>
+
+      <div class="upload-grid">
+        <div class="dropzone" id="dz-prev">
+          <div class="dz-label">Tháng trước</div>
+          <div id="dzBody-prev"></div>
+          <input type="file" id="file-prev" accept=".xlsx,.xls"/>
+        </div>
+        <div class="dropzone" id="dz-curr">
+          <div class="dz-label">Tháng hiện tại</div>
+          <div id="dzBody-curr"></div>
+          <input type="file" id="file-curr" accept=".xlsx,.xls"/>
+        </div>
+      </div>
+
+      <div class="upload-actions">
+        <button class="btn btn-primary btn-lg" id="btnAnalyze" disabled>📈 PHÂN TÍCH DỮ LIỆU</button>
+        <div style="font-size:12px;color:var(--muted);text-align:center;max-width:560px;">
+          Hệ số Ngành hàng &amp; hệ số trả góp áp dụng <strong>cố định</strong> theo công thức chuẩn (không chỉnh tay). Chỉ tính các dòng: Loại YCX không phải Online, Đã thu / Đã xuất / Đã giao / Chưa hủy / Chưa trả.
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ DASHBOARD VIEW ============ -->
+    <div id="view-dashboard" style="display:none;">
+
+      <div class="tab-view" id="tabview-overview">
+        <div class="kpi-grid" id="kpiGrid"></div>
+        <div class="chart-grid">
+          <div class="card card-pad chart-card"><div class="chart-canvas-wrap"><canvas id="chartRevenueCompare"></canvas></div></div>
+          <div class="card card-pad chart-card"><div class="chart-canvas-wrap"><canvas id="chartQuyDoiCompare"></canvas></div></div>
+        </div>
+        <div class="chart-grid">
+          <div class="card card-pad chart-card"><div class="chart-canvas-wrap"><canvas id="chartCategoryPie"></canvas></div></div>
+          <div class="card card-pad chart-card"><div class="chart-canvas-wrap"><canvas id="chartTopEmployees"></canvas></div></div>
+        </div>
+        <div class="chart-grid" style="grid-template-columns:1fr;">
+          <div class="card card-pad chart-card"><div class="chart-canvas-wrap"><canvas id="chartTopGrowth"></canvas></div></div>
+        </div>
+      </div>
+
+      <div class="tab-view" id="tabview-employees" style="display:none;">
+        <div class="card card-pad">
+          <div class="card-head">
+            <div><div class="card-title">Bảng nhân viên</div><div class="card-sub">Bấm vào 1 nhân viên để xem chi tiết sức khỏe bán hàng</div></div>
+          </div>
+          <div class="table-toolbar" id="empTableToolbar"></div>
+          <div id="empTableWrap"></div>
+        </div>
+      </div>
+
+      <div class="tab-view" id="tabview-dataquality" style="display:none;">
+        <div class="card card-pad">
+          <div class="card-head">
+            <div><div class="card-title">Kiểm tra dữ liệu</div><div class="card-sub">Đối soát số dòng bị loại và lý do, đảm bảo tool tính đúng</div></div>
+          </div>
+          <div id="dqBody"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="footer-note">Sức Khỏe Nhân Viên · Dữ liệu xử lý cục bộ trên trình duyệt · Hệ số áp dụng theo bảng quy định chính thức</div>
+
+  <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Đang xử lý...</div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+</div>
+
+<script>
+// ============================================================
+// CORE LOGIC v2 — ported EXACTLY từ file công thức chuẩn
+// (dashboard_top_best_seller.html) theo yêu cầu quản lý.
+// KHÔNG còn mapping thủ công / chỉnh % tay - hệ số cố định theo bảng dưới.
+// ============================================================
+
+const COLS = {
+  loaiYCX: 'Loại YCX',
+  employee: 'Người tạo',
+  order: 'Mã đơn hàng',
+  product: 'Tên sản phẩm',
+  nhom: 'Nhóm hàng',
+  nganh: 'Ngành hàng',
+  giaBan1: 'Giá bán_1',
+  giaBan: 'Giá bán',
+  soLuong: 'Số lượng',
+  hinhThuc: 'Hình thức xuất',
+  ttThu: 'Trạng thái thu tiền',
+  ttXuat: 'Trạng thái xuất',
+  ttGiao: 'Trạng thái giao hàng',
+  ttHuy: 'Trạng thái hủy',
+  nhapTra: 'Tình trạng nhập trả của sản phẩm đổi với sản phẩm chính',
+  ngayTao: 'Ngày tạo',
+};
+
+// ---------------- Hệ số NGÀNH HÀNG (cố định, không chỉnh qua UI) ----------------
+const CATEGORY_RATES = {
+  sim: 5.45, baoHiem: 4.18, phuKienTienIch: 3.37, phuKienTrangTri: 3.37, loaViTinh: 3.37,
+  vas: 3.30, matKinh: 3.07, dongHoThoiTrang: 3.00, wearable: 3.00, it: 2.00,
+  dungCuNhaBep: 1.92, dienGiaDung: 1.85, mayLocNuoc: 1.85, giaDungLapDat: 1.85,
+  loaKaraoke: 1.29, laptop: 1.20, tablet: 1.20, theCaoDienTu: 1.00, macDinh: 1.00,
+};
+const INSTALLMENT_MULTIPLIER = 1.3; // trả góp / trả chậm
+
+function fmtVND(n){
+  if(n===null||n===undefined||isNaN(n)) return '—';
+  return Math.round(n).toLocaleString('vi-VN') + 'đ';
+}
+function fmtNum(n){
+  if(n===null||n===undefined||isNaN(n)) return '—';
+  return Math.round(n).toLocaleString('vi-VN');
+}
+function fmtPct(n, withSign){
+  if(n===null||n===undefined||isNaN(n)||!isFinite(n)) return '—';
+  const s = withSign && n>0 ? '+' : '';
+  return s + n.toFixed(1) + '%';
+}
+function normKey(s){ return String(s||'').trim().toLowerCase(); }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+
+function vnorm(s){
+  s = String(s||'');
+  s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  s = s.replace(/Đ/g,'D').replace(/đ/g,'d');
+  return s.toLowerCase().replace(/\s+/g,' ').trim();
+}
+
+function parseNumberLoose(raw){
+  if(typeof raw === 'number') return isFinite(raw) ? raw : 0;
+  const text = String(raw===undefined||raw===null?'':raw).trim().replace(/\s/g,'');
+  if(!text) return 0;
+  const m = text.match(/-?[\d.,]+/);
+  if(!m) return 0;
+  let s = m[0];
+  const dot = s.lastIndexOf('.'), comma = s.lastIndexOf(',');
+  if(dot!==-1 && comma!==-1){
+    const decimal = dot>comma ? '.' : ',';
+    const thousand = decimal==='.' ? ',' : '.';
+    s = s.split(thousand).join('');
+    if(decimal===',') s = s.replace(',', '.');
+  } else if(comma!==-1){
+    const parts = s.split(',');
+    if(parts.length>2) s = parts.join('');
+    else if((parts[1]||'').length===3 && (parts[0]||'').length>3) s = parts.join('');
+    else s = (parts[0]||'') + '.' + (parts[1]||'');
+  } else if(dot!==-1){
+    const parts = s.split('.');
+    if(parts.length>2) s = parts.join('');
+    else if((parts[1]||'').length===3 && (parts[0]||'').length>3) s = parts.join('');
+  }
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function splitCodeName(raw){
+  const text = String(raw||'').trim();
+  const m = text.match(/^(\d+)\s*-\s*(.+)$/);
+  if(m) return {code:m[1].trim(), name:m[2].trim()};
+  return {code:'', name:text};
+}
+function parseEmployee(raw){
+  const text = String(raw||'').trim();
+  const m = text.match(/^(\d+)\s*-\s*(.+)$/);
+  if(m) return {id:m[1].trim(), name:m[2].trim(), key:m[1].trim()};
+  return {id:'', name: text || 'Không rõ NV', key: text || 'unknown'};
+}
+
+// ---------------- Hệ số Ngành hàng theo Nhóm hàng/Ngành hàng gốc ----------------
+// Port 1:1 từ categoryRate() trong file công thức gốc.
+function categoryRate(nganhRaw, nhomRaw){
+  const nganh = vnorm(nganhRaw), nhom = vnorm(nhomRaw);
+
+  if(nganh.includes('344 -') && nganh.includes('the cao dien tu'))
+    return {rate:CATEGORY_RATES.theCaoDienTu, label:'Thẻ cào điện tử'};
+  if(nganh.includes('664 -') && nganh.includes('sim online')){
+    if(nhom.includes('1891 -') && nhom.includes('sim online')) return {rate:CATEGORY_RATES.sim, label:'Sim'};
+    return null;
+  }
+  if(nganh.includes('164 -') && nganh.includes('vas')){
+    if(nhom.includes('571 -') && nhom.includes('udd')) return {rate:CATEGORY_RATES.vas, label:'VAS'};
+    if(nhom.includes('4479 -') && nhom.includes('bao hiem')) return {rate:CATEGORY_RATES.baoHiem, label:'Bảo hiểm'};
+    return {rate:CATEGORY_RATES.vas, label:'VAS'};
+  }
+  if(nganh.includes('16 -') && nganh.includes('phu kien')) return {rate:CATEGORY_RATES.phuKienTienIch, label:'Phụ kiện tiện ích'};
+  if(nganh.includes('184 -') && nganh.includes('phu kien')) return {rate:CATEGORY_RATES.phuKienTrangTri, label:'Phụ kiện trang trí'};
+  if(nganh.includes('1274 -') && nganh.includes('dong ho')) return {rate:CATEGORY_RATES.dongHoThoiTrang, label:'Đồng Hồ Thời Trang'};
+  if(nganh.includes('22 -') || nhom.includes('laptop')) return {rate:CATEGORY_RATES.laptop, label:'Laptop'};
+  if(nhom.includes('tablet') || nhom.includes('ipad')) return {rate:CATEGORY_RATES.tablet, label:'Tablet'};
+  if(nganh.includes('bao hiem') || nhom.includes('bao hiem')) return {rate:CATEGORY_RATES.baoHiem, label:'Bảo hiểm'};
+  if(nganh.includes('loa vi tinh') || nhom.includes('loa vi tinh')) return {rate:CATEGORY_RATES.loaViTinh, label:'Loa vi tính'};
+  if(nganh.includes('mat kinh') || nhom.includes('mat kinh')) return {rate:CATEGORY_RATES.matKinh, label:'Mắt kính'};
+  if(nganh.includes('wearable') || nhom.includes('wearable')) return {rate:CATEGORY_RATES.wearable, label:'Wearable'};
+  if(nganh.includes('it') || nhom.includes('it')) return {rate:CATEGORY_RATES.it, label:'IT'};
+  if(nganh.includes('dung cu nha bep') || nhom.includes('dung cu nha bep')) return {rate:CATEGORY_RATES.dungCuNhaBep, label:'Dụng cụ nhà bếp'};
+  if(nganh.includes('dien gia dung') || nhom.includes('dien gia dung')) return {rate:CATEGORY_RATES.dienGiaDung, label:'Điện gia dụng'};
+  if(nganh.includes('may loc nuoc') || nhom.includes('may loc nuoc')) return {rate:CATEGORY_RATES.mayLocNuoc, label:'Máy lọc nước'};
+  if(nganh.includes('gia dung lap dat') || nhom.includes('gia dung lap dat')) return {rate:CATEGORY_RATES.giaDungLapDat, label:'Gia dụng lắp đặt'};
+  if(nganh.includes('loa karaoke') || nhom.includes('loa karaoke')) return {rate:CATEGORY_RATES.loaKaraoke, label:'Loa Karaoke'};
+  const cleanLabel = splitCodeName(nganhRaw).name || String(nganhRaw||'').trim() || 'Mặc định';
+  return {rate:CATEGORY_RATES.macDinh, label: cleanLabel};
+}
+
+function isInstallment(loaiYCX){
+  const loai = vnorm(loaiYCX);
+  return loai.includes('tra gop') || loai.includes('tra cham');
+}
+
+// ---------------- Excel parsing ----------------
+function parseWorkbookFile(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = ()=>reject(new Error('Không đọc được file: ' + file.name));
+    reader.onload = (e)=>{
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:'array', cellDates:true});
+        const sheetName = wb.SheetNames[0];
+        const sheet = wb.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet, {defval:null, raw:true});
+        resolve(rows);
+      }catch(err){ reject(err); }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function normalizeRawRow(raw, monthTag, rowIndex){
+  const nhom = splitCodeName(raw[COLS.nhom]);
+  const nganh = splitCodeName(raw[COLS.nganh]);
+  return {
+    id: monthTag + '_' + rowIndex,
+    month: monthTag,
+    loaiYCX: String(raw[COLS.loaiYCX]||'').trim(),
+    employeeRaw: raw[COLS.employee],
+    orderId: raw[COLS.order] || '',
+    productName: raw[COLS.product] || '',
+    nhomCode: nhom.code, nhomName: nhom.name || String(raw[COLS.nhom]||'(?)'),
+    nganhCode: nganh.code, nganhGoc: nganh.name || String(raw[COLS.nganh]||'(?)'),
+    nganhRawFull: raw[COLS.nganh], nhomRawFull: raw[COLS.nhom],
+    giaBan1: parseNumberLoose(raw[COLS.giaBan1]),
+    giaBan: parseNumberLoose(raw[COLS.giaBan]),
+    soLuong: parseNumberLoose(raw[COLS.soLuong]),
+    hinhThucXuat: String(raw[COLS.hinhThuc]||'').trim(),
+    ttThu: String(raw[COLS.ttThu]||'').trim(),
+    ttXuat: String(raw[COLS.ttXuat]||'').trim(),
+    ttGiao: String(raw[COLS.ttGiao]||'').trim(),
+    ttHuy: String(raw[COLS.ttHuy]||'').trim(),
+    nhapTra: String(raw[COLS.nhapTra]||'').trim(),
+    ngayTao: raw[COLS.ngayTao] || null,
+  };
+}
+
+// ---------------- Classification (port 1:1 isValidRow + categoryRate) ----------------
+function classifyRow(row){
+  const loai = vnorm(row.loaiYCX);
+  const nganhN = vnorm(row.nganhRawFull); // dùng chuỗi gốc đầy đủ (có mã số), giống hệt file công thức
+
+  if(!loai) return {bucket:'thieuLoaiYCX', included:false, row};
+  if(loai.includes('online')) return {bucket:'online', included:false, row};
+  if(nganhN.includes('464 -') && nganhN.includes('giao dich airtime')) return {bucket:'airtime', included:false, row};
+  if(row.ttThu !== 'Đã thu') return {bucket:'chuaThu', included:false, row};
+  if(row.ttXuat !== 'Đã xuất') return {bucket:'chuaXuat', included:false, row};
+  if(row.ttGiao !== 'Đã giao') return {bucket:'chuaGiao', included:false, row};
+  if(row.ttHuy !== 'Chưa hủy') return {bucket:'daHuy', included:false, row};
+  if(row.nhapTra && row.nhapTra !== 'Chưa trả') return {bucket:'daTra', included:false, row};
+
+  const cat = categoryRate(row.nganhRawFull, row.nhomRawFull);
+  if(!cat) return {bucket:'khongXacDinhNganh', included:false, row};
+
+  const emp = parseEmployee(row.employeeRaw);
+  if(!emp.name || /^admin$/i.test(emp.name) || /^administrator$/i.test(emp.name)){
+    return {bucket:'taiKhoanHeThong', included:false, row};
+  }
+
+  const revenue = row.giaBan1;
+  if(!(revenue > 0)) return {bucket:'giaBan0', included:false, row};
+
+  const mult = isInstallment(row.loaiYCX) ? INSTALLMENT_MULTIPLIER : 1;
+  const converted = revenue * cat.rate * mult;
+
+  return {
+    bucket:'hople', included:true, row, employee:emp,
+    category: cat.label, rate: cat.rate, installmentMult: mult,
+    doanhThuThucTe: revenue, doanhThuQuyDoi: converted,
+  };
+}
+
+// ---------------- Full pipeline ----------------
+function processMonth(rawRows, monthTag){
+  const normalized = rawRows.map((r,i)=>normalizeRawRow(r, monthTag, i));
+  const classified = normalized.map(row=>classifyRow(row));
+
+  const quality = {
+    total: classified.length,
+    hople:0, online:0, airtime:0, chuaThu:0, chuaXuat:0, chuaGiao:0, daHuy:0, daTra:0,
+    khongXacDinhNganh:0, taiKhoanHeThong:0, giaBan0:0, thieuLoaiYCX:0,
+    doanhThuThucTe:0, doanhThuQuyDoi:0,
+    buckets: {hople:[], online:[], airtime:[], chuaThu:[], chuaXuat:[], chuaGiao:[], daHuy:[], daTra:[],
+      khongXacDinhNganh:[], taiKhoanHeThong:[], giaBan0:[], thieuLoaiYCX:[]},
+  };
+  classified.forEach(c=>{
+    quality[c.bucket]++;
+    quality.buckets[c.bucket].push(c);
+    if(c.included){
+      quality.doanhThuThucTe += c.doanhThuThucTe;
+      quality.doanhThuQuyDoi += c.doanhThuQuyDoi;
+    }
+  });
+
+  const byEmp = {};
+  classified.filter(c=>c.included).forEach(c=>{
+    const key = c.employee.key;
+    if(!byEmp[key]){
+      byEmp[key] = {
+        key, code: c.employee.id, name: c.employee.name,
+        thucTe:0, quyDoi:0, byCategory:{}, lineItems:[],
+      };
+    }
+    const e = byEmp[key];
+    e.thucTe += c.doanhThuThucTe;
+    e.quyDoi += c.doanhThuQuyDoi;
+    if(!e.byCategory[c.category]) e.byCategory[c.category] = {thucTe:0, quyDoi:0, count:0};
+    e.byCategory[c.category].thucTe += c.doanhThuThucTe;
+    e.byCategory[c.category].quyDoi += c.doanhThuQuyDoi;
+    e.byCategory[c.category].count += 1;
+    e.lineItems.push(c);
+  });
+
+  return {monthTag, rawCount: rawRows.length, classified, quality, byEmp};
+}
+
+function compareMonths(prevResult, currResult){
+  const employees = {};
+  Object.keys(prevResult.byEmp).forEach(k=>{ employees[k]=true; });
+  Object.keys(currResult.byEmp).forEach(k=>{ employees[k]=true; });
+
+  const rows = Object.keys(employees).map(key=>{
+    const p = prevResult.byEmp[key], c = currResult.byEmp[key];
+    const name = (c&&c.name) || (p&&p.name) || key;
+    const pThuc = p?p.thucTe:0, pQuy = p?p.quyDoi:0;
+    const cThuc = c?c.thucTe:0, cQuy = c?c.quyDoi:0;
+    const growthThuc = pThuc>0 ? ((cThuc-pThuc)/pThuc*100) : (cThuc>0?Infinity:0);
+    const growthQuy = pQuy>0 ? ((cQuy-pQuy)/pQuy*100) : (cQuy>0?Infinity:0);
+    let healthLabel='Ổn định', healthClass='flat';
+    if(!p && c){ healthLabel='Nhân viên mới / mới có DT'; healthClass='new'; }
+    else if(p && !c){ healthLabel='Không có DT tháng này'; healthClass='down'; }
+    else if(growthQuy>=10){ healthLabel='Tăng trưởng tốt'; healthClass='up'; }
+    else if(growthQuy<=-10){ healthLabel='Cần chú ý'; healthClass='down'; }
+    else { healthLabel='Ổn định'; healthClass='flat'; }
+    return {
+      key, name,
+      prev:{thucTe:pThuc, quyDoi:pQuy, byCategory:p?p.byCategory:{}},
+      curr:{thucTe:cThuc, quyDoi:cQuy, byCategory:c?c.byCategory:{}},
+      growthThuc, growthQuy, healthLabel, healthClass, prevRec:p, currRec:c,
+    };
+  });
+  rows.sort((a,b)=>b.curr.quyDoi-a.curr.quyDoi);
+  return rows;
+}
+
+function categoryBreakdownFor(rec){
+  const cats = new Set([...Object.keys(rec.prev.byCategory||{}), ...Object.keys(rec.curr.byCategory||{})]);
+  const out = [];
+  cats.forEach(cat=>{
+    if(cat==='undefined'||cat==='null') return;
+    const p = (rec.prev.byCategory||{})[cat] || {thucTe:0,quyDoi:0,count:0};
+    const c = (rec.curr.byCategory||{})[cat] || {thucTe:0,quyDoi:0,count:0};
+    const growth = p.quyDoi>0 ? ((c.quyDoi-p.quyDoi)/p.quyDoi*100) : (c.quyDoi>0?Infinity:0);
+    out.push({category:cat, prev:p, curr:c, growth});
+  });
+  out.sort((a,b)=>b.curr.quyDoi-a.curr.quyDoi);
+  return out;
+}
+// ============================================================
+// UI — application state & shell
+// ============================================================
+
+const APP = {
+  files: { prev: null, curr: null }, // {name, rawRows}
+  results: { prev: null, curr: null },
+  compare: null,
+  activeTab: 'overview',
+  chartInstances: {},
+  emp: { search:'', sortKey:'quyDoi', sortDir:'desc' },
+  selectedEmployeeKey: null,
+  health: { selected: new Set(), rendered: {} }, // key -> dataURL
+};
+
+function $(sel, root){ return (root||document).querySelector(sel); }
+function $all(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+function el(tag, attrs, children){
+  const e = document.createElement(tag);
+  if(attrs) Object.keys(attrs).forEach(k=>{
+    if(k==='class') e.className = attrs[k];
+    else if(k==='html') e.innerHTML = attrs[k];
+    else if(k.startsWith('on') && typeof attrs[k]==='function') e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  });
+  (children||[]).forEach(c=>{ if(c) e.appendChild(typeof c==='string'?document.createTextNode(c):c); });
+  return e;
+}
+function esc(s){
+  return String(s===undefined||s===null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// ---------------- Toasts ----------------
+function toast(msg, type){
+  const stack = $('#toastStack');
+  const t = el('div', {class:'toast ' + (type||'info')}, [
+    el('span', {}, [type==='success'?'✅':type==='error'?'⚠️':'ℹ️']),
+    el('span', {}, [msg]),
+  ]);
+  stack.appendChild(t);
+  setTimeout(()=>{ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(()=>t.remove(), 300); }, 3800);
+}
+
+// ---------------- Loading overlay ----------------
+function showLoading(msg){
+  const ov = $('#loadingOverlay');
+  $('#loadingText').textContent = msg || 'Đang xử lý...';
+  ov.style.display='flex';
+}
+function hideLoading(){ $('#loadingOverlay').style.display='none'; }
+
+// ---------------- Upload dropzones ----------------
+function initDropzone(slot){
+  const dz = $('#dz-' + slot);
+  const input = $('#file-' + slot);
+  dz.addEventListener('click', ()=>input.click());
+  dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', ()=>dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e=>{
+    e.preventDefault(); dz.classList.remove('dragover');
+    if(e.dataTransfer.files && e.dataTransfer.files[0]) handleFileSelected(slot, e.dataTransfer.files[0]);
+  });
+  input.addEventListener('change', e=>{
+    if(e.target.files && e.target.files[0]) handleFileSelected(slot, e.target.files[0]);
+  });
+}
+
+async function handleFileSelected(slot, file){
+  const dz = $('#dz-' + slot);
+  const okExt = /\.(xlsx|xls)$/i.test(file.name);
+  if(!okExt){
+    dz.classList.add('erroring');
+    toast('File "' + file.name + '" không phải định dạng Excel (.xlsx/.xls)', 'error');
+    setTimeout(()=>dz.classList.remove('erroring'), 1600);
+    return;
+  }
+  dz.classList.remove('erroring');
+  renderDzFilled(slot, file.name, 'Đang đọc file...');
+  try{
+    const rows = await parseWorkbookFile(file);
+    if(!rows.length){ throw new Error('File không có dữ liệu.'); }
+    APP.files[slot] = { name: file.name, rawRows: rows };
+    renderDzFilled(slot, file.name, rows.length.toLocaleString('vi-VN') + ' dòng đã đọc');
+    toast('Đã đọc "' + file.name + '" — ' + rows.length.toLocaleString('vi-VN') + ' dòng', 'success');
+  }catch(err){
+    console.error(err);
+    dz.classList.add('erroring');
+    APP.files[slot] = null;
+    toast('Lỗi đọc file: ' + err.message, 'error');
+    renderDzEmpty(slot);
+  }
+  updateAnalyzeButton();
+}
+
+function renderDzEmpty(slot){
+  const dz = $('#dz-' + slot);
+  dz.classList.remove('filled');
+  $('#dzBody-' + slot).innerHTML = `
+    <div class="dz-icon">📂</div>
+    <div class="dz-title">Kéo thả file Excel vào đây</div>
+    <div class="dz-hint">hoặc bấm để chọn file (.xlsx)</div>`;
+}
+function renderDzFilled(slot, name, status){
+  const dz = $('#dz-' + slot);
+  dz.classList.add('filled');
+  $('#dzBody-' + slot).innerHTML = `
+    <div class="dz-icon">📊</div>
+    <div class="dz-title">Đã chọn file</div>
+    <div class="dz-file"><span>✓</span><span class="fname">${esc(name)}</span></div>
+    <div class="dz-hint">${esc(status)}</div>`;
+}
+function updateAnalyzeButton(){
+  $('#btnAnalyze').disabled = !(APP.files.prev && APP.files.curr);
+}
+
+// ---------------- Run analysis ----------------
+async function runAnalysis(){
+  if(!(APP.files.prev && APP.files.curr)) return;
+  showLoading('Đang lọc dữ liệu & áp hệ số...');
+  await new Promise(r=>setTimeout(r, 60)); // let UI paint
+  try{
+    const prevRes = processMonth(APP.files.prev.rawRows, 'prev');
+    const currRes = processMonth(APP.files.curr.rawRows, 'curr');
+    APP.results.prev = prevRes;
+    APP.results.curr = currRes;
+    APP.compare = compareMonths(prevRes, currRes);
+    hideLoading();
+    enterDashboard();
+    toast('Phân tích hoàn tất: ' + (prevRes.rawCount+currRes.rawCount).toLocaleString('vi-VN') + ' dòng dữ liệu', 'success');
+  }catch(err){
+    hideLoading();
+    console.error(err);
+    toast('Lỗi khi phân tích dữ liệu: ' + err.message, 'error');
+  }
+}
+
+function enterDashboard(){
+  $('#view-upload').style.display = 'none';
+  $('#view-dashboard').style.display = 'block';
+  $('#tabbar').style.display = 'flex';
+  updateStatusBar();
+  switchTab('overview');
+}
+
+function updateStatusBar(){
+  const bar = $('#topStatus');
+  if(!APP.results.curr){
+    bar.innerHTML = `<div class="status-chip"><span class="status-dot off"></span>Chưa có dữ liệu</div>`;
+    return;
+  }
+  const total = APP.results.prev.rawCount + APP.results.curr.rawCount;
+  const today = new Date();
+  bar.innerHTML = `
+    <div class="status-chip"><span class="status-dot on"></span>Đã phân tích ${total.toLocaleString('vi-VN')} dòng</div>
+    <div class="status-chip" title="Hệ số Ngành hàng cố định, không chỉnh tay">🔒 Hệ số cố định theo công thức chuẩn</div>
+    <div class="status-chip">📅 ${today.toLocaleDateString('vi-VN')}</div>`;
+}
+
+// ---------------- Tabs ----------------
+function switchTab(tab){
+  APP.activeTab = tab;
+  $all('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  $all('.tab-view').forEach(v=>v.style.display = (v.id==='tabview-'+tab) ? 'block' : 'none');
+  renderActiveTab();
+}
+function renderActiveTab(){
+  if(!APP.results.curr) return;
+  if(APP.activeTab==='overview') renderOverview();
+  else if(APP.activeTab==='employees') renderEmployeeTable();
+  else if(APP.activeTab==='dataquality') renderDataQuality();
+}
+// ============================================================
+// UI — Tổng quan (Overview) tab
+// ============================================================
+
+function destroyChart(key){
+  if(APP.chartInstances[key]){ APP.chartInstances[key].destroy(); delete APP.chartInstances[key]; }
+}
+
+function sumCategoryLike(byCategory, matcher){
+  let thucTe=0, quyDoi=0;
+  Object.keys(byCategory||{}).forEach(cat=>{
+    if(!cat || cat==='undefined') return;
+    const hit = typeof matcher==='function' ? matcher(cat) : cat===matcher;
+    if(hit){ thucTe += byCategory[cat].thucTe; quyDoi += byCategory[cat].quyDoi; }
+  });
+  return {thucTe, quyDoi};
+}
+
+function renderOverview(){
+  const prev = APP.results.prev, curr = APP.results.curr;
+  const pQuality = prev.quality, cQuality = curr.quality;
+
+  const growThuc = pQuality.doanhThuThucTe>0 ? ((cQuality.doanhThuThucTe-pQuality.doanhThuThucTe)/pQuality.doanhThuThucTe*100) : null;
+  const growQuy = pQuality.doanhThuQuyDoi>0 ? ((cQuality.doanhThuQuyDoi-pQuality.doanhThuQuyDoi)/pQuality.doanhThuQuyDoi*100) : null;
+
+  const empUp = APP.compare.filter(r=>r.healthClass==='up').length;
+  const empDown = APP.compare.filter(r=>r.healthClass==='down').length;
+  const empTotal = APP.compare.length;
+
+  const kpis = [
+    {icon:'💰', label:'Doanh thu thực tế', value: fmtVND(cQuality.doanhThuThucTe), delta: growThuc, tip:'Doanh thu hợp lệ sau khi lọc đơn hủy, hàng trả, khuyến mãi 0đ, thu hộ.'},
+    {icon:'📈', label:'Doanh thu quy đổi', value: fmtVND(cQuality.doanhThuQuyDoi), delta: growQuy, tip:'Doanh thu thực tế × hệ số cuối (Ngành hàng + Hình thức xuất) tính theo từng dòng sản phẩm.'},
+    {icon:'📊', label:'Tăng trưởng quy đổi', value: fmtPct(growQuy, true), deltaRaw:true, tip:'% thay đổi Doanh thu quy đổi so với tháng trước.'},
+    {icon:'👥', label:'Nhân viên có DT', value: fmtNum(empTotal), tip:'Số nhân viên có doanh thu ở ít nhất 1 trong 2 tháng.'},
+    {icon:'🟢', label:'NV tăng trưởng', value: fmtNum(empUp), tip:'Số nhân viên có doanh thu quy đổi tăng ≥ 10%.'},
+    {icon:'🔴', label:'NV giảm trưởng', value: fmtNum(empDown), tip:'Số nhân viên có doanh thu quy đổi giảm ≥ 10%.'},
+  ];
+
+  $('#kpiGrid').innerHTML = kpis.map(k=>`
+    <div class="kpi-card">
+      <span class="kpi-tip" title="${esc(k.tip)}">ⓘ</span>
+      <div class="kpi-top"><span class="kpi-icon">${k.icon}</span><span class="kpi-label">${esc(k.label)}</span></div>
+      <div class="kpi-value">${k.value}</div>
+      ${k.delta!==undefined ? (k.delta===null ? '' : `<div class="kpi-delta ${k.delta>0?'up':k.delta<0?'down':'flat'}">${k.delta>0?'▲':k.delta<0?'▼':'—'} ${fmtPct(Math.abs(k.delta))}</div>`) : ''}
+      ${k.deltaRaw ? `<div class="kpi-delta ${growQuy>0?'up':growQuy<0?'down':'flat'}">${growQuy===null?'Không có DT kỳ trước':'so với tháng trước'}</div>` : ''}
+    </div>`).join('');
+
+  renderChartRevenueCompare();
+  renderChartQuyDoiCompare();
+  renderChartCategoryPie();
+  renderChartTopEmployees();
+  renderChartTopGrowth();
+}
+
+function renderChartRevenueCompare(){
+  destroyChart('revCompare');
+  const ctx = $('#chartRevenueCompare').getContext('2d');
+  APP.chartInstances.revCompare = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['Tháng trước','Tháng hiện tại'],
+      datasets:[{
+        label:'Doanh thu thực tế',
+        data:[APP.results.prev.quality.doanhThuThucTe, APP.results.curr.quality.doanhThuThucTe],
+        backgroundColor:['#94D3DE','#0E7490'],
+        borderRadius:8, maxBarThickness:90,
+      }]
+    },
+    options: chartBaseOptions('Doanh thu thực tế (đ)'),
+  });
+}
+function renderChartQuyDoiCompare(){
+  destroyChart('quyCompare');
+  const ctx = $('#chartQuyDoiCompare').getContext('2d');
+  APP.chartInstances.quyCompare = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['Tháng trước','Tháng hiện tại'],
+      datasets:[{
+        label:'Doanh thu quy đổi',
+        data:[APP.results.prev.quality.doanhThuQuyDoi, APP.results.curr.quality.doanhThuQuyDoi],
+        backgroundColor:['#D9CFF7','#6D5BD0'],
+        borderRadius:8, maxBarThickness:90,
+      }]
+    },
+    options: chartBaseOptions('Doanh thu quy đổi (đ)'),
+  });
+}
+function chartBaseOptions(title){
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      title:{display:true, text:title, align:'start', color:'#3A4553', font:{size:12,weight:'700'}, padding:{bottom:12}},
+      tooltip:{callbacks:{label:(c)=>fmtVND(c.parsed.y)}},
+    },
+    scales:{
+      y:{ticks:{callback:(v)=>compactVND(v)}, grid:{color:'#EEF2F4'}},
+      x:{grid:{display:false}},
+    }
+  };
+}
+function compactVND(v){
+  if(Math.abs(v)>=1e9) return (v/1e9).toFixed(1)+'tỷ';
+  if(Math.abs(v)>=1e6) return (v/1e6).toFixed(0)+'tr';
+  if(Math.abs(v)>=1e3) return (v/1e3).toFixed(0)+'k';
+  return v;
+}
+
+function renderChartCategoryPie(){
+  destroyChart('catPie');
+  const byCat = {};
+  Object.values(APP.results.curr.byEmp).forEach(e=>{
+    Object.keys(e.byCategory).forEach(cat=>{
+      byCat[cat] = (byCat[cat]||0) + e.byCategory[cat].quyDoi;
+    });
+  });
+  const entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const top = entries.slice(0,7);
+  const rest = entries.slice(7).reduce((s,e)=>s+e[1],0);
+  const labels = top.map(e=>e[0]); const data = top.map(e=>e[1]);
+  if(rest>0){ labels.push('Khác'); data.push(rest); }
+  const palette = ['#0E7490','#6D5BD0','#1F9D63','#C57A11','#DC4C4C','#38B4CC','#B08BD8','#94A0AC'];
+  const ctx = $('#chartCategoryPie').getContext('2d');
+  APP.chartInstances.catPie = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data, backgroundColor:palette, borderWidth:2, borderColor:'#fff' }] },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{
+        legend:{position:'right', labels:{boxWidth:10, font:{size:11}, color:'#3A4553'}},
+        title:{display:true, text:'Cơ cấu ngành hàng (DT quy đổi, tháng hiện tại)', align:'start', color:'#3A4553', font:{size:12,weight:'700'}, padding:{bottom:12}},
+        tooltip:{callbacks:{label:(c)=> c.label + ': ' + fmtVND(c.parsed)}},
+      }
+    }
+  });
+}
+
+function renderChartTopEmployees(){
+  destroyChart('topEmp');
+  const top = [...APP.compare].sort((a,b)=>b.curr.quyDoi-a.curr.quyDoi).slice(0,8);
+  const ctx = $('#chartTopEmployees').getContext('2d');
+  APP.chartInstances.topEmp = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: top.map(r=>r.name),
+      datasets:[{ data: top.map(r=>r.curr.quyDoi), backgroundColor:'#0E7490', borderRadius:6 }]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, title:{display:true, text:'Top nhân viên (DT quy đổi)', align:'start', color:'#3A4553', font:{size:12,weight:'700'}, padding:{bottom:12}},
+        tooltip:{callbacks:{label:(c)=>fmtVND(c.parsed.x)}}},
+      scales:{ x:{ticks:{callback:(v)=>compactVND(v)}, grid:{color:'#EEF2F4'}}, y:{grid:{display:false}, ticks:{font:{size:11}}} }
+    }
+  });
+}
+
+function renderChartTopGrowth(){
+  destroyChart('topGrowth');
+  const withPrev = APP.compare.filter(r=>r.prev.quyDoi>0 && isFinite(r.growthQuy));
+  const top = [...withPrev].sort((a,b)=>b.growthQuy-a.growthQuy).slice(0,8);
+  const ctx = $('#chartTopGrowth').getContext('2d');
+  APP.chartInstances.topGrowth = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: top.map(r=>r.name),
+      datasets:[{ data: top.map(r=>r.growthQuy), backgroundColor: top.map(r=>r.growthQuy>=0?'#1F9D63':'#DC4C4C'), borderRadius:6 }]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, title:{display:true, text:'Nhân viên tăng trưởng mạnh nhất (DT quy đổi)', align:'start', color:'#3A4553', font:{size:12,weight:'700'}, padding:{bottom:12}},
+        tooltip:{callbacks:{label:(c)=>fmtPct(c.parsed.x, true)}}},
+      scales:{ x:{ticks:{callback:(v)=>v.toFixed(0)+'%'}, grid:{color:'#EEF2F4'}}, y:{grid:{display:false}, ticks:{font:{size:11}}} }
+    }
+  });
+}
+// ============================================================
+// UI — Bảng nhân viên & Chi tiết nhân viên
+// ============================================================
+
+const EMP_COL_DEFS = [
+  {key:'name', label:'Nhân viên'},
+  {key:'thucTe', label:'DT thực tế', num:true},
+  {key:'quyDoi', label:'DT quy đổi', num:true},
+  {key:'growth', label:'Tăng trưởng', num:true},
+  {key:'dienThoai', label:'Điện thoại', num:true},
+  {key:'laptop', label:'Laptop', num:true},
+  {key:'tablet', label:'Tablet', num:true},
+  {key:'phuKien', label:'Phụ kiện', num:true},
+  {key:'sim', label:'SIM', num:true},
+  {key:'vas', label:'VAS', num:true},
+  {key:'it', label:'IT', num:true},
+  {key:'baoHiem', label:'Bảo hiểm', num:true},
+  {key:'health', label:'Sức khỏe'},
+];
+
+function buildEmpRowView(r){
+  const byCat = r.currRec ? r.currRec.byCategory : {};
+  return {
+    key:r.key, name:r.name, code: r.currRec ? r.currRec.code : (r.prevRec?r.prevRec.code:r.key),
+    thucTe:r.curr.thucTe, quyDoi:r.curr.quyDoi, growth:r.growthQuy,
+    dienThoai: sumCategoryLike(byCat, c=>c==='Điện thoại').quyDoi,
+    laptop: sumCategoryLike(byCat, 'Laptop').quyDoi,
+    tablet: sumCategoryLike(byCat, 'Tablet').quyDoi,
+    phuKien: sumCategoryLike(byCat, c=>c.indexOf('Phụ kiện')===0 || c==='Loa vi tính').quyDoi,
+    sim: sumCategoryLike(byCat, 'Sim').quyDoi,
+    vas: sumCategoryLike(byCat, 'VAS').quyDoi,
+    it: sumCategoryLike(byCat, 'IT').quyDoi,
+    baoHiem: sumCategoryLike(byCat, 'Bảo hiểm').quyDoi,
+    healthLabel:r.healthLabel, healthClass:r.healthClass,
+    _rec:r,
+  };
+}
+
+function renderEmployeeTable(){
+  const rows = APP.compare.map(buildEmpRowView);
+  let filtered = rows;
+  if(APP.emp.search){
+    const q = normKey(APP.emp.search);
+    filtered = filtered.filter(r=> normKey(r.name).includes(q) || normKey(r.code).includes(q));
+  }
+  const sk = APP.emp.sortKey, dir = APP.emp.sortDir==='asc'?1:-1;
+  filtered = [...filtered].sort((a,b)=>{
+    const av = a[sk], bv = b[sk];
+    if(typeof av==='string') return av.localeCompare(bv)*dir;
+    return ((av||0)-(bv||0))*dir;
+  });
+
+  $('#empTableToolbar').innerHTML = `
+    <input class="search-input" id="empSearchInput" placeholder="🔍 Tìm nhân viên theo tên hoặc mã..." value="${esc(APP.emp.search)}"/>
+    <select class="filter-select" id="empHealthFilter">
+      <option value="all">Tất cả sức khỏe</option>
+      <option value="up">🟢 Tăng trưởng tốt</option>
+      <option value="flat">⚪ Ổn định</option>
+      <option value="down">🔴 Cần chú ý</option>
+      <option value="new">🟣 Mới có DT</option>
+    </select>
+    <span style="font-size:12.5px;color:var(--muted)">${filtered.length}/${rows.length} nhân viên</span>
+  `;
+  $('#empSearchInput').addEventListener('input', e=>{ APP.emp.search = e.target.value; renderEmployeeTable(); });
+  $('#empHealthFilter').value = APP.emp._healthFilter || 'all';
+  $('#empHealthFilter').addEventListener('change', e=>{ APP.emp._healthFilter = e.target.value; renderEmployeeTable(); });
+  if(APP.emp._healthFilter && APP.emp._healthFilter!=='all'){
+    filtered = filtered.filter(r=>r.healthClass===APP.emp._healthFilter);
+  }
+
+  const thead = EMP_COL_DEFS.map(c=>{
+    const arrow = APP.emp.sortKey===c.key ? (APP.emp.sortDir==='asc'?'↑':'↓') : '';
+    return `<th class="${c.num?'num':''}" data-key="${c.key}">${esc(c.label)} <span class="sort-arrow">${arrow}</span></th>`;
+  }).join('');
+
+  const tbody = filtered.map(r=>`
+    <tr data-key="${esc(r.key)}">
+      <td><div class="emp-name-cell"><span class="emp-name">${esc(r.name)}</span><span class="emp-code">#${esc(r.code)}</span></div></td>
+      <td class="num">${fmtVND(r.thucTe)}</td>
+      <td class="num">${fmtVND(r.quyDoi)}</td>
+      <td class="num">${growthPill(r.growth)}</td>
+      <td class="num">${miniVal(r.dienThoai)}</td>
+      <td class="num">${miniVal(r.laptop)}</td>
+      <td class="num">${miniVal(r.tablet)}</td>
+      <td class="num">${miniVal(r.phuKien)}</td>
+      <td class="num">${miniVal(r.sim)}</td>
+      <td class="num">${miniVal(r.vas)}</td>
+      <td class="num">${miniVal(r.it)}</td>
+      <td class="num">${miniVal(r.baoHiem)}</td>
+      <td>${healthPill(r.healthLabel, r.healthClass)}</td>
+    </tr>`).join('');
+
+  $('#empTableWrap').innerHTML = `
+    <div class="table-scroll">
+      <table><thead><tr>${thead}</tr></thead><tbody>${tbody || `<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:30px;">Không tìm thấy nhân viên phù hợp</td></tr>`}</tbody></table>
+    </div>`;
+
+  $all('#empTableWrap thead th').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(APP.emp.sortKey===key) APP.emp.sortDir = APP.emp.sortDir==='asc'?'desc':'asc';
+      else { APP.emp.sortKey = key; APP.emp.sortDir = 'desc'; }
+      renderEmployeeTable();
+    });
+  });
+  $all('#empTableWrap tbody tr').forEach(tr=>{
+    tr.addEventListener('click', ()=> openEmployeeDetail(tr.dataset.key));
+  });
+}
+
+function miniVal(v){ return v>0 ? fmtVND(v) : '<span style="color:var(--faint)">—</span>'; }
+function growthPill(g){
+  if(g===null||g===undefined) return '—';
+  if(g===Infinity) return `<span class="pill new">Mới</span>`;
+  if(g>=5) return `<span class="pill up">▲ ${fmtPct(g)}</span>`;
+  if(g<=-5) return `<span class="pill down">▼ ${fmtPct(Math.abs(g))}</span>`;
+  return `<span class="pill flat">${fmtPct(g,true)}</span>`;
+}
+function healthPill(label, cls){
+  const map = {up:'up', down:'down', flat:'flat', new:'new'};
+  const dot = {up:'🟢', down:'🔴', flat:'⚪', new:'🟣'};
+  return `<span class="pill ${map[cls]||'flat'}">${dot[cls]||'⚪'} ${esc(label)}</span>`;
+}
+
+// ---------------- Employee detail overlay ----------------
+function openEmployeeDetail(key){
+  const rec = APP.compare.find(r=>r.key===key);
+  if(!rec) return;
+  APP.selectedEmployeeKey = key;
+  const cats = categoryBreakdownFor(rec);
+  const avgCoef = rec.curr.thucTe>0 ? (rec.curr.quyDoi/rec.curr.thucTe*100) : 0;
+
+  const strengths = cats.filter(c=>c.curr.quyDoi>0).slice(0,3);
+  const improve = cats.filter(c=>c.curr.quyDoi>0 && c.growth<0).sort((a,b)=>a.growth-b.growth).slice(0,3);
+  const totalCurr = rec.curr.quyDoi || 1;
+
+  const backdrop = el('div', {class:'overlay-backdrop', id:'empOverlay'});
+  const panel = el('div', {class:'overlay-panel'});
+  panel.innerHTML = `
+    <div class="overlay-header">
+      <div>
+        <div style="font-size:11px;letter-spacing:.08em;color:#8FD3E0;font-weight:800;text-transform:uppercase;">🩺 Sức khỏe bán hàng</div>
+        <div style="font-size:19px;font-weight:800;margin-top:2px;">${esc(rec.name)}</div>
+        <div style="font-size:12px;color:#AFC9D2;margin-top:1px;">#${esc(rec.currRec?rec.currRec.code:(rec.prevRec?rec.prevRec.code:rec.key))}</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" id="btnSingleHealthRender" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff;">🩺 Render ảnh</button>
+        <button class="icon-btn" id="btnCloseOverlay" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff;">✕</button>
+      </div>
+    </div>
+    <div class="overlay-body">
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="kpi-card"><div class="kpi-label">Doanh thu thực tế</div><div class="kpi-value">${fmtVND(rec.curr.thucTe)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Doanh thu quy đổi</div><div class="kpi-value">${fmtVND(rec.curr.quyDoi)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Tăng trưởng quy đổi</div><div class="kpi-value">${fmtPct(rec.growthQuy,true)}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Hệ số quy đổi BQ</div><div class="kpi-value">${avgCoef.toFixed(0)}%</div></div>
+      </div>
+
+      <div class="section-title">Doanh thu tháng trước vs tháng hiện tại</div>
+      <div class="card card-pad chart-card" style="height:280px;">
+        <div class="chart-canvas-wrap"><canvas id="empDetailChart"></canvas></div>
+      </div>
+
+      <div class="section-title">Cơ cấu ngành hàng</div>
+      <div class="card card-pad">
+        ${cats.length ? cats.map(c=>`
+          <div class="cat-bar-row">
+            <div class="cat-name">${esc(c.category)}</div>
+            <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${Math.min(100, c.curr.quyDoi/totalCurr*100)}%"></div></div>
+            <div class="cat-meta">${fmtVND(c.curr.quyDoi)} · ${(c.curr.quyDoi/totalCurr*100).toFixed(0)}% · ${c.growth===Infinity?'Mới':fmtPct(c.growth,true)}</div>
+          </div>`).join('') : `<div class="empty-state" style="padding:20px;">Không có dữ liệu ngành hàng tháng hiện tại</div>`}
+      </div>
+
+      <div class="section-title">Phân tích</div>
+      <div class="insight-grid">
+        <div class="insight-card insight-strength">
+          <h4>💪 Điểm mạnh</h4>
+          <ul>${strengths.length ? strengths.map(c=>`<li>${esc(c.category)} — ${fmtVND(c.curr.quyDoi)} (${(c.curr.quyDoi/totalCurr*100).toFixed(0)}% doanh thu quy đổi)</li>`).join('') : '<li>Chưa đủ dữ liệu</li>'}</ul>
+        </div>
+        <div class="insight-card insight-improve">
+          <h4>⚠️ Cần cải thiện</h4>
+          <ul>${improve.length ? improve.map(c=>`<li>${esc(c.category)} — giảm ${fmtPct(Math.abs(c.growth))} so với tháng trước</li>`).join('') : '<li>Không có ngành hàng nào giảm rõ rệt</li>'}</ul>
+        </div>
+        <div class="insight-card insight-trend">
+          <h4>📈 Xu hướng</h4>
+          <ul>
+            <li>Doanh thu thực tế: ${fmtVND(rec.prev.thucTe)} → ${fmtVND(rec.curr.thucTe)} (${rec.growthThuc===Infinity?'mới':fmtPct(rec.growthThuc,true)})</li>
+            <li>Doanh thu quy đổi: ${fmtVND(rec.prev.quyDoi)} → ${fmtVND(rec.curr.quyDoi)} (${rec.growthQuy===Infinity?'mới':fmtPct(rec.growthQuy,true)})</li>
+          </ul>
+        </div>
+        <div class="insight-card insight-note">
+          <h4>💡 Nhận định</h4>
+          <ul><li>${buildNhanDinh(rec, cats, avgCoef)}</li></ul>
+        </div>
+      </div>
+
+      <div class="section-title">Chi tiết từng dòng sản phẩm (tháng hiện tại)</div>
+      <div class="card card-pad">
+        ${renderLineItemsMini(rec.currRec ? rec.currRec.lineItems : [])}
+      </div>
+    </div>`;
+  backdrop.appendChild(panel);
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', e=>{ if(e.target===backdrop) closeEmployeeDetail(); });
+  $('#btnCloseOverlay').addEventListener('click', closeEmployeeDetail);
+  $('#btnSingleHealthRender').addEventListener('click', ()=>{
+    closeEmployeeDetail();
+    openHealthModal([key]);
+  });
+
+  const ctx = $('#empDetailChart').getContext('2d');
+  new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['DT thực tế','DT quy đổi'],
+      datasets:[
+        {label:'Tháng trước', data:[rec.prev.thucTe, rec.prev.quyDoi], backgroundColor:'#B9C4CB', borderRadius:6, maxBarThickness:60},
+        {label:'Tháng hiện tại', data:[rec.curr.thucTe, rec.curr.quyDoi], backgroundColor:'#0E7490', borderRadius:6, maxBarThickness:60},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'top', labels:{boxWidth:10,font:{size:11}}}, tooltip:{callbacks:{label:(c)=>c.dataset.label+': '+fmtVND(c.parsed.y)}}},
+      scales:{ y:{ticks:{callback:(v)=>compactVND(v)}, grid:{color:'#EEF2F4'}}, x:{grid:{display:false}} }
+    }
+  });
+}
+function closeEmployeeDetail(){
+  const ov = $('#empOverlay');
+  if(ov) ov.remove();
+  APP.selectedEmployeeKey = null;
+}
+function buildNhanDinh(rec, cats, avgCoef){
+  const dir = rec.growthQuy===Infinity ? 'là nhân viên mới phát sinh doanh thu trong tháng này' :
+    rec.growthQuy>=10 ? `đang tăng trưởng tốt (+${rec.growthQuy.toFixed(1)}% DT quy đổi)` :
+    rec.growthQuy<=-10 ? `đang giảm sút cần theo dõi (${rec.growthQuy.toFixed(1)}% DT quy đổi)` :
+    'duy trì phong độ ổn định so với tháng trước';
+  const topCat = cats[0];
+  const focus = topCat ? `, tập trung chủ yếu ở ngành ${topCat.category} (${(topCat.curr.quyDoi/(rec.curr.quyDoi||1)*100).toFixed(0)}% doanh thu quy đổi)` : '';
+  return `Nhân viên ${dir}${focus}. Hệ số quy đổi bình quân đạt ${avgCoef.toFixed(0)}%, phản ánh cơ cấu ngành hàng đang bán.`;
+}
+
+function renderLineItemsMini(items){
+  if(!items || !items.length) return `<div class="empty-state" style="padding:20px;">Không có dòng sản phẩm hợp lệ</div>`;
+  const rows = items.slice(0, 300).map((c,i)=>`
+    <tr data-idx="${i}">
+      <td>${esc(c.row.productName)}</td>
+      <td>${esc(c.category)}</td>
+      <td class="num">${fmtVND(c.doanhThuThucTe)}</td>
+      <td class="num">×${(c.rate*c.installmentMult).toFixed(2)}</td>
+      <td class="num">${fmtVND(c.doanhThuQuyDoi)}</td>
+    </tr>`).join('');
+  const html = `<div class="table-scroll"><table><thead><tr>
+    <th>Sản phẩm</th><th>Ngành hàng</th><th class="num">Doanh thu</th><th class="num">Hệ số (nhân)</th><th class="num">DT quy đổi</th>
+  </tr></thead><tbody>${rows}</tbody></table></div>
+  ${items.length>300 ? `<div style="padding:8px 4px;color:var(--muted);font-size:12px;">Hiển thị 300/${items.length} dòng đầu tiên</div>` : ''}`;
+  setTimeout(()=>{
+    $all('.overlay-body tbody tr').forEach(tr=>{
+      tr.addEventListener('click', ()=> openRowExplain(items[Number(tr.dataset.idx)]));
+    });
+  }, 0);
+  return html;
+}
+// ============================================================
+// UI — Kiểm tra dữ liệu (Data quality) & giải thích dòng
+// ============================================================
+
+const DQ_LABELS = {
+  hople:              {label:'Dòng hợp lệ - đã tính doanh thu', icon:'✅'},
+  online:             {label:'Loại YCX là Online (không tính)', icon:'💻'},
+  airtime:            {label:'Giao dịch AirTime / Thu hộ', icon:'🧾'},
+  chuaThu:            {label:'Chưa thu tiền', icon:'💰'},
+  chuaXuat:           {label:'Chưa xuất hàng', icon:'📦'},
+  chuaGiao:           {label:'Chưa giao hàng', icon:'🚚'},
+  daHuy:              {label:'Đơn đã hủy', icon:'🚫'},
+  daTra:              {label:'Hàng đã nhập trả', icon:'↩️'},
+  giaBan0:            {label:'Giá bán_1 = 0đ / hàng tặng', icon:'🎁'},
+  khongXacDinhNganh:  {label:'Ngành hàng không xác định (vd Sim khác mã 1891)', icon:'❓'},
+  taiKhoanHeThong:    {label:'Tài khoản hệ thống / không rõ NV', icon:'🔒'},
+  thieuLoaiYCX:       {label:'Thiếu Loại YCX', icon:'⚠️'},
+};
+
+function renderDataQuality(){
+  const monthSel = APP.dq_month || 'curr';
+  $('#dqBody').innerHTML = `
+    <div class="table-toolbar" style="margin-bottom:18px;">
+      <select class="filter-select" id="dqMonthSelect">
+        <option value="curr" ${monthSel==='curr'?'selected':''}>Tháng hiện tại (${esc(APP.files.curr.name)})</option>
+        <option value="prev" ${monthSel==='prev'?'selected':''}>Tháng trước (${esc(APP.files.prev.name)})</option>
+      </select>
+    </div>
+    <div id="dqSummary"></div>
+    <div id="dqDrilldown"></div>
+  `;
+  $('#dqMonthSelect').addEventListener('change', e=>{ APP.dq_month = e.target.value; renderDataQuality(); });
+  renderDqSummary(monthSel);
+}
+
+function renderDqSummary(monthSel){
+  const res = APP.results[monthSel];
+  const q = res.quality;
+  const cells = Object.keys(DQ_LABELS).map(bucket=>{
+    const meta = DQ_LABELS[bucket];
+    const count = q[bucket];
+    const rev = q.buckets[bucket].reduce((s,c)=> s + (parseNumberLoose(c.row.giaBan1)||0), 0);
+    return `<div class="dq-cell" data-bucket="${bucket}">
+      <div class="n">${count.toLocaleString('vi-VN')}</div>
+      <div class="l">${meta.icon} ${meta.label}</div>
+      <div class="l" style="margin-top:4px;">Giá bán_1: ${fmtVND(rev)}</div>
+    </div>`;
+  }).join('');
+
+  $('#dqSummary').innerHTML = `
+    <div class="dq-grid">${cells}</div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="kpi-card"><div class="kpi-label">Tổng số dòng</div><div class="kpi-value">${q.total.toLocaleString('vi-VN')}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Tổng doanh thu thực tế</div><div class="kpi-value">${fmtVND(q.doanhThuThucTe)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Tổng doanh thu quy đổi</div><div class="kpi-value">${fmtVND(q.doanhThuQuyDoi)}</div></div>
+    </div>`;
+
+  $all('.dq-cell').forEach(c=>{
+    c.addEventListener('click', ()=> renderDqDrilldown(monthSel, c.dataset.bucket));
+  });
+}
+
+function renderDqDrilldown(monthSel, bucket){
+  const res = APP.results[monthSel];
+  const items = res.quality.buckets[bucket];
+  const meta = DQ_LABELS[bucket];
+  const rows = items.slice(0,500).map((c,i)=>`
+    <tr data-idx="${i}">
+      <td>${esc(c.row.employeeRaw)}</td>
+      <td>${esc(c.row.orderId)}</td>
+      <td>${esc(c.row.productName)}</td>
+      <td>${esc(c.row.nhomName)}</td>
+      <td class="num">${fmtVND(parseNumberLoose(c.row.giaBan1))}</td>
+      <td>${esc(c.row.loaiYCX)}</td>
+      <td>${bucketReasonText(c)}</td>
+    </tr>`).join('');
+
+  $('#dqDrilldown').innerHTML = `
+    <div class="card card-pad" style="margin-top:16px;">
+      <div class="card-head">
+        <div>
+          <div class="card-title">${meta.icon} ${meta.label} <span style="color:var(--muted);font-weight:500;">(${items.length.toLocaleString('vi-VN')} dòng)</span></div>
+          <div class="card-sub">Bấm vào 1 dòng để xem chi tiết cách xử lý</div>
+        </div>
+        <button class="btn btn-sm btn-ghost" id="dqCloseDrill">✕ Đóng</button>
+      </div>
+      <div class="table-scroll"><table><thead><tr>
+        <th>Người tạo</th><th>Mã đơn</th><th>Sản phẩm</th><th>Nhóm hàng</th><th class="num">Giá bán_1</th><th>Loại YCX</th><th>Lý do</th>
+      </tr></thead><tbody>${rows || `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Không có dòng nào</td></tr>`}</tbody></table></div>
+      ${items.length>500 ? `<div style="padding:8px 4px;color:var(--muted);font-size:12px;">Hiển thị 500/${items.length} dòng đầu tiên</div>` : ''}
+    </div>`;
+  $('#dqCloseDrill').addEventListener('click', ()=>{ $('#dqDrilldown').innerHTML=''; });
+  $all('#dqDrilldown tbody tr').forEach(tr=>{
+    tr.addEventListener('click', ()=> openRowExplain(items[Number(tr.dataset.idx)]));
+  });
+}
+
+function bucketReasonText(c){
+  const map = {
+    online: 'Loại YCX là bán Online - không tính vào sức khỏe bán hàng tại quầy',
+    airtime: 'Ngành hàng "464 - Giao dịch AirTime" (thu hộ cước/ví/bảo hiểm...) - không phải doanh thu bán hàng',
+    chuaThu: 'Trạng thái thu tiền khác "Đã thu"',
+    chuaXuat: 'Trạng thái xuất khác "Đã xuất"',
+    chuaGiao: 'Trạng thái giao hàng khác "Đã giao"',
+    daHuy: 'Trạng thái hủy khác "Chưa hủy" (đơn đã hủy)',
+    daTra: 'Tình trạng nhập trả khác "Chưa trả" (đã trả hàng)',
+    giaBan0: 'Giá bán_1 = 0đ (không tạo doanh thu / hàng tặng)',
+    khongXacDinhNganh: 'Ngành hàng "Sim Online" nhưng Nhóm hàng khác mã 1891 - không xác định được hệ số',
+    taiKhoanHeThong: 'Người tạo trống hoặc là tài khoản admin/administrator',
+    thieuLoaiYCX: 'Không có giá trị ở cột "Loại YCX"',
+  };
+  return esc(map[c.bucket] || '');
+}
+
+// ---------------- Row explain modal (đúng công thức: revenue × hệ số ngành × hệ số trả góp) ----------------
+function openRowExplain(c){
+  const row = c.row;
+  const included = c.included;
+  const body = included ? `
+    <div class="explain-grid">
+      <div class="explain-row"><div class="k">Sản phẩm</div><div class="v" style="font-family:inherit;">${esc(row.productName)}</div></div>
+      <div class="explain-row"><div class="k">Nhân viên</div><div class="v" style="font-family:inherit;">${esc(row.employeeRaw)}</div></div>
+      <div class="explain-row"><div class="k">Nhóm hàng</div><div class="v" style="font-family:inherit;">${esc(row.nhomName)}</div></div>
+      <div class="explain-row"><div class="k">Doanh thu (Giá bán_1)</div><div class="v">${fmtVND(row.giaBan1)}</div></div>
+      <div class="explain-row"><div class="k">Ngành hàng quy đổi</div><div class="v" style="font-family:inherit;">${esc(c.category)}</div></div>
+      <div class="explain-row"><div class="k">Hệ số ngành (nhân)</div><div class="v">×${c.rate}</div></div>
+      <div class="explain-row"><div class="k">Loại YCX</div><div class="v" style="font-family:inherit;font-size:12px;">${esc(row.loaiYCX)}</div></div>
+      <div class="explain-row"><div class="k">Hệ số trả góp</div><div class="v">×${c.installmentMult}</div></div>
+      <div class="explain-row"><div class="k">Doanh thu quy đổi</div><div class="v" style="color:var(--primary-dark);">${fmtVND(c.doanhThuQuyDoi)}</div></div>
+    </div>
+    <div class="explain-formula">
+      Doanh thu quy đổi = Giá bán_1 × Hệ số ngành × Hệ số trả góp<br/>
+      = ${fmtNum(row.giaBan1)}đ × ${c.rate} × ${c.installmentMult} = <strong>${fmtVND(c.doanhThuQuyDoi)}</strong>
+    </div>` : `
+    <div class="explain-grid">
+      <div class="explain-row"><div class="k">Sản phẩm</div><div class="v" style="font-family:inherit;">${esc(row.productName)}</div></div>
+      <div class="explain-row"><div class="k">Nhân viên</div><div class="v" style="font-family:inherit;">${esc(row.employeeRaw)}</div></div>
+      <div class="explain-row"><div class="k">Nhóm hàng</div><div class="v" style="font-family:inherit;">${esc(row.nhomName)}</div></div>
+      <div class="explain-row"><div class="k">Giá bán_1</div><div class="v">${fmtVND(row.giaBan1)}</div></div>
+    </div>
+    <div class="explain-formula" style="background:var(--bad-100);border-color:#F3CACA;color:var(--bad);">
+      ⛔ Dòng này KHÔNG được tính vào doanh thu.<br/>Lý do: ${bucketReasonText(c)}
+    </div>`;
+
+  openModal('Giải thích dòng doanh thu', body, []);
+}
+
+// ---------------- Generic modal ----------------
+function openModal(title, bodyHtml, actions){
+  closeModal();
+  const backdrop = el('div', {class:'modal-backdrop', id:'genericModal'});
+  const box = el('div', {class:'modal-box'});
+  box.innerHTML = `
+    <div class="modal-head"><h3>${esc(title)}</h3><button class="icon-btn" id="modalCloseBtn">✕</button></div>
+    <div class="modal-body">${bodyHtml}</div>
+    <div class="modal-foot" id="modalFoot"></div>`;
+  backdrop.appendChild(box);
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', e=>{ if(e.target===backdrop) closeModal(); });
+  $('#modalCloseBtn').addEventListener('click', closeModal);
+  const foot = $('#modalFoot');
+  (actions||[]).forEach(a=>{
+    const b = el('button', {class:'btn ' + (a.primary?'btn-primary':''), onclick:a.onClick}, [a.label]);
+    foot.appendChild(b);
+  });
+  if(!actions || !actions.length) foot.style.display='none';
+}
+function closeModal(){
+  const m = $('#genericModal');
+  if(m) m.remove();
+}
+// ============================================================
+// UI — 🩺 Render Sức khỏe nhân viên (PNG report cards for LINE)
+// ============================================================
+
+function openHealthModal(preselectKeys){
+  closeModal();
+  const emps = [...APP.compare].sort((a,b)=>b.curr.quyDoi-a.curr.quyDoi);
+  if(preselectKeys) APP.health.selected = new Set(preselectKeys);
+
+  const listHtml = emps.map(r=>`
+    <label class="check-item">
+      <input type="checkbox" class="health-check" value="${esc(r.key)}" ${APP.health.selected.has(r.key)?'checked':''}/>
+      <span>${esc(r.name)}</span>
+      <span style="margin-left:auto;color:var(--faint);font-size:11.5px;" class="mono">${fmtVND(r.curr.quyDoi)}</span>
+    </label>`).join('');
+
+  const body = `
+    <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">Chọn nhân viên để tạo ảnh báo cáo "Sức khỏe bán hàng" (tỉ lệ phù hợp điện thoại, kèm biểu đồ so sánh ~10 ngành hàng chính so với cùng kỳ) — dùng để gửi qua LINE.</p>
+    <div style="display:flex;gap:10px;margin-bottom:10px;">
+      <button class="btn btn-sm" id="healthSelectAll">☑ Chọn tất cả (${emps.length})</button>
+      <button class="btn btn-sm btn-ghost" id="healthSelectNone">☐ Bỏ chọn tất cả</button>
+    </div>
+    <div class="check-list" id="healthCheckList">${listHtml}</div>
+    <div id="healthRenderArea" style="margin-top:6px;"></div>
+  `;
+  openModal('🩺 Render Sức khỏe nhân viên', body, [
+    {label:'RENDER', primary:true, onClick: renderHealthCards},
+  ]);
+
+  $('#healthSelectAll').addEventListener('click', ()=>{
+    $all('.health-check').forEach(cb=>{ cb.checked=true; APP.health.selected.add(cb.value); });
+  });
+  $('#healthSelectNone').addEventListener('click', ()=>{
+    $all('.health-check').forEach(cb=>{ cb.checked=false; });
+    APP.health.selected.clear();
+  });
+  $all('.health-check').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      if(cb.checked) APP.health.selected.add(cb.value); else APP.health.selected.delete(cb.value);
+    });
+  });
+}
+
+function healthColor(cls){
+  return cls==='up' ? '#1F9D63' : cls==='down' ? '#DC4C4C' : cls==='new' ? '#6D5BD0' : '#8A94A0';
+}
+
+const REPORT_CATEGORY_LIMIT = 10;
+
+// Render 1 biểu đồ cột ngang (grouped: Kỳ trước vs Kỳ này) ra ảnh PNG offscreen
+// bằng Chart.js, để nhúng tĩnh vào thẻ báo cáo trước khi html2canvas chụp toàn bộ.
+async function renderCategoryComparisonChartImage(catRows){
+  const SCALE = 2; // bake sẵn độ nét 2x, ảnh PNG cuối cùng sẽ sắc nét khi thu nhỏ lại
+  const displayWidth = 640, rowH = 34, topPad = 46, bottomPad = 14;
+  const displayHeight = Math.max(150, catRows.length*rowH + topPad + bottomPad);
+  const canvas = document.createElement('canvas');
+  canvas.width = displayWidth*SCALE; canvas.height = displayHeight*SCALE;
+  const host = document.createElement('div');
+  host.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;';
+  host.appendChild(canvas);
+  document.body.appendChild(host);
+
+  const labels = catRows.map(c=> c.category.length>18 ? c.category.slice(0,17)+'…' : c.category);
+  const prevData = catRows.map(c=>Math.round(c.prev.quyDoi));
+  const currData = catRows.map(c=>Math.round(c.curr.quyDoi));
+
+  let dataUrl = null;
+  try{
+    const chart = new Chart(canvas.getContext('2d'), {
+      type:'bar',
+      data:{ labels, datasets:[
+        {label:'Kỳ trước', data:prevData, backgroundColor:'#C7D2D8', borderRadius:4*SCALE, barPercentage:0.68, categoryPercentage:0.75},
+        {label:'Kỳ này',   data:currData, backgroundColor:'#0E7490', borderRadius:4*SCALE, barPercentage:0.68, categoryPercentage:0.75},
+      ]},
+      options:{
+        indexAxis:'y', responsive:false, animation:false,
+        layout:{padding:{right:20*SCALE, top:6*SCALE, bottom:2*SCALE, left:4*SCALE}},
+        plugins:{
+          legend:{position:'top', align:'end', labels:{boxWidth:11*SCALE, font:{size:12*SCALE}, color:'#3A4553', padding:14*SCALE}},
+          tooltip:{enabled:false},
+        },
+        scales:{
+          x:{ ticks:{callback:v=>compactVND(v), font:{size:11*SCALE}, color:'#6B7684'}, grid:{color:'#EEF2F4'}, border:{display:false} },
+          y:{ ticks:{font:{size:12.5*SCALE, weight:'600'}, color:'#101826'}, grid:{display:false}, border:{display:false} },
+        }
+      }
+    });
+    await new Promise(r=>setTimeout(r, 50));
+    dataUrl = canvas.toDataURL('image/png');
+    chart.destroy();
+  }catch(err){
+    console.error('chart render fail', err);
+  }
+  host.remove();
+  return {dataUrl, displayWidth, displayHeight};
+}
+
+function buildReportCardShellHTML(rec, chartImg, catRows){
+  const total = rec.curr.quyDoi || 1;
+  const color = healthColor(rec.healthClass);
+  const growthTxt = rec.growthQuy===Infinity ? 'Mới có DT' : fmtPct(rec.growthQuy, true);
+  const avgCoef = rec.curr.thucTe>0 ? (rec.curr.quyDoi/rec.curr.thucTe*100) : 0;
+
+  const tableRows = catRows.map(c=>{
+    const gTxt = c.growth===Infinity ? 'Mới' : fmtPct(c.growth, true);
+    const gColor = c.growth===Infinity ? '#6D5BD0' : c.growth>0 ? '#1F9D63' : c.growth<0 ? '#DC4C4C' : '#8A94A0';
+    return `
+    <tr>
+      <td style="padding:7px 8px;font-size:12.5px;font-weight:700;color:#101826;border-bottom:1px solid #EEF2F4;">${esc(c.category)}</td>
+      <td style="padding:7px 8px;font-size:12px;text-align:right;color:#8A94A0;font-family:ui-monospace,Menlo,monospace;border-bottom:1px solid #EEF2F4;">${fmtVND(c.prev.quyDoi)}</td>
+      <td style="padding:7px 8px;font-size:12px;text-align:right;color:#101826;font-weight:700;font-family:ui-monospace,Menlo,monospace;border-bottom:1px solid #EEF2F4;">${fmtVND(c.curr.quyDoi)}</td>
+      <td style="padding:7px 8px;font-size:12px;text-align:right;font-weight:800;color:${gColor};border-bottom:1px solid #EEF2F4;">${gTxt}</td>
+    </tr>`;
+  }).join('');
+
+  const chartBlock = chartImg && chartImg.dataUrl
+    ? `<img src="${chartImg.dataUrl}" style="width:100%;display:block;border-radius:12px;background:#fff;" />`
+    : `<div style="padding:30px;text-align:center;color:#94A0AC;font-size:13px;background:#F7F9FA;border-radius:12px;">Không đủ dữ liệu ngành hàng để vẽ biểu đồ</div>`;
+
+  return `
+    <div style="background:linear-gradient(160deg,#0F2530,#123542);padding:36px 40px 28px;color:#fff;">
+      <div style="font-size:13px;font-weight:800;letter-spacing:.12em;color:#7FD6E6;text-transform:uppercase;">🩺 SỨC KHỎE BÁN HÀNG</div>
+      <div style="font-size:32px;font-weight:800;margin-top:8px;">${esc(rec.name)}</div>
+      <div style="font-size:13px;color:#9FC4CE;margin-top:4px;">Mã NV #${esc(rec.currRec?rec.currRec.code:rec.key)} · So sánh kỳ trước &amp; kỳ này</div>
+    </div>
+    <div style="background:#fff;padding:30px 40px;">
+      <div style="display:flex;gap:14px;">
+        <div style="flex:1;background:#F1F8FA;border-radius:16px;padding:18px;">
+          <div style="font-size:11px;font-weight:800;color:#0B5D74;text-transform:uppercase;letter-spacing:.05em;">Doanh thu thực tế</div>
+          <div style="font-size:24px;font-weight:800;margin-top:6px;font-family:ui-monospace,Menlo,monospace;">${fmtVND(rec.curr.thucTe)}</div>
+        </div>
+        <div style="flex:1;background:#EEEBFA;border-radius:16px;padding:18px;">
+          <div style="font-size:11px;font-weight:800;color:#4A3D99;text-transform:uppercase;letter-spacing:.05em;">Doanh thu quy đổi</div>
+          <div style="font-size:24px;font-weight:800;margin-top:6px;font-family:ui-monospace,Menlo,monospace;">${fmtVND(rec.curr.quyDoi)}</div>
+        </div>
+      </div>
+      <div style="margin-top:14px;background:${color}18;border:1.5px solid ${color};border-radius:16px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:11px;font-weight:800;color:${color};text-transform:uppercase;letter-spacing:.05em;">Tăng trưởng quy đổi</div>
+          <div style="font-size:26px;font-weight:800;color:${color};margin-top:4px;">${growthTxt}</div>
+        </div>
+        <div style="text-align:right;font-size:12px;color:#5B6572;">Hệ số quy đổi BQ<br/><span style="font-size:17px;font-weight:800;color:#101826;">×${(avgCoef/100).toFixed(2)}</span></div>
+      </div>
+
+      <div style="margin-top:26px;font-size:12px;font-weight:800;color:#5B6572;text-transform:uppercase;letter-spacing:.06em;">📊 So sánh doanh thu quy đổi theo Ngành hàng (Kỳ trước vs Kỳ này)</div>
+      <div style="margin-top:10px;">${chartBlock}</div>
+
+      ${catRows.length ? `
+      <div style="margin-top:16px;border:1px solid #EEF2F4;border-radius:12px;overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#F7F9FA;">
+              <th style="text-align:left;padding:8px;font-size:10.5px;font-weight:800;color:#6B7684;text-transform:uppercase;">Ngành hàng</th>
+              <th style="text-align:right;padding:8px;font-size:10.5px;font-weight:800;color:#6B7684;text-transform:uppercase;">Kỳ trước</th>
+              <th style="text-align:right;padding:8px;font-size:10.5px;font-weight:800;color:#6B7684;text-transform:uppercase;">Kỳ này</div></th>
+              <th style="text-align:right;padding:8px;font-size:10.5px;font-weight:800;color:#6B7684;text-transform:uppercase;">Tăng/Giảm</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>` : ''}
+
+      <div style="margin-top:20px;background:#F7F5FF;border-radius:16px;padding:16px 18px;">
+        <div style="font-size:12px;font-weight:800;color:#4A3D99;text-transform:uppercase;letter-spacing:.05em;">💡 Nhận định</div>
+        <div style="font-size:13.5px;margin-top:6px;color:#101826;line-height:1.5;">${buildNhanDinh(rec, categoryBreakdownFor(rec), avgCoef)}</div>
+      </div>
+    </div>
+    <div style="background:#0F2530;color:#8FAAB4;text-align:center;padding:12px;font-size:11px;">Sức Khỏe Nhân Viên · Báo cáo tự động</div>
+  `;
+}
+
+async function buildReportCardNode(rec){
+  let catRows = categoryBreakdownFor(rec).filter(c=> c.prev.quyDoi>0 || c.curr.quyDoi>0);
+  catRows.sort((a,b)=> (b.prev.quyDoi+b.curr.quyDoi) - (a.prev.quyDoi+a.curr.quyDoi));
+  catRows = catRows.slice(0, REPORT_CATEGORY_LIMIT);
+  // hiển thị trong biểu đồ từ cao xuống thấp theo DT kỳ này
+  const chartRows = [...catRows].sort((a,b)=> b.curr.quyDoi - a.curr.quyDoi);
+
+  const chartImg = chartRows.length ? await renderCategoryComparisonChartImage(chartRows) : null;
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'width:720px;background:#0F2530;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#101826;';
+  wrap.innerHTML = buildReportCardShellHTML(rec, chartImg, chartRows);
+  return wrap;
+}
+
+async function renderHealthCards(){
+  const keys = Array.from(APP.health.selected);
+  if(!keys.length){ toast('Vui lòng chọn ít nhất 1 nhân viên', 'error'); return; }
+  const area = $('#healthRenderArea');
+  area.innerHTML = `<div style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;padding:10px 0;"><div class="spinner" style="width:20px;height:20px;border-width:3px;"></div> Đang render ${keys.length} ảnh...</div>`;
+
+  const hiddenHost = document.createElement('div');
+  hiddenHost.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;';
+  document.body.appendChild(hiddenHost);
+
+  const results = [];
+  for(let i=0;i<keys.length;i++){
+    const rec = APP.compare.find(r=>r.key===keys[i]);
+    if(!rec) continue;
+    area.innerHTML = `<div style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;padding:10px 0;"><div class="spinner" style="width:20px;height:20px;border-width:3px;"></div> Đang render ${i+1}/${keys.length}: ${esc(rec.name)}</div>`;
+    const node = await buildReportCardNode(rec);
+    hiddenHost.innerHTML = '';
+    hiddenHost.appendChild(node);
+    await new Promise(r=>setTimeout(r, 20));
+    try{
+      const canvas = await html2canvas(node, {scale:2, backgroundColor:'#ffffff', useCORS:true});
+      const dataUrl = canvas.toDataURL('image/png');
+      const fname = safeFileName(rec.name) + '.png';
+      results.push({key:rec.key, name:rec.name, dataUrl, fname});
+      APP.health.rendered[rec.key] = {dataUrl, fname};
+    }catch(err){
+      console.error('render fail', rec.name, err);
+      toast('Lỗi render ảnh cho ' + rec.name, 'error');
+    }
+  }
+  hiddenHost.remove();
+
+  area.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+      <div style="font-size:13px;font-weight:700;">✅ Đã render ${results.length}/${keys.length} ảnh</div>
+      <button class="btn btn-primary btn-sm" id="downloadAllPng">⬇ Download tất cả (ZIP)</button>
+    </div>
+    <div class="report-card-list">
+      ${results.map(r=>`
+        <div class="report-thumb">
+          <img src="${r.dataUrl}" />
+          <div class="rt-name">${esc(r.name)}</div>
+          <div class="rt-actions"><button class="btn btn-sm btn-block" data-key="${esc(r.key)}">⬇ PNG</button></div>
+        </div>`).join('')}
+    </div>`;
+  $all('.rt-actions button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const r = APP.health.rendered[btn.dataset.key];
+      downloadDataUrl(r.dataUrl, r.fname);
+    });
+  });
+  $('#downloadAllPng').addEventListener('click', ()=> downloadAllAsZip(results));
+  toast('Render ảnh Sức khỏe nhân viên hoàn tất', 'success');
+}
+
+function safeFileName(name){
+  return String(name).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'nhan_vien';
+}
+function downloadDataUrl(dataUrl, fname){
+  const a = document.createElement('a');
+  a.href = dataUrl; a.download = fname;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+async function downloadAllAsZip(results){
+  const zip = new JSZip();
+  results.forEach(r=>{
+    const base64 = r.dataUrl.split(',')[1];
+    zip.file(r.fname, base64, {base64:true});
+  });
+  const blob = await zip.generateAsync({type:'blob'});
+  saveAs(blob, 'suc_khoe_nhan_vien_' + Date.now() + '.zip');
+}
+// ============================================================
+// BOOTSTRAP
+// ============================================================
+
+function checkDependencies(){
+  const missing = [];
+  if(typeof XLSX==='undefined') missing.push('SheetJS (đọc file Excel)');
+  if(typeof Chart==='undefined') missing.push('Chart.js (biểu đồ)');
+  if(typeof html2canvas==='undefined') missing.push('html2canvas (render ảnh PNG)');
+  if(typeof JSZip==='undefined') missing.push('JSZip (đóng gói ZIP)');
+  if(typeof saveAs==='undefined') missing.push('FileSaver (tải file)');
+  if(missing.length){
+    const banner = el('div', {style:'max-width:760px;margin:16px auto;padding:14px 18px;background:#FBEAEA;border:1px solid #F3CACA;border-radius:12px;color:#7A2323;font-size:13px;'});
+    banner.innerHTML = '⚠️ Không tải được thư viện bên ngoài: <strong>' + missing.join(', ') + '</strong>. Vui lòng kiểm tra kết nối mạng và tải lại trang.';
+    document.querySelector('main').prepend(banner);
+    return false;
+  }
+  return true;
+}
+
+function initSession(){
+  try{
+    const session = JSON.parse(localStorage.getItem('mwg_session') || '{}');
+    const elUser = $('#navUsername');
+    if(elUser) elUser.textContent = session.displayName || session.username || '—';
+  }catch(e){}
+}
+
+function initApp(){
+  if(!checkDependencies()) return;
+  initSession();
+  const btnLogout = $('#btnNavLogout');
+  if(btnLogout) btnLogout.addEventListener('click', ()=>{
+    localStorage.removeItem('mwg_session');
+    window.location.href = './index.html';
+  });
+  renderDzEmpty('prev');
+  renderDzEmpty('curr');
+  initDropzone('prev');
+  initDropzone('curr');
+  updateAnalyzeButton();
+
+  $('#btnAnalyze').addEventListener('click', runAnalysis);
+  $('#btnHealthRenderTop').addEventListener('click', ()=> openHealthModal());
+  $('#btnResetAll').addEventListener('click', ()=>{
+    if(confirm('Tải lại dữ liệu mới? Kết quả phân tích hiện tại sẽ bị xoá.')){
+      APP.files = {prev:null, curr:null};
+      APP.results = {prev:null, curr:null};
+      APP.compare = null;
+      $('#view-dashboard').style.display='none';
+      $('#tabbar').style.display='none';
+      $('#view-upload').style.display='block';
+      renderDzEmpty('prev'); renderDzEmpty('curr');
+      updateAnalyzeButton();
+      updateStatusBar();
+    }
+  });
+
+  $all('.tab-btn[data-tab]').forEach(b=>{
+    b.addEventListener('click', ()=> switchTab(b.dataset.tab));
+  });
+
+  updateStatusBar();
+}
+
+document.addEventListener('DOMContentLoaded', initApp);
+
+</script>
+</body>
+</html>
