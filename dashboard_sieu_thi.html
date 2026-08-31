@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BI Realtime — MWG</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 
@@ -137,17 +138,43 @@ body{
 /* ── ORIGINAL STYLES ── */
 .container{max-width:860px;margin:0 auto;}
 
-.form-wrap{background:#fff;border:1px solid #ddd;border-radius:10px;padding:9px 12px;margin-bottom:7px;}
-.form-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.form-label{font-size:11px;font-weight:600;color:#555;white-space:nowrap;}
-.form-toggle{background:none;border:1px solid #ccc;color:#0066cc;font-size:11px;font-weight:600;cursor:pointer;padding:3px 9px;border-radius:5px;white-space:nowrap;}
-.form-toggle:hover{background:#f0f4ff;}
-.inp-inner{display:none;margin-top:7px;}
-.inp-label{font-size:10px;color:#999;margin-bottom:3px;}
-textarea{width:100%;min-height:80px;font-family:'Courier New',monospace;font-size:10px;padding:6px 8px;border:1px solid #ddd;border-radius:5px;background:#fafafa;color:#333;resize:vertical;line-height:1.4;}
-textarea:focus{outline:none;border-color:#0066cc;}
+.form-wrap{background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px;margin-bottom:7px;}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.upload-box{position:relative;border:2px dashed #d5d9e0;border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;background:#fafbfc;transition:border-color 150ms,background 150ms,transform 100ms;}
+.upload-box:hover{border-color:#0066cc;background:#f2f7ff;}
+.upload-box:active{transform:scale(0.99);}
+.upload-box.dt{border-color:#bcd8f5;}
+.upload-box.dt:hover{border-color:#1565c0;background:#eef6ff;}
+.upload-box.td{border-color:#f5c8bc;}
+.upload-box.td:hover{border-color:#e53935;background:#fff3f1;}
+.upload-box.has-file.dt{border-style:solid;border-color:#1565c0;background:#eef6ff;}
+.upload-box.has-file.td{border-style:solid;border-color:#e53935;background:#fff3f1;}
+.upload-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.upload-icon{font-size:24px;line-height:1;margin-bottom:5px;}
+.upload-title{font-size:11.5px;font-weight:800;color:#333;letter-spacing:.2px;}
+.upload-sub{font-size:9.5px;color:#999;margin-top:3px;}
+.upload-filename{font-size:10px;color:#333;margin-top:6px;font-weight:600;word-break:break-all;}
+.upload-status{font-size:10px;margin-top:4px;font-weight:700;}
+.upload-status.ok{color:#1e8e3e;}
+.upload-status.err{color:#c0392b;}
+.upload-status.wait{color:#aaa;font-weight:500;}
 
-.btn-row{display:flex;gap:7px;align-items:center;margin-bottom:8px;}
+.paste-box{border:2px solid #f5c8bc;border-radius:10px;padding:10px 12px;background:#fff9f8;display:flex;flex-direction:column;}
+.paste-box .upload-title{color:#c0392b;}
+.paste-box textarea{width:100%;min-height:88px;font-family:'Courier New',monospace;font-size:9.5px;padding:6px 8px;border:1px solid #f0c9c0;border-radius:6px;background:#fffdfc;color:#333;resize:vertical;line-height:1.4;margin-top:6px;}
+.paste-box textarea:focus{outline:none;border-color:#e53935;}
+.paste-status{font-size:10px;margin-top:4px;font-weight:700;}
+.paste-status.ok{color:#1e8e3e;}
+.paste-status.err{color:#c0392b;}
+.paste-status.wait{color:#aaa;font-weight:500;}
+
+.target-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed #e5e5e5;}
+.target-label{font-size:11px;font-weight:700;color:#555;white-space:nowrap;}
+.target-input{width:160px;padding:6px 9px;border:1px solid #ccc;border-radius:6px;font-size:12px;font-weight:700;color:#1c1c1e;background:#fffef5;}
+.target-input:focus{outline:none;border-color:#f5c518;box-shadow:0 0 0 2px rgba(245,197,24,0.25);}
+.target-hint{font-size:9.5px;color:#bbb;}
+
+.btn-row{display:flex;gap:7px;align-items:center;margin-bottom:8px;margin-top:8px;}
 .btn-build{padding:7px 18px;background:#1c1c1e;color:#f5c518;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;}
 .btn-build:hover{background:#333;}
 .btn-img{padding:7px 18px;background:#0066cc;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;display:none;}
@@ -207,14 +234,6 @@ textarea:focus{outline:none;border-color:#0066cc;}
 </head>
 <body>
 
-<!-- AUTH GUARD -->
-<script>
-(function(){
-  const s = localStorage.getItem('mwg_session');
-  if (!s) { window.location.replace('./index.html'); }
-})();
-</script>
-
 <!-- NAVBAR -->
 <nav class="mwg-nav">
   <a class="nav-brand" href="./main.html">
@@ -222,65 +241,51 @@ textarea:focus{outline:none;border-color:#0066cc;}
     <span class="nav-brand-name">Business Intelligence</span>
   </a>
   <span class="nav-page-badge">Realtime</span>
-  <div class="nav-user">
-    <span class="nav-user-dot"></span>
-    <span>Đăng nhập: <strong id="nav-username">—</strong></span>
-  </div>
   <a class="nav-btn btn-home" href="./main.html">
     <span>⌂</span> Trang chủ
   </a>
-  <button class="nav-btn btn-logout" onclick="navLogout()">
-    <span>↩</span> Đăng xuất
-  </button>
 </nav>
 
 <!-- ORIGINAL CONTENT -->
 <div class="container">
 
   <div class="form-wrap">
-    <div class="form-row">
-      <span class="form-label">📊 Vùng 1:</span>
-      <button class="form-toggle" onclick="tog('v1')">Dữ liệu tổng hợp ▾</button>
-      <span class="form-label" style="margin-left:6px;">🎯 Vùng 2:</span>
-      <button class="form-toggle" onclick="tog('v2')">Dữ liệu thi đua ▾</button>
+    <div class="upload-grid">
+      <label class="upload-box dt" id="box1">
+        <input type="file" id="f1" accept=".xlsx,.xls" onchange="handleFile(1)">
+        <div class="upload-icon">📊</div>
+        <div class="upload-title">File Doanh Thu Hợp Nhất</div>
+        <div class="upload-sub">.xlsx — bấm hoặc kéo thả file vào đây</div>
+        <div class="upload-filename" id="f1-name"></div>
+        <div class="upload-status wait" id="f1-status">Chưa chọn file</div>
+      </label>
+      <div class="paste-box" id="box2v">
+        <div class="upload-title">🏆 Dữ Liệu Thi Đua (dán trực tiếp)</div>
+        <div class="upload-sub">Dán nguyên khối dữ liệu copy từ báo cáo thi đua (giữ nguyên tab/dòng)</div>
+        <textarea id="d2" placeholder="Dán dữ liệu thi đua vào đây..."></textarea>
+        <div class="paste-status wait" id="f2-status">Chưa có dữ liệu</div>
+      </div>
     </div>
-    <div class="inp-inner" id="v1">
-      <div class="inp-label">Bảng: Nhóm ngành hàng | SL | DT | Target | % HT | Trả Góp | Tỷ trọng</div>
-      <textarea id="d1" placeholder="Dán dữ liệu vùng 1..."></textarea>
-    </div>
-    <div class="inp-inner" id="v2">
-      <div class="inp-label">Bảng: Tên NH | DT/SL Realtime | Target | % HT | Xếp hạng</div>
-      <textarea id="d2" placeholder="Dán dữ liệu vùng 2..."></textarea>
+
+    <div class="target-row">
+      <label class="target-label" for="manualTarget">🎯 Target doanh thu tổng (tr):</label>
+      <input type="number" id="manualTarget" class="target-input" placeholder="Nhập target doanh thu tổng, VD: 5000" step="any" min="0">
+      <span class="target-hint">Nhập số rồi bấm "Tạo Dashboard" để áp dụng</span>
     </div>
   </div>
 
   <div class="btn-row">
     <button class="btn-build" onclick="build()">▶ Tạo Dashboard</button>
     <button class="btn-img" id="btnImg" onclick="saveImg()">📷 Tải ảnh về</button>
-    <span class="hint">Paste dữ liệu → Tạo Dashboard → Tải ảnh</span>
+    <span class="hint">Upload file doanh thu, dán dữ liệu thi đua, nhập Target → Tạo Dashboard → Tải ảnh</span>
   </div>
 
   <div id="db"></div>
 </div>
 
 <script>
-// Set username in navbar
-(function(){
-  try {
-    const s = JSON.parse(localStorage.getItem('mwg_session') || '{}');
-    document.getElementById('nav-username').textContent = s.displayName || s.username || '—';
-  } catch(e){}
-})();
-
-function navLogout() {
-  localStorage.removeItem('mwg_session');
-  window.location.href = './index.html';
-}
-
-function tog(id){
-  const e=document.getElementById(id);
-  e.style.display=e.style.display==='block'?'none':'block';
-}
+// ── DỮ LIỆU ĐÃ ĐỌC TỪ 2 FILE EXCEL ──
+let g1 = null; // dữ liệu doanh thu hợp nhất (đã parse từ file Excel)
 
 const ICONS={
   'flagship':'🔥','smartphone':'📱','điện thoại':'📱','realme':'📱','vivo':'📱',
@@ -313,48 +318,160 @@ function fmtPct(p){
   return Math.round(p)+'%';
 }
 
-function parseV1(raw){
-  let totalDT=0,totalTgt=0,totalPct=0,tgPct=0;
-  for(const line of raw.trim().split('\n')){
-    const c=line.split('\t');
-    if(c[0].trim().toLowerCase()==='tổng'&&c.length>=5){
-      totalDT  = parseFloat(c[2])||0;
-      totalTgt = parseFloat(c[3])||0;
-      // Tính lại % HT từ DT thực / Target thay vì đọc cột (tránh sai khi target thay đổi)
-      totalPct = totalTgt>0 ? Math.round(totalDT/totalTgt*100) : 0;
-      tgPct    = parseFloat((c[6]||'0').replace('%','').replace(',','.'))||0;
-      break;
-    }
-  }
-  return {totalDT,totalTgt,totalPct,tgPct};
+// ── ĐỌC FILE EXCEL (.xlsx) BẰNG SheetJS ──
+// Trả về mảng-các-mảng (array of arrays), dòng đầu là header
+function readSheetAsRows(workbook){
+  const sheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  return XLSX.utils.sheet_to_json(sheet, {header:1, defval:null, raw:true});
 }
 
+// Tìm vị trí cột theo tên (không phân biệt hoa/thường, có dấu),
+// mustInclude: mảng từ khóa PHẢI có trong tên cột
+// mustExclude: mảng từ khóa KHÔNG được có trong tên cột
+function findCol(headers, mustInclude, mustExclude){
+  for(let i=0;i<headers.length;i++){
+    const h = (headers[i]==null?'':String(headers[i])).toLowerCase().trim();
+    if(!h) continue;
+    if(!mustInclude.every(k=>h.includes(k))) continue;
+    if(mustExclude && mustExclude.some(k=>h.includes(k))) continue;
+    return i;
+  }
+  return -1;
+}
+function num(v){ const n=parseFloat(v); return isNaN(n)?0:n; }
+
+// ── FILE 1: DOANH THU HỢP NHẤT ──
+// Hỗ trợ 2 kiểu file:
+//  a) File cây ngành hàng (CẤP DÒNG=CATEGORY/SUBGROUP, TÊN ĐƠN VỊ, SỐ LƯỢNG, DOANH THU (TR), TARGET (TR), DT TRẢ GÓP (TR)...)
+//  b) File có sẵn dòng "Tổng" tổng hợp
+function parseFile1(rows){
+  if(!rows || !rows.length) return {totalDT:0,totalTgt:0,totalPct:0,tgPct:0,ictRows:[],bkRows:[],totICT:0};
+  const headers = rows[0].map(h=>h==null?'':String(h).toLowerCase().trim());
+  const iLevel  = findCol(headers,['cấp dòng']);
+  const iName   = findCol(headers,['tên đơn vị']) >=0 ? findCol(headers,['tên đơn vị']) : findCol(headers,['tên']);
+  const iSL     = findCol(headers,['số lượng']);
+  const iDT     = findCol(headers,['doanh thu','qđ']);
+  const iTarget = findCol(headers,['target'],['qđ']);
+  const iTraGop = findCol(headers,['trả góp'],['qđ']);
+
+  const data = [];
+  let tongRow = null;
+  for(let r=1;r<rows.length;r++){
+    const row = rows[r];
+    if(!row) continue;
+    const name = iName>=0 ? String(row[iName]||'').trim() : '';
+    if(!name) continue;
+    const level = iLevel>=0 ? String(row[iLevel]||'').toUpperCase().trim() : '';
+    const item = {
+      level, name, nameLow:name.toLowerCase(),
+      sl:  iSL>=0?num(row[iSL]):0,
+      dt:  iDT>=0?num(row[iDT]):0,
+      tgt: iTarget>=0?num(row[iTarget]):0,
+      tragop: iTraGop>=0?num(row[iTraGop]):0,
+    };
+    if(item.nameLow==='tổng') tongRow = item;
+    data.push(item);
+  }
+
+  // Tổng doanh thu / target / trả góp
+  let totalDT=0,totalTgt=0,totalTraGop=0;
+  if(tongRow){
+    totalDT=tongRow.dt; totalTgt=tongRow.tgt; totalTraGop=tongRow.tragop;
+  } else {
+    // Không có dòng "Tổng" → cộng ở cấp cao nhất (CATEGORY) để tránh cộng đôi với SUBGROUP con
+    const topRows = iLevel>=0 ? data.filter(d=>d.level==='CATEGORY') : data;
+    for(const d of topRows){ totalDT+=d.dt; totalTgt+=d.tgt; totalTraGop+=d.tragop; }
+  }
+  const totalPct = totalTgt>0 ? Math.round(totalDT/totalTgt*100) : 0;
+  const tgPct = totalDT>0 ? (totalTraGop/totalDT*100) : 0;
+
+  // Ngành hàng ICT + Bán kèm: match theo tên (cấp cao nhất, tránh double-count)
+  const topForICT = iLevel>=0 ? data.filter(d=>d.level==='CATEGORY' || d.nameLow.startsWith('nnh ')) : data;
+  const ictRows = ICT_MAP.map(cat=>{
+    let sl=0,dt=0,tgt=0;
+    for(const d of topForICT){ if(cat.keys.some(k=>d.nameLow.includes(k))){ sl+=d.sl; dt+=d.dt; tgt+=d.tgt; } }
+    const pct = tgt>0 ? Math.round(dt/tgt*100) : 0;
+    return {label:cat.label, sl, dt, tgt, pct};
+  }).filter(r=>r.sl>0||r.tgt>0);
+  const ICT_BASE=['Điện Thoại','Tablet','Laptop'];
+  const totICT = ictRows.filter(r=>ICT_BASE.includes(r.label)).reduce((s,r)=>s+r.sl,0);
+
+  // Bán kèm: quét TOÀN BỘ dòng (kể cả SUBGROUP con) để bắt pin sạc, tai nghe, sim...
+  const bkRows = BK_MAP.map(cat=>{
+    let sl=0;
+    for(const d of data){ if(cat.keys.some(k=>d.nameLow.includes(k))) sl+=d.sl; }
+    const pct = totICT>0 ? Math.round(sl/totICT*100) : null;
+    return {label:cat.label, sl, pct};
+  }).filter(r=>r.sl>0);
+
+  return {totalDT,totalTgt,totalPct,tgPct,ictRows,bkRows,totICT};
+}
+
+// ── VÙNG 2: DỮ LIỆU THI ĐUA (DÁN TRỰC TIẾP) ──
+// Mỗi chương trình là 1 khối 6 dòng dạng:
+//   Tên chương trình
+//   SỐ LƯỢNG (RT) / DOANH THU (RT)   TARGET   % HT NGÀY   % DỰ BÁO   HẠNG VÙNG   TOP/BOTTOM VÙNG
+//   TỔNG
+//   <giá trị dòng Tổng, cách nhau bằng tab>
+//   TGD_...(tên siêu thị)
+//   <giá trị dòng siêu thị, cách nhau bằng tab>  ← lấy HẠNG VÙNG ở đây (cột thứ 5)
+// Dòng đầu "SỐ LƯỢNG (RT)" hay "DOANH THU (RT)" cho biết chương trình này thi đua
+// theo số lượng hay theo doanh thu, để hiển thị đúng đơn vị.
 function parseV2(raw){
-  const lines=raw.trim().split('\n');
+  if(!raw || !raw.trim()) return [];
+  const lines = raw.replace(/\r/g,'').split('\n');
   const items=[];
   let i=0;
+
+  function isKeywordLine(l){
+    const u=l.trim().toUpperCase();
+    return u==='' || u==='TỔNG' || u.startsWith('TGD_') || l.includes('\t');
+  }
+
   while(i<lines.length){
-    const c=lines[i].split('\t');
-    const name=c[0].trim();
-    if(!name||name.startsWith('TGD_')||name.toLowerCase()==='tổng'||
-       name.includes('Realtime')||name.includes('Target')){i++;continue;}
-    let dt=0,tgt=0,pct=null,rank=0;
-    if(i+1<lines.length){
-      const t=lines[i+1].split('\t');
-      if(t[0].trim().toLowerCase()==='tổng'){
-        dt=parseFloat(t[1])||0;
-        tgt=parseFloat(t[2])||0;
-        const ps=(t[3]||'').replace('%','').replace(',','.');
-        pct=(ps===''||ps.toLowerCase()==='nan')?null:parseFloat(ps);
+    const line = lines[i];
+    if(isKeywordLine(line)){ i++; continue; }
+    // Dòng tên chương trình
+    const name = line.trim();
+    i++;
+    while(i<lines.length && !lines[i].trim()) i++;
+    if(i>=lines.length) break;
+
+    // Dòng header (chứa TARGET, HẠNG VÙNG...) → xác định SL hay DT
+    const headerLine = lines[i].toUpperCase();
+    const isSL = headerLine.includes('SỐ LƯỢNG');
+    i++;
+    while(i<lines.length && !lines[i].trim()) i++;
+
+    // Dòng nhãn "TỔNG"
+    if(i<lines.length && lines[i].trim().toUpperCase()==='TỔNG') i++;
+    while(i<lines.length && !lines[i].trim()) i++;
+    if(i>=lines.length) break;
+
+    // Dòng dữ liệu Tổng: [dt/sl, target, %HT, %dựbáo, hạngvùng(trống), top/bottom]
+    const tCols = lines[i].split('\t');
+    i++;
+    const dt  = parseFloat((tCols[0]||'').replace(',','.')) || 0;
+    const tgt = parseFloat((tCols[1]||'').replace(',','.')) || 0;
+    const pctRaw = (tCols[2]||'').replace('%','').replace(',','.').trim();
+    const pct = (pctRaw===''||pctRaw==='-'||isNaN(parseFloat(pctRaw))) ? null : parseFloat(pctRaw);
+
+    // Dòng tên siêu thị (TGD_...) rồi dòng dữ liệu siêu thị chứa hạng vùng thật
+    let rank=0;
+    while(i<lines.length && !lines[i].trim()) i++;
+    if(i<lines.length && lines[i].trim().toUpperCase().startsWith('TGD_')){
+      i++;
+      while(i<lines.length && !lines[i].trim()) i++;
+      if(i<lines.length){
+        const sCols = lines[i].split('\t');
+        rank = parseInt(sCols[4]) || 0;
+        i++;
       }
     }
-    if(i+2<lines.length){
-      const r=lines[i+2].split('\t');
-      if(r[0].trim().startsWith('TGD_')) rank=parseInt(r[4])||0;
-    }
-    items.push({name,dt,tgt,pct,rank});
-    i+=3;
+    items.push({name, dt, tgt, pct, rank, isSL});
   }
+
   items.sort((a,b)=>{
     const pa=(a.pct===null||isNaN(a.pct))?-Infinity:a.pct;
     const pb=(b.pct===null||isNaN(b.pct))?-Infinity:b.pct;
@@ -366,11 +483,15 @@ function parseV2(raw){
 function makeRow(g){
   const s=rowStyle(g.pct);
   const rankStr=g.rank>0?`#${g.rank} trong miền`:'';
+  const isSL = !!g.isSL;
+  const dtStr  = isSL ? Math.round(g.dt)  : g.dt.toFixed(1);
+  const tgtStr = isSL ? Math.round(g.tgt) : g.tgt.toFixed(1);
+  const unit = isSL ? ' SL' : ' tr';
   return `<div class="krow" style="background:${s.bg};border-left-color:${s.border};">
     <span class="krow-icon">${getIcon(g.name)}</span>
     <span class="krow-name" style="color:${s.name};">${g.name}</span>
     <div class="krow-right">
-      <div class="krow-nums" style="color:${s.nums};">${g.dt.toFixed(1)} / ${g.tgt.toFixed(1)}</div>
+      <div class="krow-nums" style="color:${s.nums};">${dtStr}${unit} / ${tgtStr}${unit}</div>
       <div class="krow-pct" style="color:${s.pct};">${fmtPct(g.pct)}</div>
       ${rankStr?`<div class="krow-rank" style="color:${s.nums};">${rankStr}</div>`:''}
     </div>
@@ -378,7 +499,7 @@ function makeRow(g){
 }
 
 const ICT_MAP = [
-  { label:'Điện Thoại', keys:['smartphone','điện thoại di động','điện thoai','nnh điện thoại mới','điện thoại mới'] },
+  { label:'Điện Thoại', keys:['smartphone','điện thoại di động','điện thoai','nnh điện thoại mới','điện thoại mới','điện thoại'] },
   { label:'Tablet',     keys:['tablet','nnh tablet'] },
   { label:'Laptop',     keys:['laptop','nnh laptop'] },
   { label:'Máy Cũ',     keys:['máy cũ','nnh máy cũ'] },
@@ -390,67 +511,9 @@ const BK_MAP = [
   { label:'Pin sạc DP',  keys:['pin sạc dự phòng'] },
   { label:'Cáp, Sạc',   keys:['cáp','sạc/ adapter','bộ sạc'] },
   { label:'Tai Nghe',    keys:['tai nghe bluetooth','tai nghe dây','tai nghe'] },
-  { label:'Camera',      keys:['camera ip'] },
+  { label:'Camera',      keys:['camera ip','camera'] },
   { label:'Sim',         keys:['nnh sim','sim số'] },
 ];
-
-function extractICTandBK(raw){
-  const lines = raw.trim().split('\n');
-
-  // rowICT: CHỈ dòng NNH (dòng cha) — tránh cộng đôi với dòng con
-  const rowICT = [];
-  // rowBK: TẤT CẢ dòng (kể cả dòng con) — để bắt được pin sạc, tai nghe, sim...
-  const rowBK  = [];
-
-  for(const line of lines){
-    const c = line.split('\t');
-    if(!c[0]||!c[0].trim()) continue;
-    const name    = c[0].trim();
-    const nameLow = name.toLowerCase();
-    if(nameLow==='tổng') continue;
-    if(nameLow.startsWith('nhóm ngành')) continue;
-
-    const row = {
-      name: nameLow,
-      sl:   parseFloat(c[1])||0,
-      dt:   parseFloat(c[2])||0,
-      tgt:  parseFloat(c[3])||0,
-    };
-
-    // ICT: chỉ dòng NNH để tránh double count
-    if(nameLow.startsWith('nnh ') || nameLow==='n/a'){
-      rowICT.push(row);
-    }
-
-    // BK: tất cả dòng (kể cả dòng con như "Pin sạc dự phòng", "Tai Nghe Bluetooth"...)
-    rowBK.push(row);
-  }
-
-  // Tính ICT từ rowICT
-  const ictRows = ICT_MAP.map(cat=>{
-    let sl=0, dt=0, tgt=0;
-    for(const row of rowICT){
-      if(cat.keys.some(k=>row.name.includes(k))){ sl+=row.sl; dt+=row.dt; tgt+=row.tgt; }
-    }
-    const pct = tgt>0 ? Math.round(dt/tgt*100) : 0;
-    return {label:cat.label, sl, dt, tgt, pct};
-  }).filter(r=>r.sl>0||r.tgt>0);
-
-  const ICT_BASE = ['Điện Thoại','Tablet','Laptop'];
-  const totICT = ictRows.filter(r=>ICT_BASE.includes(r.label)).reduce((s,r)=>s+r.sl,0);
-
-  // Tính BK từ rowBK (đọc cả dòng con)
-  const bkRows = BK_MAP.map(cat=>{
-    let sl=0;
-    for(const row of rowBK){
-      if(cat.keys.some(k=>row.name.includes(k))) sl+=row.sl;
-    }
-    const pct = totICT>0 ? Math.round(sl/totICT*100) : null;
-    return {label:cat.label, sl, pct};
-  }).filter(r=>r.sl>0);
-
-  return {ictRows, bkRows, totICT};
-}
 
 function pctColor(p){
   if(p===null||isNaN(p)) return '';
@@ -514,11 +577,59 @@ function buildBKTable(bkRows, totICT){
     </div>`;
 }
 
+// ── XỬ LÝ UPLOAD FILE EXCEL (Vùng 1 - Doanh thu) ──
+async function handleFile(which){
+  const inputEl  = document.getElementById('f'+which);
+  const boxEl    = document.getElementById('box'+which);
+  const nameEl   = document.getElementById('f'+which+'-name');
+  const statusEl = document.getElementById('f'+which+'-status');
+  const file = inputEl.files[0];
+  if(!file) return;
+
+  nameEl.textContent = '📄 '+file.name;
+  statusEl.className = 'upload-status wait';
+  statusEl.textContent = 'Đang đọc file...';
+
+  try{
+    const buf = await file.arrayBuffer();
+    const wb  = XLSX.read(buf, {type:'array'});
+    const rows = readSheetAsRows(wb);
+    if(!rows || rows.length<2) throw new Error('empty');
+
+    g1 = parseFile1(rows);
+    statusEl.textContent = `✓ Đã đọc ${rows.length-1} dòng — DT ${g1.totalDT.toFixed(0)}tr`;
+    statusEl.className = 'upload-status ok';
+    boxEl.classList.add('has-file');
+    build();
+  } catch(err){
+    statusEl.className = 'upload-status err';
+    statusEl.textContent = '✗ Không đọc được file, kiểm tra lại định dạng .xlsx';
+    boxEl.classList.remove('has-file');
+    g1=null;
+  }
+}
+
 function build(){
-  const raw1=document.getElementById('d1').value.trim();
-  const raw2=document.getElementById('d2').value.trim();
-  const h=raw1?parseV1(raw1):{totalDT:0,totalTgt:0,totalPct:0,tgPct:0};
-  const items=raw2?parseV2(raw2):[];
+  const h = g1 ? {...g1} : {totalDT:0,totalTgt:0,totalPct:0,tgPct:0,ictRows:[],bkRows:[],totICT:0};
+
+  // Vùng 2: đọc trực tiếp từ ô dán dữ liệu thi đua
+  const raw2 = (document.getElementById('d2').value||'').trim();
+  const items = raw2 ? parseV2(raw2) : [];
+  const f2Status = document.getElementById('f2-status');
+  if(f2Status){
+    if(!raw2){ f2Status.className='paste-status wait'; f2Status.textContent='Chưa có dữ liệu'; }
+    else if(items.length===0){ f2Status.className='paste-status err'; f2Status.textContent='✗ Không nhận diện được dữ liệu, kiểm tra lại định dạng dán'; }
+    else{ f2Status.className='paste-status ok'; f2Status.textContent=`✓ Đã đọc ${items.length} chương trình thi đua`; }
+  }
+
+  // Target doanh thu tổng: ưu tiên số người dùng tự nhập (vì file thường không có sẵn target)
+  const manualTargetEl = document.getElementById('manualTarget');
+  const manualTarget = manualTargetEl ? parseFloat(manualTargetEl.value) : NaN;
+  if(!isNaN(manualTarget) && manualTarget>0){
+    h.totalTgt = manualTarget;
+  }
+  h.totalPct = h.totalTgt>0 ? Math.round(h.totalDT/h.totalTgt*100) : 0;
+
   const con=Math.max(0,h.totalTgt-h.totalDT);
   const nhomDat=items.filter(g=>g.pct!==null&&!isNaN(g.pct)&&g.pct>=100).length;
   const half=Math.ceil(items.length/2);
@@ -528,13 +639,18 @@ function build(){
   const timeStr=now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
   const dateStr=now.toLocaleDateString('vi-VN');
 
-  // Trích ICT + Bán Kèm từ Vùng 1
-  const ex = raw1 ? extractICTandBK(raw1) : {ictRows:[],bkRows:[],totICT:0};
-  const ictHtml = buildICTTable(ex.ictRows, ex.totICT);
-  const bkHtml  = buildBKTable(ex.bkRows, ex.totICT);
+  // Bảng ICT + Bán Kèm từ file doanh thu
+  const ictHtml = buildICTTable(h.ictRows||[], h.totICT||0);
+  const bkHtml  = buildBKTable(h.bkRows||[], h.totICT||0);
   const ictWrap = (ictHtml||bkHtml)
     ? `<div class="ict-wrap">${ictHtml||'<div></div>'}${bkHtml||'<div></div>'}</div>`
     : '';
+
+  if(!g1 && items.length===0){
+    document.getElementById('db').innerHTML = '<div class="empty">Chưa có dữ liệu — upload file doanh thu & dán dữ liệu thi đua ở trên</div>';
+    document.getElementById('btnImg').style.display='none';
+    return;
+  }
 
   document.getElementById('db').innerHTML=`
     <div class="top-cards">
@@ -562,7 +678,7 @@ function build(){
           <div class="gcol">${leftItems.map(makeRow).join('')}</div>
           <div class="gcol">${rightItems.map(makeRow).join('')}</div>
         </div>`
-      :'<div class="empty">Chưa có dữ liệu — paste vào Vùng 2 và bấm Tạo Dashboard</div>'
+      :'<div class="empty">Chưa có dữ liệu thi đua — upload file báo cáo thi đua ở trên</div>'
     }
     <div class="footer">Dashboard Siêu Thị — Cập nhật lúc: <b>${timeStr} - ${dateStr}</b></div>`;
 
@@ -597,6 +713,9 @@ function saveImg(){
     btn.disabled=false;
   });
 }
+
+// Trạng thái ban đầu
+build();
 </script>
 </body>
 </html>
