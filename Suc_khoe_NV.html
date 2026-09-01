@@ -13,6 +13,9 @@
       rel="stylesheet"
     />
 
+    <!-- SheetJS for Excel upload in Trường 2 -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <!-- html2canvas for "Chụp ảnh" -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
@@ -952,14 +955,6 @@
 
   <body>
 
-    <!-- AUTH GUARD -->
-    <script>
-      (function(){
-        var s = localStorage.getItem('mwg_session');
-        if (!s) { window.location.replace('./index.html'); }
-      })();
-    </script>
-
     <!-- MWG NAVBAR -->
     <nav class="mwg-nav">
       <a class="mwg-nav-brand" href="./main.html">
@@ -969,10 +964,9 @@
       <span class="mwg-nav-chip">Sức khoẻ NV</span>
       <div class="mwg-nav-user">
         <span class="mwg-nav-dot"></span>
-        Xin chào, <strong id="mwg-nav-username">—</strong>
+        Chạy cục bộ
       </div>
       <a class="mwg-nav-btn mwg-btn-home" href="./main.html">⌂ Trang chủ</a>
-      <button class="mwg-nav-btn mwg-btn-logout" onclick="mwgLogout()">↩ Đăng xuất</button>
     </nav>
 
     <header class="topbar">
@@ -1024,14 +1018,21 @@
               <span class="pill" id="pillEmployees">0 NV</span>
             </div>
             <div class="card-body">
+              <div class="file-upload-box" style="border:1px dashed rgba(37,99,235,.35);background:rgba(37,99,235,.04);border-radius:14px;padding:14px;">
+                <div style="font-weight:800;margin-bottom:6px;">📁 Upload file doanh thu nhân viên</div>
+                <div class="cell-muted" style="margin-bottom:10px;">Chọn file Excel xuất trực tiếp từ hệ thống (.xlsx / .xls / .csv).</div>
+                <input id="fileEmployees" type="file" accept=".xlsx,.xls,.csv" style="display:block;width:100%;" />
+                <div id="employeeFileStatus" class="helper" style="margin-top:8px;">Chưa chọn file.</div>
+              </div>
               <textarea
                 id="taEmployees"
-                placeholder="Gợi ý format:\n[Tên nhóm] Tên NV - MãNV 215.47\nTên NV - 178116 334.24\n\n(Doanh thu là số cuối dòng)"
+                style="display:none"
+                aria-hidden="true"
               ></textarea>
               <div class="helper">
-                <span>Hỗ trợ group: <b>[Nhóm]</b> ở đầu dòng</span>
+                <span>Dữ liệu lấy từ cột <b>DOANH THU QĐ (TR)</b>.</span>
                 <button class="btn ghost small" id="btnParseEmployees" type="button">
-                  Parse
+                  Đọc lại
                 </button>
               </div>
               <div class="list" id="listEmployees" aria-label="Danh sách nhân viên"></div>
@@ -1348,6 +1349,18 @@
           .toUpperCase();
       }
 
+      function abbreviateName(fullName) {
+        const parts = String(fullName || "")
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean);
+        if (parts.length <= 2) return parts.join(" ");
+        const first = parts[0];
+        const last = parts[parts.length - 1];
+        const mids = parts.slice(1, -1).map((p) => (p ? p[0] : "")).filter(Boolean);
+        return [first, ...mids, last].join(" ");
+      }
+
       function formatNumber(n, digits = 2) {
         if (!Number.isFinite(n)) return "0";
         const opts =
@@ -1387,7 +1400,7 @@
 
       function normalizeBoostPct(v) {
         const n = Number(v);
-        if (!Number.isFinite(n)) return 120;
+        if (!Number.isFinite(n)) return 110;
         // giới hạn để tránh nhập sai quá lớn/âm
         return clamp(n, 0, 500);
       }
@@ -1443,7 +1456,7 @@
         if (!Array.isArray(day.categories)) day.categories = [];
         for (const c of day.categories) {
           if (!c || typeof c !== "object") continue;
-          if (!("boostPct" in c)) c.boostPct = 120;
+          if (!("boostPct" in c)) c.boostPct = 110;
           c.boostPct = normalizeBoostPct(c.boostPct);
         }
       }
@@ -1487,6 +1500,14 @@
           if (!data.stores || typeof data.stores !== "object") return;
           state.stores = data.stores;
           state.ui = { ...state.ui, ...(data.ui || {}) };
+          // One-time migration from the previous hard-coded 120% default to 110%.
+          for (const store of Object.values(state.stores)) {
+            for (const day of Object.values(store?.days || {})) {
+              for (const c of day?.categories || []) {
+                if (c && Number(c.boostPct) === 120) c.boostPct = 110;
+              }
+            }
+          }
         } catch (e) {
           console.warn("Failed to load localStorage", e);
         }
@@ -1507,317 +1528,398 @@
       // =========================
       // Parsing
       // =========================
-      function parseTargetsText(text) {
-        const rawLines = String(text || "").split(/\r?\n/);
-        const lines = rawLines
-          .map((l) => String(l).replace(/^"+|"+$/g, "").trim())
-          .filter(Boolean);
-
-        // --- Mode 1: Paste from table (tab-separated) like:
-        // "SMARTPHONE ... \t DTLK \t Target \t ..."
-        // "Tổng \t 1,609.37 \t 2,721.94 \t 59.13% ..."
-        const outTable = [];
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          if (!line.includes("\t")) continue;
-          const cells = line.split("\t").map((c) => c.trim()).filter((c) => c.length > 0);
-          if (cells.length < 3) continue;
-
-          const first = cells[0];
-          if (!first) continue;
-          if (/^tổng$/i.test(first)) continue;
-          if (/^tgd_/i.test(first)) continue; // store row
-
-          const targetCol = cells.findIndex((c) => /^target$/i.test(c));
-          const hasDtlk = cells.some((c) => /^dtlk$/i.test(c) || /^sllk$/i.test(c));
-          if (targetCol < 0 || !hasDtlk) continue;
-
-          const categoryName = first;
-
-          // Find the "Tổng" row for this block (next lines)
-          let targetValue = NaN;
-          for (let j = i + 1; j < Math.min(i + 6, lines.length); j++) {
-            const l2 = lines[j];
-            if (!l2.includes("\t")) continue;
-            const c2 = l2.split("\t").map((c) => c.trim());
-            if (!c2.length) continue;
-            if (!/^tổng$/i.test((c2[0] || "").trim())) continue;
-            const vRaw = c2[targetCol] ?? "";
-            const v = parseNumber(vRaw);
-            if (Number.isFinite(v)) targetValue = v;
-            break;
-          }
-
-          if (Number.isFinite(targetValue)) {
-            outTable.push({
-              id: uid("cat"),
-              name: categoryName,
-              target: targetValue,
-              boostPct: 120, // mặc định 120%
-            });
-          }
-        }
-
-        if (outTable.length) return outTable;
-
-        // --- Mode 2: Simple lines: "Tên ngành hàng ... 490.69"
-        const out = [];
-        for (const line of lines) {
-          const m = line.match(/(-?\d[\d.,]*)\s*$/);
-          if (!m) continue;
-          const target = parseNumber(m[1]);
-          if (!Number.isFinite(target)) continue;
-          const name = line.slice(0, m.index).trim();
-          if (!name) continue;
-          out.push({ id: uid("cat"), name, target, boostPct: 120 });
-        }
-        return out;
+      function cleanPastedCell(value) {
+        return String(value ?? "")
+          .replace(/^\s*\|\s*/, "")
+          .replace(/\s*\|\s*$/, "")
+          .replace(/\*\*/g, "")
+          .replace(/`/g, "")
+          .replace(/<[^>]*>/g, "")
+          .replace(/svgsvg/gi, "")
+          .trim();
       }
 
-      function parseEmployeesText(text) {
-        const rawLines = String(text || "").split(/\r?\n/);
-        const lines = rawLines
-          .map((l) => String(l).replace(/^"+|"+$/g, "").trim())
-          .filter(Boolean);
+      function splitPastedRow(line) {
+        const raw = String(line ?? "").trim();
+        if (!raw) return [];
+        if (raw.includes("|")) {
+          const cells = raw.split("|").map(cleanPastedCell);
+          if (cells.length && cells[0] === "") cells.shift();
+          if (cells.length && cells[cells.length - 1] === "") cells.pop();
+          return cells;
+        }
+        if (raw.includes("\t")) {
+          return raw.split("\t").map(cleanPastedCell);
+        }
+        return [cleanPastedCell(raw)];
+      }
 
-        // --- Mode 1: Paste table (tab-separated):
-        // "Nhân viên \t DTLK \t DTQĐ ..."
-        // "Võ Thành Long - 37354 \t 598.61 \t 904.27 ..."
-        const normHeader = (s) =>
-          String(s || "")
-            .trim()
+      function categoryFromReportHeader(cell, marker) {
+        let s = cleanPastedCell(cell);
+        if (!s) return "";
+        const upper = s.toUpperCase();
+        const pos = upper.indexOf(marker.toUpperCase());
+        if (pos >= 0) s = s.slice(0, pos);
+        // The copied report concatenates the measure label with the category
+        // in the first markdown cell (e.g. "Nồi cơmDOANH THU...").
+        s = s.replace(/(?:DOANH THU|SỐ LƯỢNG)\s*$/i, "");
+        return s.trim();
+      }
+
+      function parseTargetsText(text) {
+        const rawLines = String(text || "").split(/\r?\n/);
+        const lines = rawLines.map((l) => String(l).trim()).filter(Boolean);
+        const out = [];
+
+        // FORMAT MỚI (copy trực tiếp từ báo cáo):
+        // Tên ngành hàng
+        // DOANH THU | TARGET | ...  hoặc  SỐ LƯỢNG | TARGET | ...
+        // TỔNG
+        // doanh_thu_or_qty | TARGET | ...
+        // TGD_BDU_TDM ...
+        //
+        // Quan trọng: KHÔNG parse từng dòng có số ở cuối. Ta chỉ tạo 1 ngành
+        // hàng khi gặp đúng HEADER có TARGET, rồi lấy TARGET từ dòng ngay sau TỔNG.
+        for (let i = 0; i < lines.length; i++) {
+          const header = cleanPastedCell(lines[i]);
+          const headerUpper = header
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .replaceAll("Đ", "D")
             .toUpperCase();
 
-        let revenueCol = -1;
-        for (const line of lines) {
-          if (!line.includes("\t")) continue;
-          const cells = line.split("\t").map((c) => c.trim());
-          if (!cells.length) continue;
-          if (/^nhân viên$/i.test((cells[0] || "").trim())) {
-            // Requirement update: lấy doanh thu ở cột DTQĐ (không phải DTLK)
-            revenueCol = cells.findIndex((c) => normHeader(c) === "DTQD");
-            if (revenueCol < 0) {
-              // fallback nếu bảng không có DTQĐ
-              revenueCol = cells.findIndex((c) => normHeader(c) === "DTLK");
+          // Header phải có TARGET và một trong hai chỉ tiêu chính.
+          if (!headerUpper.includes("TARGET")) continue;
+          if (!headerUpper.includes("DOANH THU") && !headerUpper.includes("SO LUONG")) continue;
+
+          // Tên ngành hàng nằm ở dòng ngay trước header trong format plain-text.
+          let name = "";
+          for (let k = i - 1; k >= 0 && k >= i - 3; k--) {
+            const candidate = cleanPastedCell(lines[k]);
+            if (!candidate) continue;
+            const cu = candidate
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replaceAll("Đ", "D")
+              .toUpperCase();
+            if (cu === "TỔNG" || cu === "TONG") continue;
+            if (cu.includes("TARGET") || cu.includes("TOP/BOTTOM") || cu.includes("HẠNG VÙNG")) continue;
+            name = candidate;
+            break;
+          }
+
+          // Với markdown/table paste, tên ngành hàng có thể dính ngay vào header.
+          if (!name) {
+            name = categoryFromReportHeader(header, "TARGET");
+          }
+          if (!name) continue;
+
+          // Tìm TỔNG trong block này, nhưng KHÔNG đi xuyên qua header kế tiếp.
+          let target = NaN;
+          for (let j = i + 1; j < lines.length; j++) {
+            const row = cleanPastedCell(lines[j]);
+            const rowUpper = row
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replaceAll("Đ", "D")
+              .toUpperCase();
+
+            // Gặp header của ngành tiếp theo mà chưa có TỔNG => block lỗi, dừng.
+            if (j > i + 1 && rowUpper.includes("TARGET") &&
+                (rowUpper.includes("DOANH THU") || rowUpper.includes("SO LUONG"))) {
+              break;
             }
+
+            if (rowUpper !== "TỔNG" && rowUpper !== "TONG") continue;
+
+            // TỔNG có thể nằm một dòng riêng, nên đọc dòng kế tiếp.
+            let dataLine = "";
+            for (let k = j + 1; k < Math.min(j + 4, lines.length); k++) {
+              const candidate = cleanPastedCell(lines[k]);
+              if (!candidate) continue;
+              const cu = candidate
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replaceAll("Đ", "D")
+                .toUpperCase();
+              if (cu === "TỔNG" || cu === "TONG") continue;
+              if (cu.includes("TARGET") && (cu.includes("DOANH THU") || cu.includes("SO LUONG"))) break;
+              if (/^TGD[_\s-]/i.test(candidate)) continue;
+              dataLine = candidate;
+              break;
+            }
+
+            if (!dataLine) break;
+
+            const cells = splitPastedRow(dataLine);
+            let nums = [];
+            if (cells.length > 1) {
+              nums = cells.map(parseNumber).filter(Number.isFinite);
+            } else {
+              // Plain text không có tab: lấy các số từ trái sang phải.
+              // Giá trị target luôn là số thứ 2 trong dòng tổng.
+              const matches = dataLine.match(/-?\d[\d,.]*/g) || [];
+              nums = matches.map(parseNumber).filter(Number.isFinite);
+            }
+            if (nums.length >= 2) target = nums[1];
+            else if (nums.length === 1) target = nums[0];
+            break;
+          }
+
+          if (Number.isFinite(target)) {
+            out.push({ id: uid("cat"), name, target, boostPct: 110 });
+          }
+        }
+
+        // Legacy/simple format: chỉ dùng khi KHÔNG nhận diện được format mới.
+        // Không được fallback nếu format mới đã có header nhưng một block lỗi,
+        // vì fallback sẽ biến doanh thu/rank thành "ngành hàng" rác.
+        if (out.length) return out;
+        const hasNewFormat = lines.some((line) => {
+          const u = cleanPastedCell(line).toUpperCase();
+          return u.includes("TARGET") && (u.includes("DOANH THU") || u.includes("SỐ LƯỢNG") || u.includes("SO LUONG"));
+        });
+        if (hasNewFormat) return [];
+
+        for (const line of lines) {
+          const m = line.match(/(-?\d[\d.,]*)\s*$/);
+          if (!m) continue;
+          const target = parseNumber(m[1]);
+          if (!Number.isFinite(target)) continue;
+          const name = cleanPastedCell(line.slice(0, m.index).trim());
+          if (!name || /^TỔNG$/i.test(name) || /^TGD[_\s-]/i.test(name)) continue;
+          out.push({ id: uid("cat"), name, target, boostPct: 110 });
+        }
+        return out;
+      }
+
+      function parseEmployeesText(text) {
+        const rawLines = String(text || '').split(/\r?\n/);
+        const lines = rawLines.map(l => String(l).replace(/^"+|"+$/g, '').trim()).filter(Boolean);
+
+        const normHeader = s => String(s || '')
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/Đ/g, 'D').toUpperCase().replace(/\s+/g, ' ').trim();
+
+        const rows = lines.map(splitPastedRow);
+        const isEmployeeLabel = s => normHeader(s) === 'NHAN VIEN';
+        const isEmployeeRow = s => /^\s*[^\t|]+?\s+-\s+.+/.test(String(s || ''));
+
+        // FORMAT MỚI MWG:
+        // NHÂN VIÊN
+        // SỐ LƯỢNG
+        // DOANH THU
+        // % TỈ TRỌNG
+        // DOANH THU QĐ
+        // TARGET ...
+        // rồi mới tới các dòng dữ liệu TAB-separated.
+        // Header là từng dòng riêng, nên DTQĐ luôn là cột thứ 5 (index 4).
+        let revenueCol = -1;
+        let dataStart = 0;
+
+        const employeeHeaderLine = lines.findIndex(isEmployeeLabel);
+        if (employeeHeaderLine >= 0) {
+          const headerOrder = [];
+          for (let i = employeeHeaderLine; i < Math.min(lines.length, employeeHeaderLine + 20); i++) {
+            const cells = splitPastedRow(lines[i]);
+            if (cells.length > 1) {
+              const hs = cells.map(normHeader);
+              const q = hs.findIndex(x => x === 'DOANH THU QD' || x.includes('DOANH THU QD'));
+              if (q >= 0) { revenueCol = q; dataStart = i + 1; break; }
+            } else {
+              const h = normHeader(lines[i]);
+              if (h === 'DOANH THU QD' || h.includes('DOANH THU QD')) {
+                revenueCol = headerOrder.length;
+                dataStart = i + 1;
+                break;
+              }
+              // Chỉ gom các header hợp lệ; không gom vô hạn sang vùng dữ liệu.
+              if (['NHAN VIEN','SO LUONG','DOANH THU','% TI TRONG','TARGET','% HT TARGET','TB 3 THANG','% TT','DT OFFLINE','DT ONLINE','% ONL','DT TRA GOP','% TRA GOP'].includes(h)) {
+                headerOrder.push(h);
+              } else if (headerOrder.length) {
+                break;
+              }
+            }
+          }
+        }
+
+        // FORMAT CŨ: header nằm cùng một dòng tab-separated.
+        if (revenueCol < 0) {
+          for (let i = 0; i < rows.length; i++) {
+            const cells = rows[i];
+            if (cells.length < 2) continue;
+            const hs = cells.map(normHeader);
+            if (!hs.some(x => x === 'NHAN VIEN' || x.startsWith('NHAN VIEN'))) continue;
+            revenueCol = hs.findIndex(x => x === 'DOANH THU QD' || x.includes('DOANH THU QD'));
+            if (revenueCol < 0) revenueCol = hs.findIndex(x => x === 'DOANH THU' || x === 'DTQD');
+            dataStart = i + 1;
             break;
           }
         }
 
-        const outTable = [];
+        const out = [];
         if (revenueCol >= 0) {
-          for (const line of lines) {
-            if (!line.includes("\t")) continue;
-            const cells = line.split("\t").map((c) => c.trim());
-            const first = (cells[0] || "").trim();
+          for (let i = dataStart; i < rows.length; i++) {
+            const cells = rows[i];
+            if (cells.length < revenueCol + 1) continue;
+            const first = String(cells[0] || '').trim();
             if (!first) continue;
-            if (/^nhân viên$/i.test(first)) continue;
-            if (/^tổng$/i.test(first)) continue;
+            const nfirst = normHeader(first);
+            if (nfirst === 'NHAN VIEN' || nfirst === 'TONG' || nfirst.startsWith('TONG (')) continue;
+            if (!isEmployeeRow(first)) continue;
 
-            // Optional [Group] in first cell
-            let group = "Chung";
-            let rest = first;
-            const g = rest.match(/^\s*\[([^\]]+)\]\s*(.+)$/);
-            if (g) {
-              group = g[1].trim() || "Chung";
-              rest = g[2].trim();
-            }
-
-            const m = rest.match(/^(.+?)\s*-\s*([^\s]+)\s*$/);
+            // Chuẩn mới: "154850 - Trần Thị Thanh Trúc"
+            // Đặc biệt cho phép "online - Online - 18001060".
+            const m = first.match(/^\s*([^\-]+?)\s*-\s*(.+?)\s*$/);
             if (!m) continue;
-            const name = m[1].trim();
-            const empId = m[2].trim();
-            const revenue = parseNumber(cells[revenueCol] ?? "");
-            if (!name || !empId || !Number.isFinite(revenue)) continue;
-            outTable.push({ id: uid("emp"), name, empId, revenue, group });
+            const empId = m[1].trim();
+            const name = m[2].trim();
+            const revenue = parseNumber(cells[revenueCol]);
+            if (!empId || !name || !Number.isFinite(revenue)) continue;
+            out.push({ id: uid('emp'), name, empId, revenue, group: 'Chung' });
           }
         }
-        if (outTable.length) return outTable;
 
-        // --- Mode 2: Simple lines: "[Nhóm] Tên - Mã 215.47"
-        const out = [];
+        // Fallback cho format một dòng: "Mã - Tên - doanh thu".
+        if (out.length) return out;
         for (const line of lines) {
-          let group = "Chung";
-          let rest = line;
-          const g = rest.match(/^\s*\[([^\]]+)\]\s*(.+)$/);
-          if (g) {
-            group = g[1].trim() || "Chung";
-            rest = g[2].trim();
-          }
-
-          const m = rest.match(/^(.+?)\s*-\s*([^\s]+)\s+(-?\d[\d.,]*)\s*$/);
+          const m = line.match(/^\s*([^\s]+)\s*-\s*(.+?)\s+(-?\d[\d.,]*)\s*$/);
           if (!m) continue;
-          const name = m[1].trim();
-          const empId = m[2].trim();
+          const empId = m[1].trim();
+          const name = m[2].trim();
           const revenue = parseNumber(m[3]);
-          if (!name || !empId || !Number.isFinite(revenue)) continue;
-          out.push({ id: uid("emp"), name, empId, revenue, group });
+          if (empId && name && Number.isFinite(revenue)) out.push({ id: uid('emp'), name, empId, revenue, group: 'Chung' });
         }
         return out;
       }
 
       function parseSalesText(text, employees, categories) {
-        /**
-         * Supports:
-         * A) Each line: empId | category | amount
-         * B) Blocks:
-         *    Name - empId
-         *    category amount
-         * C) Matrix paste (Phòng ban):
-         *    Phòng ban
-         *    Cat 1
-         *    Cat 2
-         *    ...
-         *    DTLK  DTLK  ... (tab-separated header)
-         *    Tổng  v1    v2   ...
-         *    Name - empId  v1 v2 ...
-         *
-         * Lines with only numbers are ignored.
-         */
-        const empIds = new Set((employees || []).map((e) => e.empId));
-        const norm = (s) =>
-          String(s || "")
-            .trim()
-            .toUpperCase()
-            .replace(/\s+/g, " ");
+        // TRƯỜNG 3 — parser theo đúng format báo cáo MWG.
+        // Chỉ nhận NHÂN VIÊN có MÃ SỐ (ID toàn số). Bỏ hoàn toàn các record
+        // đặc biệt như "online - Online - 18001060".
+        const normId = (v) => String(v ?? '').trim().replace(/\.0+$/, '');
+        const normName = (v) => normKey(String(v ?? '')).replace(/\s+/g, ' ').trim();
+        const catKey = (v) => normKey(String(v ?? '')).replace(/\s+/g, ' ').trim();
 
-        // Only keep categories that exist in mục (1) - target ngành hàng
-        const allowedCatByNorm = new Map();
-        for (const c of categories || []) {
-          if (!c?.name) continue;
-          allowedCatByNorm.set(norm(c.name), c.name);
+        const empById = new Map();
+        const empByName = new Map();
+        for (const e of employees || []) {
+          const id = normId(e.empId);
+          const name = normName(e.name);
+          if (/^\d+$/.test(id)) empById.set(id, id);
+          if (name) empByName.set(name, id);
         }
+
+        const catNames = (categories || []).map(c => c?.name).filter(Boolean);
+        const resolveCategory = (raw) => {
+          const k = catKey(raw);
+          if (!k) return null;
+          const exact = catNames.find(n => catKey(n) === k);
+          if (exact) return exact;
+          // Cho phép khác biệt nhỏ do copy/paste nhưng không tự đoán quá xa.
+          let best = null, bestScore = 0;
+          for (const n of catNames) {
+            const nk = catKey(n);
+            if (!nk) continue;
+            const score = nk.includes(k) ? k.length / nk.length : (k.includes(nk) ? nk.length / k.length : 0);
+            if (score > bestScore) { bestScore = score; best = n; }
+          }
+          return bestScore >= 0.85 ? best : null;
+        };
+
+        const lines = String(text || '').split(/\r?\n/).map(x => x.trim()).filter(Boolean);
         const salesByEmp = {};
+        let currentCategory = null;
+        let blocks = 0, parsedRows = 0, unmatchedBlocks = 0;
 
-        const lines = String(text || "")
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .filter(Boolean);
+        const isTotal = s => /^TỔNG(?:\s*\(.*\))?$/i.test(s) || /^TONG(?:\s*\(.*\))?$/i.test(s);
+        const isHeaderMeasure = s => /^(?:DOANH THU|SỐ LƯỢNG)\b/i.test(s);
 
-        // ---- Mode C: Matrix paste ("Phòng ban" + rows + tab matrix)
-        // Try parse first because it’s the most structured.
-        const idxPB = lines.findIndex((l) => /^phòng\s*ban\b/i.test(l));
-        if (idxPB >= 0) {
-          const matrixCats = [];
-          let headerIdx = -1;
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const cells = splitPastedRow(line);
+          const first = cleanPastedCell(cells[0] || '');
+          if (!first) continue;
 
-          for (let i = idxPB + 1; i < lines.length; i++) {
-            const l = lines[i];
-            const firstCell = (l.split("\t")[0] || "").trim();
-            if (!firstCell) continue;
-
-            // Header row typically starts with DTLK/SLLK and contains tabs
-            if (/^(DTLK|SLLK)\b/i.test(firstCell) && l.includes("\t")) {
-              headerIdx = i;
-              break;
-            }
-
-            // Category name row (usually no tabs)
-            if (!l.includes("\t")) {
-              matrixCats.push(firstCell);
-            }
-          }
-
-          if (headerIdx >= 0 && matrixCats.length) {
-            for (let i = headerIdx + 1; i < lines.length; i++) {
-              const l = lines[i];
-              if (!l.includes("\t")) continue;
-
-              const cells = l.split("\t").map((c) => c.trim());
-              const rowName = (cells[0] || "").trim();
-              if (!rowName) continue;
-              if (/^tổng$/i.test(rowName)) continue;
-              if (/^bp\b/i.test(rowName)) continue; // BP All In One - ĐMX, etc.
-
-              const m = rowName.match(/^(.+?)\s*-\s*([^\s]+)\s*$/);
-              if (!m) continue;
-              const empId = m[2].trim();
-              if (!empIds.has(empId)) continue; // only map employees already parsed in mục (2)
-
-              for (let col = 0; col < matrixCats.length; col++) {
-                const catRaw = matrixCats[col];
-                const allowed = allowedCatByNorm.get(norm(catRaw));
-                if (!allowed) continue; // filter: only categories kept in mục (1)
-                const v = parseNumber(cells[col + 1] ?? "");
-                if (!Number.isFinite(v)) continue;
-                if (v === 0) continue;
-                if (!salesByEmp[empId]) salesByEmp[empId] = {};
-                salesByEmp[empId][allowed] = (salesByEmp[empId][allowed] || 0) + v;
-              }
-            }
-
-            // If parsed anything, return now (avoid mixing with other heuristics)
-            if (Object.keys(salesByEmp).length) return salesByEmp;
-          }
-        }
-
-        let currentEmpId = null;
-        for (const line of lines) {
-          // Ignore lines that are purely numbers/spaces/punctuation
-          if (/^[\d\s.,;:()]+$/.test(line)) continue;
-
-          const header = line.match(/^(.+?)\s*-\s*([^\s]+)\s*$/);
-          if (header && empIds.has(header[2].trim())) {
-            currentEmpId = header[2].trim();
-            if (!salesByEmp[currentEmpId]) salesByEmp[currentEmpId] = {};
+          // QUAN TRỌNG: trong dữ liệu copy từ hệ thống, tên ngành hàng và
+          // "DOANH THU/SỐ LƯỢNG" thường dính trong cùng ô đầu tiên:
+          // "Nồi cơmDOANH THU". Chỉ cần tìm marker ở bất kỳ vị trí nào.
+          const markerMatch = first.match(/^(.*?)(DOANH THU|SỐ LƯỢNG)\b/i);
+          if (markerMatch && markerMatch[1].trim()) {
+            const rawCategory = markerMatch[1].trim();
+            const resolved = resolveCategory(rawCategory);
+            currentCategory = resolved;
+            if (resolved) blocks++; else unmatchedBlocks++;
             continue;
           }
 
-          // Split by common delimiters
-          const parts = line.split(/\s*[|,\t]\s*/).map((p) => p.trim()).filter(Boolean);
-          if (parts.length >= 3) {
-            // Attempt to find empId in first/second token
-            let empId = null;
-            let cat = null;
-            let amountRaw = null;
-
-            if (empIds.has(parts[0])) {
-              empId = parts[0];
-              cat = parts[1];
-              amountRaw = parts.slice(2).join(" ");
-            } else if (empIds.has(parts[1])) {
-              empId = parts[1];
-              cat = parts[0];
-              amountRaw = parts.slice(2).join(" ");
+          // Format text tách riêng: dòng "DOANH THU" / "SỐ LƯỢNG",
+          // tên ngành hàng nằm ở dòng ngay trước đó.
+          if (isHeaderMeasure(first)) {
+            let rawCategory = '';
+            for (let k = i - 1; k >= 0; k--) {
+              const prev = cleanPastedCell(lines[k]);
+              if (!prev || isTotal(prev) || isHeaderMeasure(prev)) continue;
+              if (/TARGET|HẠNG|TOP\/?BOTTOM|BỘ PHẬN/i.test(prev)) continue;
+              rawCategory = prev;
+              break;
             }
+            const resolved = resolveCategory(rawCategory);
+            currentCategory = resolved;
+            if (resolved) blocks++; else unmatchedBlocks++;
+            continue;
+          }
 
-            if (empId && cat) {
-              const m = amountRaw.match(/(-?\d[\d.,]*)\s*$/);
-              if (m) {
-                const amt = parseNumber(m[1]);
-                if (Number.isFinite(amt)) {
-                  const allowed = allowedCatByNorm.get(norm(cat));
-                  if (!allowed) continue; // filter by mục (1)
-                  if (amt === 0) continue;
-                  if (!salesByEmp[empId]) salesByEmp[empId] = {};
-                  salesByEmp[empId][allowed] =
-                    (salesByEmp[empId][allowed] || 0) + amt;
-                  continue;
-                }
+          if (!currentCategory || isTotal(first)) continue;
+
+          // CHỈ nhận nhân viên có mã số rõ ràng. Không nhận "online".
+          const empMatch = first.match(/^(\d+)\s*-\s*(.+)$/);
+          if (!empMatch) continue;
+
+          const sourceId = normId(empMatch[1]);
+          const sourceName = empMatch[2].trim();
+          if (!/^\d+$/.test(sourceId)) continue;
+
+          // Ghép ưu tiên bằng MÃ NV; nếu không có trong Trường 2 thì thử tên.
+          let canonicalId = empById.get(sourceId);
+          if (!canonicalId) canonicalId = empByName.get(normName(sourceName));
+          if (!canonicalId) continue;
+
+          // Số liệu có thể nằm ngay trên cùng dòng (cells[1], format 1 dòng/NV)
+          // HOẶC ở dòng kế tiếp (format export gốc MWG: nhãn NV và số liệu
+          // tách làm 2 dòng riêng, giống hệt format của Trường 1 & Trường 2).
+          let amount = cells.length > 1 ? parseNumber(cells[1]) : NaN;
+          let consumedNext = false;
+          if (!Number.isFinite(amount)) {
+            const nextLine = lines[i + 1];
+            if (nextLine !== undefined) {
+              const nextCells = splitPastedRow(nextLine);
+              const nextFirst = cleanPastedCell(nextCells[0] || '');
+              // Dòng kế tiếp phải THỰC SỰ là dòng dữ liệu (nhiều cột), không phải
+              // một nhãn khác (NV mới / TỔNG / header ngành hàng mới).
+              const isAnotherLabel =
+                /^(\d+)\s*-\s*(.+)$/.test(nextFirst) ||
+                isTotal(nextFirst) ||
+                isHeaderMeasure(nextFirst) ||
+                /(DOANH THU|SỐ LƯỢNG)\b/i.test(nextFirst);
+              if (nextCells.length > 1 && !isAnotherLabel) {
+                amount = parseNumber(nextCells[0]);
+                consumedNext = true;
               }
             }
           }
+          if (!Number.isFinite(amount)) continue;
 
-          // Block mode: category amount (needs currentEmpId)
-          if (currentEmpId) {
-            const m = line.match(/(-?\d[\d.,]*)\s*$/);
-            if (m) {
-              const amt = parseNumber(m[1]);
-              const cat = line.slice(0, m.index).trim();
-              if (cat && Number.isFinite(amt)) {
-                const allowed = allowedCatByNorm.get(norm(cat));
-                if (!allowed) continue; // filter by mục (1)
-                if (amt === 0) continue;
-                if (!salesByEmp[currentEmpId]) salesByEmp[currentEmpId] = {};
-                salesByEmp[currentEmpId][allowed] =
-                  (salesByEmp[currentEmpId][allowed] || 0) + amt;
-              }
-            }
-          }
+          if (!salesByEmp[canonicalId]) salesByEmp[canonicalId] = {};
+          salesByEmp[canonicalId][currentCategory] = amount;
+          parsedRows++;
+          if (consumedNext) i++; // đã dùng dòng kế tiếp làm dữ liệu, bỏ qua nó
         }
+
+        Object.defineProperty(salesByEmp, '__meta', {
+          value: { blocks, parsedRows, unmatchedBlocks },
+          enumerable: false
+        });
         return salesByEmp;
       }
 
@@ -1910,7 +2012,7 @@
                       <div class="cat-target-label">%</div>
                       <input class="mini mono" data-grid="cat" data-field="boostPct" data-id="${escapeHtml(
                         c.id
-                      )}" value="${escapeHtml(String(c.boostPct ?? 120))}" />
+                      )}" value="${escapeHtml(String(c.boostPct ?? 110))}" />
                     </div>
                     <div class="cat-target-meta mono">Cuối: ${formatNumber(finalTarget, 2)}</div>
                   </div>
@@ -2062,11 +2164,11 @@
 
 	        // Category completion rule (Số NH H.T) - MUST match "Chi tiết bán":
 	        // - Chỉ tính các ngành hàng thi đua ở mục (1) có target > 0
-	        // - Target ngành hàng theo NV = Target_NH / số NV đang lọc
-	        // - % dự kiến ngành hàng = DT_NH / (Target_NH_theo_NV * tiến độ ngày)
+	        // - Target ngành hàng theo NV = Target_NH_cuối / số NV đang lọc
+	        // - % dự kiến ngành hàng = DT_NH / (Target_NH_cuối_theo_NV * tiến độ ngày)
 	        // - 1 ngành hàng "hoàn tất" khi % dự kiến >= 100%
 	        const eligibleCategories = (day.categories || []).filter(
-	          (c) => Number(c?.target || 0) > 0
+	          (c) => effectiveCategoryTarget(c) > 0
 	        );
 	        const totalCategories = eligibleCategories.length;
 
@@ -2144,7 +2246,7 @@
 
         const employeeCount = employees.length || 0;
         const sales = day.sales || {};
-        const categories = (day.categories || []).filter((c) => Number(c?.target || 0) > 0);
+        const categories = (day.categories || []).filter((c) => effectiveCategoryTarget(c) > 0);
         const totalCategories = categories.length;
 
         // Per employee completion: completed if projected% >= 100%
@@ -2310,7 +2412,7 @@
         const tablesHtml = chunks
           .map((catsChunk, idxChunk) => {
             const theadCats = catsChunk
-              .map((c) => `<th style="width:100px;word-break:break-word;white-space:normal;line-height:1.3"><div class="th-cat" style="font-size:10px">${escapeHtml(c.name)}</div></th>`)
+              .map((c) => `<th style="width:90px;word-break:break-word;white-space:normal;line-height:1.25"><div class="th-cat" style="font-size:9px">${escapeHtml(c.name)}</div></th>`)
               .join("");
 
             const bodyRows = detail.rows
@@ -2352,9 +2454,8 @@
                   <tr>
                     <td>${rankBadge}</td>
                     <td>
-                      <div style="font-weight:900">${escapeHtml(r.e.name)} - <span class="mono">${escapeHtml(
-                  r.e.empId
-                )}</span></div>
+                      <div style="font-weight:900">${escapeHtml(abbreviateName(r.e.name))}</div>
+                      <div class="cell-muted mono">${escapeHtml(r.e.empId)}</div>
                     </td>
                     <td class="mono" style="font-weight:900; color: var(--red)">${formatNumber(
                       r.revenue,
@@ -2371,14 +2472,15 @@
             const footerCells = catsChunk
               .map((cat) => {
                 const sumActual = Number(detail.totalsByCat.get(cat.name) || 0);
-                const denom = Number(cat.target || 0) * detail.progress;
+                const finalTarget = effectiveCategoryTarget(cat);
+                const denom = finalTarget * detail.progress;
                 const pct = denom > 0 ? (sumActual / denom) * 100 : 0;
                 const good = pct >= 100;
                 const cls = good ? "cell-cat good" : "cell-cat bad";
                 return `
                   <td class="${cls}">
                     <div class="mono">${formatNumber(sumActual, 2)} / ${formatNumber(
-                  Number(cat.target || 0),
+                  finalTarget,
                   2
                 )}</div>
                     <div class="pct mono" style="color:var(--blue);font-weight:700">${formatNumber(pct, 0)}%</div>
@@ -2405,10 +2507,10 @@
                 <table class="table" aria-label="Chi tiết bán (bảng ${idxChunk + 1})">
                   <thead>
                     <tr>
-                      <th style="width:50px">Hạng</th>
-                      <th style="width:180px">Nhân viên</th>
-                      <th style="width:80px">DTQĐ</th>
-                      <th style="width:80px">SL<br>NH HT</th>
+                      <th style="width:44px">Hạng</th>
+                      <th style="width:140px">Nhân viên</th>
+                      <th style="width:70px">DTQĐ</th>
+                      <th style="width:66px">SL<br>NH HT</th>
                       ${theadCats}
                     </tr>
                   </thead>
@@ -2448,7 +2550,7 @@
             if (prev.id) c.id = prev.id;
             if ("boostPct" in prev) c.boostPct = normalizeBoostPct(prev.boostPct);
           }
-          if (!("boostPct" in c)) c.boostPct = 120;
+          if (!("boostPct" in c)) c.boostPct = 110;
           c.boostPct = normalizeBoostPct(c.boostPct);
         }
         day.employees = parseEmployeesText(day.employeeText);
@@ -2460,6 +2562,15 @@
 
         // Parse sales detail
         day.sales = parseSalesText(day.salesText, day.employees, day.categories);
+        const salesEmpCount = Object.keys(day.sales || {}).length;
+        const salesRowCount = Object.values(day.sales || {}).reduce((n, obj) => n + Object.keys(obj || {}).length, 0);
+        const salesMeta = day.sales?.__meta || {};
+        const salesNote = $("salesNote");
+        if (salesNote) {
+          salesNote.textContent = salesRowCount
+            ? `✓ Trường 3: ${salesEmpCount} NV • ${salesRowCount} ô dữ liệu • ${salesMeta.blocks || 0} ngành hàng`
+            : (day.salesText ? `✕ Trường 3: chưa đọc được NV (đã nhận ${salesMeta.blocks || 0} ngành hàng).` : "Chưa nhập Trường 3.");
+        }
         day.updatedAt = Date.now();
       }
 
@@ -2628,6 +2739,72 @@
         $("taEmployees").addEventListener("input", parseAndRenderDebounced);
         $("taSales").addEventListener("input", parseAndRenderDebounced);
 
+        // Trường 2: upload Excel/CSV từ hệ thống và chuyển thành dữ liệu chuẩn cho parser hiện có.
+        $("fileEmployees").addEventListener("change", async (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const status = $("employeeFileStatus");
+          status.textContent = "Đang đọc file…";
+          try {
+            if (typeof XLSX === "undefined") throw new Error("Không tải được thư viện đọc Excel. Hãy mở file khi có kết nối Internet.");
+            const buf = await file.arrayBuffer();
+            const wb = XLSX.read(buf, { type: "array", cellDates: false });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            if (!ws) throw new Error("Không tìm thấy sheet dữ liệu.");
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", raw: true });
+            if (!rows.length) throw new Error("File không có dữ liệu.");
+
+            const norm = (v) => String(v ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/Đ/g,"D").toUpperCase().replace(/\s+/g," ").trim();
+            const header = rows[0].map(norm);
+            const findCol = (...names) => {
+              for (const name of names) {
+                const n = norm(name);
+                const idx = header.findIndex(h => h === n || h.includes(n));
+                if (idx >= 0) return idx;
+              }
+              return -1;
+            };
+            const idCol = findCol("MÃ NHÂN VIÊN", "MA NHAN VIEN", "MÃ NV");
+            const nameCol = findCol("TÊN NHÂN VIÊN", "TEN NHAN VIEN", "NHÂN VIÊN");
+            const qtyCol = findCol("SỐ LƯỢNG", "SO LUONG");
+            const dtCol = findCol("DOANH THU (TR)", "DOANH THU");
+            const qdCol = findCol("DOANH THU QĐ (TR)", "DOANH THU QD", "DTQD");
+            if (idCol < 0 || nameCol < 0 || qdCol < 0) {
+              throw new Error("Không tìm thấy đủ cột MÃ NHÂN VIÊN, TÊN NHÂN VIÊN và DOANH THU QĐ (TR).");
+            }
+
+            const parseCellNumber = (v) => {
+              if (typeof v === "number") return Number.isFinite(v) ? v : NaN;
+              let x = String(v ?? "").trim().replace(/,/g, "");
+              if (!x || x === "—" || x === "-") return NaN;
+              return Number(x);
+            };
+            const outRows = [["NHÂN VIÊN","SỐ LƯỢNG","DOANH THU","% TỈ TRỌNG","DOANH THU QĐ"]];
+            let count = 0;
+            for (let r = 1; r < rows.length; r++) {
+              const row = rows[r] || [];
+              const empId = String(row[idCol] ?? "").trim();
+              const name = String(row[nameCol] ?? "").trim();
+              if (!empId || !name) continue;
+              const qd = parseCellNumber(row[qdCol]);
+              if (!Number.isFinite(qd)) continue;
+              const qty = qtyCol >= 0 ? row[qtyCol] ?? "" : "";
+              const dt = dtCol >= 0 ? row[dtCol] ?? "" : "";
+              outRows.push([`${empId} - ${name}`, qty, dt, "", qd]);
+              count++;
+            }
+            if (!count) throw new Error("Không đọc được dòng nhân viên nào.");
+
+            // Đưa về text TSV chuẩn để toàn bộ luồng phân tích hiện tại dùng chung một nguồn dữ liệu.
+            $("taEmployees").value = outRows.map(row => row.map(v => String(v ?? "")).join("\t")).join("\n");
+            status.textContent = `✓ Đã đọc ${count} nhân viên • ${file.name}`;
+            parseAndRenderDebounced();
+          } catch (err) {
+            console.error(err);
+            status.textContent = `✕ ${err?.message || "Không đọc được file."}`;
+          }
+        });
+
         // Parse buttons
         $("btnParseTargets").addEventListener("click", () => {
           parseAndRenderDebounced();
@@ -2767,6 +2944,7 @@
         async function captureElementsForExport(elements, filename, options = {}) {
           const els = (elements || []).filter(Boolean);
           if (!els.length) return;
+          const fitWidth = Number(options.fitWidth || 0);
 
           // --- Style override: dùng <style> tag inject vào clone để phá hết max-width ---
           const overrideCSS = `
@@ -2783,23 +2961,27 @@
               float: none !important;
               position: relative !important;
             }
+            .export-root .card-body {
+              max-height: none !important;
+              overflow: visible !important;
+            }
             .export-root .table-scroll {
               overflow: visible !important;
               max-width: none !important;
-              width: auto !important;
+              width: max-content !important;
+              display: inline-block !important;
             }
             .export-root table {
               min-width: 0 !important;
-              width: 100% !important;
+              width: max-content !important;
               table-layout: auto !important;
+            }
+            .export-root .table {
+              min-width: 0 !important;
             }
             .export-root .cell-cat {
               min-width: 90px !important;
               max-width: 110px !important;
-            }
-            .export-root .table-scroll {
-              width: 100% !important;
-              overflow: visible !important;
             }
             .export-root .report-header {
               width: 100% !important;
@@ -2814,10 +2996,11 @@
           wrapper.style.position = "absolute";
           wrapper.style.left = "0px";
           wrapper.style.top = (document.body.scrollHeight + 100) + "px";
-          wrapper.style.width = "1400px";   // set cứng 1400px để bảng tự fill vào
+          wrapper.style.width = (fitWidth > 0 ? `${fitWidth}px` : "1400px");
           wrapper.style.padding = "24px";
           wrapper.style.background = "#f3f5f7";
           wrapper.style.zIndex = "0";
+          wrapper.style.display = "inline-block";
 
           // Inject override style vào wrapper
           const styleTag = document.createElement("style");
@@ -2838,30 +3021,108 @@
           await new Promise(r => requestAnimationFrame(r));
           await new Promise(r => setTimeout(r, 80));
 
-          const W = wrapper.offsetWidth;    // = 1400px
-          const H = wrapper.scrollHeight;
+          // Nếu bảng rộng hơn fitWidth, mở rộng wrapper để capture đủ cột
+          const baseW = fitWidth > 0 ? fitWidth : 1400;
+          let maxTableW = 0;
+          for (const t of wrapper.querySelectorAll("table")) {
+            maxTableW = Math.max(maxTableW, t.scrollWidth || 0);
+          }
+          const targetW = Math.max(baseW, maxTableW + 2); // +2 tránh rounding
+          if (targetW !== wrapper.offsetWidth) wrapper.style.width = `${targetW}px`;
+
+          // Đợi reflow sau khi đổi width
+          await new Promise(r => requestAnimationFrame(r));
+
+          const W = wrapper.scrollWidth || wrapper.offsetWidth;
+          const H = wrapper.scrollHeight || wrapper.offsetHeight;
 
           try {
-            const canvas = await window.html2canvas(wrapper, {
-              backgroundColor: "#f3f5f7",
-              scale: 2,
-              useCORS: true,
-              allowTaint: true,
-              logging: false,
-              x: 0,
-              y: 0,
-              scrollX: 0,
-              scrollY: 0,
-              width: W,
-              height: H,
-              windowWidth: W,
-              windowHeight: H,
-            });
-            const url = canvas.toDataURL("image/png");
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = filename;
-            a.click();
+            // html2canvas/canvas có giới hạn kích thước tối đa theo từng chiều.
+            // Nếu scale quá lớn sẽ bị cắt mất phần cuối (thường xảy ra với báo cáo dài).
+            const MAX_DIM = 16384;
+            // Đảm bảo canvas không vượt giới hạn (nếu vượt sẽ bị cắt mất dòng/cột).
+            // Không đặt min-scale, chấp nhận ảnh nhỏ hơn để không bị crop.
+            const scale = Math.min(
+              2,
+              MAX_DIM / Math.max(1, W),
+              MAX_DIM / Math.max(1, H)
+            );
+
+            const targetCanvasW = Math.ceil(W * scale);
+            const targetCanvasH = Math.ceil(H * scale);
+
+            // Fallback chắc ăn: nếu vẫn có nguy cơ vượt giới hạn/crop → chụp theo lát rồi ghép.
+            const needTiling =
+              targetCanvasW > MAX_DIM ||
+              targetCanvasH > MAX_DIM ||
+              W > MAX_DIM ||
+              H > MAX_DIM;
+
+            if (needTiling) {
+              const tileMaxCssW = Math.max(400, Math.floor(MAX_DIM / Math.max(scale, 0.01)));
+              const tileMaxCssH = Math.max(400, Math.floor(MAX_DIM / Math.max(scale, 0.01)));
+
+              const tilesX = Math.ceil(W / tileMaxCssW);
+              const tilesY = Math.ceil(H / tileMaxCssH);
+
+              const outCanvas = document.createElement("canvas");
+              outCanvas.width = Math.ceil(W * scale);
+              outCanvas.height = Math.ceil(H * scale);
+              const ctx = outCanvas.getContext("2d");
+
+              for (let ty = 0; ty < tilesY; ty++) {
+                for (let tx = 0; tx < tilesX; tx++) {
+                  const x = tx * tileMaxCssW;
+                  const y = ty * tileMaxCssH;
+                  const w = Math.min(tileMaxCssW, W - x);
+                  const h = Math.min(tileMaxCssH, H - y);
+
+                  const tile = await window.html2canvas(wrapper, {
+                    backgroundColor: "#f3f5f7",
+                    scale,
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false,
+                    x,
+                    y,
+                    scrollX: 0,
+                    scrollY: 0,
+                    width: w,
+                    height: h,
+                    windowWidth: W,
+                    windowHeight: H,
+                  });
+                  ctx.drawImage(tile, Math.floor(x * scale), Math.floor(y * scale));
+                }
+              }
+
+              const url = outCanvas.toDataURL("image/png");
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = filename;
+              a.click();
+            } else {
+              const canvas = await window.html2canvas(wrapper, {
+                backgroundColor: "#f3f5f7",
+                scale,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                x: 0,
+                y: 0,
+                scrollX: 0,
+                scrollY: 0,
+                width: W,
+                height: H,
+                windowWidth: W,
+                windowHeight: H,
+              });
+              const url = canvas.toDataURL("image/png");
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = filename;
+              a.click();
+            }
           } catch (err) {
             console.error("html2canvas error:", err);
             window.alert("Không lưu được ảnh. Thử lại nhé!");
@@ -3123,18 +3384,6 @@
 
       boot();
 
-      // ── MWG AUTH ──
-      (function(){
-        try {
-          var s = JSON.parse(localStorage.getItem('mwg_session') || '{}');
-          var el = document.getElementById('mwg-nav-username');
-          if (el) el.textContent = s.displayName || s.username || '—';
-        } catch(e) {}
-      })();
-      function mwgLogout() {
-        localStorage.removeItem('mwg_session');
-        window.location.href = './index.html';
-      }
     </script>
   </body>
 </html>
