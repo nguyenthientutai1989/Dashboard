@@ -168,6 +168,34 @@ body{
 .paste-status.err{color:#c0392b;}
 .paste-status.wait{color:#aaa;font-weight:500;}
 
+.emp-paste{margin-top:10px;border-color:#d8c4ee;background:#faf7ff;}
+.emp-paste .upload-title{color:#6a3fa0;}
+.emp-paste textarea{border-color:#e0d0f5;}
+.emp-paste textarea:focus{border-color:#8e5cd9;}
+
+.emp-section{margin-bottom:14px;}
+.emp-title-bar{background:linear-gradient(90deg,#6a3fa0,#8e5cd9);color:#fff;font-size:11px;font-weight:800;padding:7px 12px;border-radius:8px 8px 0 0;letter-spacing:.3px;}
+.emp-table-wrap{background:#f4effa;padding:6px;border-radius:0 0 8px 8px;}
+.emp-col-header{display:grid;grid-template-columns:26px 1fr 64px 118px 100px 90px 20px;gap:8px;align-items:center;padding:5px 8px;font-size:9px;font-weight:800;color:#6a3fa0;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid #ddccf0;}
+.emp-col-header span{text-align:right;}
+.emp-col-header span.eh-name{text-align:left;}
+.emp-col-header span.eh-rank{text-align:center;}
+.emp-row{display:grid;grid-template-columns:26px 1fr 64px 118px 100px 90px 20px;gap:8px;align-items:center;background:#fff;border-left:3px solid #b8a0d8;border-radius:5px;padding:7px 8px;margin-top:4px;position:relative;}
+.emp-row.top1{border-left-color:#e8b400;background:linear-gradient(90deg,#fff9e6,#fff);box-shadow:0 0 0 1px #f5d878 inset;}
+.emp-row.top2{border-left-color:#9a9a9a;background:linear-gradient(90deg,#f5f5f5,#fff);box-shadow:0 0 0 1px #d8d8d8 inset;}
+.emp-row.top3{border-left-color:#c17a3a;background:linear-gradient(90deg,#fdf0e3,#fff);box-shadow:0 0 0 1px #ecc7a0 inset;}
+.emp-rank{text-align:center;font-size:14px;line-height:1;}
+.emp-name{font-size:11.5px;font-weight:700;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.emp-row.top1 .emp-name,.emp-row.top2 .emp-name,.emp-row.top3 .emp-name{font-weight:800;}
+.emp-num{font-size:10.5px;font-weight:700;color:#444;text-align:right;white-space:nowrap;}
+.emp-num-sub{font-size:9px;font-weight:600;color:#999;margin-left:3px;}
+.emp-badge{font-size:10px;font-weight:800;padding:2px 7px;border-radius:9px;text-align:center;white-space:nowrap;justify-self:end;}
+.emp-hide-btn{border:none;background:#f0f0f0;color:#999;width:17px;height:17px;line-height:17px;text-align:center;border-radius:50%;font-size:9px;cursor:pointer;padding:0;justify-self:center;}
+.emp-hide-btn:hover{background:#e53935;color:#fff;}
+.emp-hidden-note{font-size:9.5px;color:#888;padding:6px 4px 2px;text-align:right;}
+.emp-reset-btn{border:none;background:none;color:#0066cc;font-weight:700;font-size:9.5px;cursor:pointer;text-decoration:underline;padding:0;margin-left:4px;}
+.emp-empty{font-size:10px;color:#aaa;text-align:center;padding:12px;background:#fff;border-radius:0 0 8px 8px;}
+
 .target-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed #e5e5e5;}
 .target-label{font-size:11px;font-weight:700;color:#555;white-space:nowrap;}
 .target-input{width:160px;padding:6px 9px;border:1px solid #ccc;border-radius:6px;font-size:12px;font-weight:700;color:#1c1c1e;background:#fffef5;}
@@ -184,15 +212,15 @@ body{
 
 #db{background:#e8e8e8;}
 
-.top-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:7px;border-radius:9px;overflow:hidden;border:2px solid #1c1c1e;}
-.tc{background:#1c1c1e;padding:9px 11px;text-align:center;border-right:1px solid #383838;}
+.top-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:14px;border-radius:9px;overflow:hidden;border:2px solid #1c1c1e;}
+.tc{background:#1c1c1e;padding:16px 14px;text-align:center;border-right:1px solid #383838;}
 .tc:last-child{border-right:none;}
-.tc-label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;}
-.tc-val{font-size:19px;font-weight:800;color:#f5c518;line-height:1.1;}
-.tc-sub{font-size:9px;color:#e84a5f;margin-top:2px;font-weight:600;}
+.tc-label{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;font-weight:600;}
+.tc-val{font-size:27px;font-weight:800;color:#f5c518;line-height:1.1;}
+.tc-sub{font-size:10.5px;color:#e84a5f;margin-top:4px;font-weight:600;}
 .tc-val.red{color:#e84a5f;}
 
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:14px;}
 .gcol{display:flex;flex-direction:column;gap:4px;}
 
 .krow{display:flex;align-items:center;gap:8px;border-radius:7px;padding:8px 10px;border-left:4px solid transparent;}
@@ -203,12 +231,12 @@ body{
 .krow-pct{font-size:13px;font-weight:800;line-height:1;}
 .krow-rank{font-size:9px;margin-top:1px;opacity:.65;}
 
-.footer{text-align:center;margin-top:7px;font-size:10px;color:#999;padding-bottom:2px;}
+.footer{text-align:center;margin-top:16px;font-size:10px;color:#999;padding-bottom:2px;}
 .footer b{color:#e84a5f;font-weight:700;}
 .empty{color:#aaa;font-size:12px;text-align:center;padding:24px;background:#fff;border-radius:8px;}
 
 /* ── BẢNG ICT + BÁN KÈM ── */
-.ict-wrap{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;margin-top:0;}
+.ict-wrap{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;margin-top:0;}
 .ict-box{background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e0e0e0;box-shadow:0 2px 8px rgba(0,0,0,0.07);}
 .ict-title{font-size:10px;font-weight:800;letter-spacing:.5px;text-align:center;padding:6px 8px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:5px;}
 .ict-title.ict{background:linear-gradient(90deg,#1565c0,#1976d2);color:#fff;}
@@ -272,6 +300,13 @@ body{
       <input type="number" id="manualTarget" class="target-input" placeholder="Nhập target doanh thu tổng, VD: 5000" step="any" min="0">
       <span class="target-hint">Nhập số rồi bấm "Tạo Dashboard" để áp dụng</span>
     </div>
+
+    <div class="paste-box emp-paste">
+      <div class="upload-title">👤 Doanh Thu Nhân Viên (Realtime) — không bắt buộc</div>
+      <div class="upload-sub">Dán dữ liệu doanh thu từng nhân viên (copy từ bảng RT). Bỏ trống nếu không cần hiển thị.</div>
+      <textarea id="d3" placeholder="Dán dữ liệu doanh thu nhân viên vào đây (không bắt buộc)..."></textarea>
+      <div class="paste-status wait" id="f3-status">Chưa có dữ liệu</div>
+    </div>
   </div>
 
   <div class="btn-row">
@@ -286,6 +321,7 @@ body{
 <script>
 // ── DỮ LIỆU ĐÃ ĐỌC TỪ 2 FILE EXCEL ──
 let g1 = null; // dữ liệu doanh thu hợp nhất (đã parse từ file Excel)
+const hiddenEmpSet = new Set(); // tên nhân viên đang bị ẩn khỏi hiển thị
 
 const ICONS={
   'flagship':'🔥','smartphone':'📱','điện thoại':'📱','realme':'📱','vivo':'📱',
@@ -315,7 +351,51 @@ function rowStyle(p){
 
 function fmtPct(p){
   if(p===null||isNaN(p)) return '0%';
+  // Số quá lớn (VD 2235.7%) → rút gọn hiển thị dạng "2.2k%" nhưng giá trị gốc vẫn giữ nguyên để tính toán/sắp xếp
+  if(Math.abs(p)>=1000){
+    const kVal = p/1000;
+    const kStr = (Math.round(kVal*10)/10).toString().replace(/\.0$/,'');
+    return kStr+'k%';
+  }
   return Math.round(p)+'%';
+}
+
+// Parse số dạng text có thể là định dạng VN (dấu chấm=hàng nghìn, dấu phẩy=thập phân, VD "1.234,5")
+// hoặc định dạng US (dấu phẩy=hàng nghìn, dấu chấm=thập phân, VD "2,235.7") — tự nhận diện theo
+// dấu xuất hiện SAU CÙNG trong chuỗi (đó là dấu thập phân thật sự).
+function parseVNNumber(s){
+  if(s===undefined||s===null) return NaN;
+  let t = String(s).trim().replace(/%/g,'');
+  if(t===''||t==='—'||t==='-') return NaN;
+  const lastComma = t.lastIndexOf(',');
+  const lastDot   = t.lastIndexOf('.');
+  if(lastComma>-1 && lastDot>-1){
+    if(lastDot>lastComma){
+      // dấu chấm ở sau → dấu chấm là thập phân, dấu phẩy là hàng nghìn (kiểu US: "2,235.7")
+      t = t.replace(/,/g,'');
+    } else {
+      // dấu phẩy ở sau → dấu phẩy là thập phân, dấu chấm là hàng nghìn (kiểu VN: "1.234,5")
+      t = t.replace(/\./g,'').replace(',', '.');
+    }
+  } else if(lastComma>-1){
+    const after = t.slice(lastComma+1);
+    if(/^\d{3}$/.test(after)){
+      // đúng 3 chữ số sau dấu phẩy → nhiều khả năng là hàng nghìn (VD "13,738")
+      t = t.replace(/,/g,'');
+    } else {
+      // còn lại coi là thập phân kiểu VN (VD "67,4")
+      t = t.replace(',', '.');
+    }
+  } else if(lastDot>-1){
+    const after = t.slice(lastDot+1);
+    if(/^\d{3}$/.test(after) && t.slice(0,lastDot).replace(/\./g,'').length>0){
+      // đúng 3 chữ số sau dấu chấm và có chữ số đứng trước → hàng nghìn kiểu VN (VD "13.738")
+      t = t.replace(/\./g,'');
+    }
+    // ngược lại giữ nguyên, coi dấu chấm là thập phân (VD "67.4")
+  }
+  const n = parseFloat(t);
+  return isNaN(n) ? NaN : n;
 }
 
 // ── ĐỌC FILE EXCEL (.xlsx) BẰNG SheetJS ──
@@ -455,10 +535,12 @@ function parseV2(raw){
     // Dòng dữ liệu Tổng: [dt/sl, target, %HT, %dựbáo, hạngvùng(trống), top/bottom]
     const tCols = lines[i].split('\t');
     i++;
-    const dt  = parseFloat((tCols[0]||'').replace(',','.')) || 0;
-    const tgt = parseFloat((tCols[1]||'').replace(',','.')) || 0;
-    const pctRaw = (tCols[2]||'').replace('%','').replace(',','.').trim();
-    const pct = (pctRaw===''||pctRaw==='-'||isNaN(parseFloat(pctRaw))) ? null : parseFloat(pctRaw);
+    const dtN  = parseVNNumber(tCols[0]);
+    const tgtN = parseVNNumber(tCols[1]);
+    const dt  = isNaN(dtN)  ? 0 : dtN;
+    const tgt = isNaN(tgtN) ? 0 : tgtN;
+    const pctN = parseVNNumber(tCols[2]);
+    const pct = isNaN(pctN) ? null : pctN;
 
     // Dòng tên siêu thị (TGD_...) rồi dòng dữ liệu siêu thị chứa hạng vùng thật
     let rank=0;
@@ -481,6 +563,122 @@ function parseV2(raw){
     return pb-pa;
   });
   return items;
+}
+
+// ── VÙNG 3: DOANH THU NHÂN VIÊN (REALTIME) — DÁN TRỰC TIẾP, KHÔNG BẮT BUỘC ──
+// Mỗi nhân viên là 1 khối 2 dòng:
+//   "123456 - Tên nhân viên"   (dòng tên, có mã NV phía trước, không chứa tab)
+//   SL <tab> DT QĐ <tab> % Tỉ Trọng <tab> DT <tab> Target <tab> %HT Target <tab> TB3T <tab> %TT <tab> DT Trả Góp <tab> % Trả Góp
+// Dòng "Tổng (...)" ở cuối và các dòng tiêu đề bị bỏ qua tự động vì không khớp mẫu tên nhân viên.
+function parseV3(raw){
+  if(!raw || !raw.trim()) return [];
+  const lines = raw.replace(/\r/g,'').split('\n');
+  const empNameRe = /^(\d+|online)\s*-\s*.+/i;
+  const parseValNum = (s)=>{
+    const n = parseVNNumber(s);
+    return isNaN(n) ? 0 : n;
+  };
+  const parseValOrNull = (s)=>{
+    const n = parseVNNumber(s);
+    return isNaN(n) ? null : n;
+  };
+
+  const items=[];
+  let i=0;
+  while(i<lines.length){
+    const line = lines[i];
+    const trimmed = line.trim();
+    if(trimmed && empNameRe.test(trimmed) && !line.includes('\t')){
+      const name = trimmed;
+      i++;
+      while(i<lines.length && !lines[i].includes('\t')) i++;
+      if(i>=lines.length) break;
+      const cols = lines[i].split('\t');
+      i++;
+      items.push({
+        name,
+        sl:        parseValNum(cols[0]),
+        dtQD:      parseValNum(cols[1]),
+        tiTrong:   parseValOrNull(cols[2]),
+        dt:        parseValNum(cols[3]),
+        target:    parseValOrNull(cols[4]),
+        pctTarget: parseValOrNull(cols[5]),
+        tb3:       parseValNum(cols[6]),
+        pctTT:     parseValOrNull(cols[7]),
+        dtTraGop:  parseValNum(cols[8]),
+        pctTraGop: parseValOrNull(cols[9]),
+      });
+    } else {
+      i++;
+    }
+  }
+  items.sort((a,b)=>b.dtQD-a.dtQD);
+  return items;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escapeJs(s){
+  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+
+function toggleEmpHide(name){
+  if(hiddenEmpSet.has(name)) hiddenEmpSet.delete(name);
+  else hiddenEmpSet.add(name);
+  build();
+}
+function resetHiddenEmp(){
+  hiddenEmpSet.clear();
+  build();
+}
+
+function makeEmpRow(e, idx){
+  const s = rowStyle(e.pctTraGop);
+  const medals = ['🥇','🥈','🥉'];
+  const topClass = idx<3 ? ' top'+(idx+1) : '';
+  const rankCell = idx<3 ? medals[idx] : (idx+1);
+  const tgCell = e.dtTraGop>0
+    ? `${e.dtTraGop.toFixed(0)}tr`
+    : '—';
+  const tgPctCell = e.pctTraGop!==null
+    ? `<span class="emp-badge" style="background:${s.bg};color:${s.pct};">${Math.round(e.pctTraGop)}%</span>`
+    : `<span class="emp-badge" style="background:#f0f0f0;color:#999;">—</span>`;
+  const tiTrongStr = e.tiTrong!==null ? ` <span class="emp-num-sub">(${e.tiTrong.toFixed(1)}%)</span>` : '';
+  return `<div class="emp-row${topClass}">
+    <span class="emp-rank">${rankCell}</span>
+    <span class="emp-name" title="${escapeHtml(e.name)}">${escapeHtml(e.name)}</span>
+    <span class="emp-num">${e.sl}</span>
+    <span class="emp-num">${e.dtQD.toFixed(0)}tr${tiTrongStr}</span>
+    <span class="emp-num">${tgCell}</span>
+    ${tgPctCell}
+    <button class="emp-hide-btn no-capture" onclick="toggleEmpHide('${escapeJs(e.name)}')" title="Ẩn nhân viên này">✕</button>
+  </div>`;
+}
+
+function buildEmpSection(allEmp){
+  if(!allEmp.length) return '';
+  const visible = allEmp.filter(e=>!hiddenEmpSet.has(e.name));
+  const hiddenCount = allEmp.length - visible.length;
+  const header = `<div class="emp-col-header">
+      <span class="eh-rank">#</span>
+      <span class="eh-name">Nhân viên</span>
+      <span>SL</span>
+      <span>Doanh thu đóng góp</span>
+      <span>DT trả góp</span>
+      <span>% trả góp</span>
+      <span></span>
+    </div>`;
+  const body = visible.length
+    ? `${header}${visible.map((e,i)=>makeEmpRow(e,i)).join('')}`
+    : `<div class="emp-empty">Tất cả nhân viên đang bị ẩn</div>`;
+  const resetBar = hiddenCount>0
+    ? `<div class="emp-hidden-note no-capture">Đang ẩn ${hiddenCount} nhân viên.<button class="emp-reset-btn" onclick="resetHiddenEmp()">Hiện lại tất cả</button></div>`
+    : '';
+  return `<div class="emp-section">
+    <div class="emp-title-bar">👤 Doanh Thu Nhân Viên (Realtime) — sắp xếp theo doanh thu giảm dần</div>
+    <div class="emp-table-wrap">${body}${resetBar}</div>
+  </div>`;
 }
 
 function makeRow(g){
@@ -625,6 +823,17 @@ function build(){
     else{ f2Status.className='paste-status ok'; f2Status.textContent=`✓ Đã đọc ${items.length} chương trình thi đua`; }
   }
 
+  // Vùng 3: đọc trực tiếp từ ô dán dữ liệu nhân viên (không bắt buộc)
+  const raw3 = (document.getElementById('d3').value||'').trim();
+  const empItems = raw3 ? parseV3(raw3) : [];
+  const f3Status = document.getElementById('f3-status');
+  if(f3Status){
+    if(!raw3){ f3Status.className='paste-status wait'; f3Status.textContent='Chưa có dữ liệu'; }
+    else if(empItems.length===0){ f3Status.className='paste-status err'; f3Status.textContent='✗ Không nhận diện được dữ liệu, kiểm tra lại định dạng dán'; }
+    else{ f3Status.className='paste-status ok'; f3Status.textContent=`✓ Đã đọc ${empItems.length} nhân viên`; }
+  }
+  const empHtml = buildEmpSection(empItems);
+
   // Target doanh thu tổng: ưu tiên số người dùng tự nhập (vì file thường không có sẵn target)
   const manualTargetEl = document.getElementById('manualTarget');
   const manualTarget = manualTargetEl ? parseFloat(manualTargetEl.value) : NaN;
@@ -676,6 +885,7 @@ function build(){
       </div>
     </div>
     ${ictWrap}
+    ${empHtml}
     ${items.length>0
       ?`<div class="grid2">
           <div class="gcol">${leftItems.map(makeRow).join('')}</div>
@@ -699,7 +909,8 @@ function saveImg(){
     scale:2,
     useCORS:true,
     backgroundColor:'#e8e8e8',
-    logging:false
+    logging:false,
+    ignoreElements:(node)=>node.classList && node.classList.contains('no-capture')
   }).then(canvas=>{
     const now=new Date();
     const ts=now.toLocaleDateString('vi-VN').replace(/\//g,'-')
