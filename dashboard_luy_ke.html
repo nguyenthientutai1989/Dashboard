@@ -1,371 +1,1218 @@
 <!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BI Lũy Kế — MWG</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-    <style>
-      /* ── NAVBAR ── */
-      :root {
-        --nav-h: 52px;
-        --nav-bg: rgba(10, 14, 24, 0.92);
-        --nav-border: rgba(255,255,255,0.1);
-        --accent: #f5c518;
-      }
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BI Lũy Kế — MWG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --nav-h: 52px;
+    --bg: #eef1f6;
+    --panel: #ffffff;
+    --panel-soft: #f5f7fb;
+    --panel-alt: #eef1f7;
+    --border: rgba(15,23,42,0.09);
+    --border-strong: rgba(15,23,42,0.16);
+    --text: #161b28;
+    --text-dim: #545d72;
+    --text-faint: #8991a6;
+    --gold: #f5c518;
+    --gold-deep: #916f00;
+    --gold-soft: rgba(245,197,24,0.16);
+    --good: #148a4a;
+    --good-soft: rgba(20,138,74,0.10);
+    --bad: #d1323f;
+    --bad-soft: rgba(209,50,63,0.10);
+    --info: #2f6fed;
+    --info-soft: rgba(47,111,237,0.10);
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.05);
+    --shadow-md: 0 10px 26px rgba(15,23,42,0.07);
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:
+      radial-gradient(1100px 520px at 10% -8%, rgba(245,197,24,0.10), transparent 60%),
+      radial-gradient(900px 460px at 100% 0%, rgba(47,111,237,0.07), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Be Vietnam Pro', sans-serif;
+    padding-top: calc(var(--nav-h) + 20px);
+    min-height: 100vh;
+  }
+  ::selection{ background: var(--gold); color:#191204; }
 
-      * { box-sizing: border-box; }
+  /* ── NAVBAR ── */
+  .mwg-nav{
+    position: fixed; top:0; left:0; right:0; height: var(--nav-h);
+    background: rgba(255,255,255,0.88);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    z-index: 999;
+    display:flex; align-items:center; padding: 0 20px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+  }
+  .nav-brand{ display:flex; align-items:center; gap:9px; text-decoration:none; margin-right:auto; }
+  .nav-brand-badge{ background: var(--gold); color:#191204; font-size:10px; font-weight:800; letter-spacing:.08em; padding:3px 8px; border-radius:5px; line-height:1; }
+  .nav-brand-name{ font-size:13px; font-weight:700; color: var(--text); }
+  .nav-page-badge{ font-size:11px; font-weight:600; color: var(--text-dim); background: var(--panel-alt); border:1px solid var(--border); padding:4px 10px; border-radius:20px; margin-right:10px; }
+  .nav-btn{
+    display:flex; align-items:center; gap:5px; padding:7px 13px; border-radius:8px;
+    font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer; text-decoration:none;
+    border:1px solid var(--border-strong); background: var(--panel-alt); color: var(--text-dim);
+    transition: background 140ms, transform 140ms;
+  }
+  .nav-btn:hover{ background: var(--border-strong); color: var(--text); }
+  .nav-btn:active{ transform: scale(0.97); }
+  @media (max-width:560px){ .nav-brand-name{ display:none; } .nav-page-badge{ display:none; } }
 
-      body {
-        padding-top: calc(var(--nav-h) + 8px);
-      }
+  /* ── LAYOUT ── */
+  .dashboard-shell{ max-width: 1280px; margin: 0 auto; padding: 0 20px 60px; display:flex; flex-direction:column; gap: 22px; }
 
-      .mwg-nav {
-        position: fixed;
-        top: 0; left: 0; right: 0;
-        height: var(--nav-h);
-        background: var(--nav-bg);
-        border-bottom: 1px solid var(--nav-border);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        padding: 0 20px;
-        gap: 0;
-        font-family: 'Be Vietnam Pro', sans-serif;
-      }
+  .panel{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 24px; box-shadow: var(--shadow-sm); }
+  .panel-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom: 18px; }
+  .panel-kicker{ margin:0 0 4px; font-size:12px; font-weight:600; color: var(--text-faint); }
+  .panel-kicker.accent-good{ color: var(--good); }
+  .panel-kicker.accent-alert{ color: var(--bad); }
+  .panel-head h2{ margin:0; font-size: 18px; font-weight:700; color: var(--text); }
+  .panel-tag{ font-size:11px; font-weight:600; color: var(--text-dim); background: var(--panel-alt); border:1px solid var(--border); padding: 5px 11px; border-radius:20px; white-space:nowrap; }
+  .panel-tag.tag-good{ color: var(--good); background: var(--good-soft); border-color: rgba(20,138,74,0.28); }
+  .panel-tag.tag-alert{ color: var(--bad); background: var(--bad-soft); border-color: rgba(209,50,63,0.28); }
 
-      .nav-brand {
-        display: flex;
-        align-items: center;
-        gap: 9px;
-        text-decoration: none;
-        margin-right: auto;
-      }
-      .nav-brand-badge {
-        background: var(--accent);
-        color: #111;
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        padding: 3px 8px;
-        border-radius: 5px;
-        line-height: 1;
-      }
-      .nav-brand-name {
-        font-size: 13px;
-        font-weight: 700;
-        color: rgba(255,255,255,0.85);
-        letter-spacing: 0.02em;
-      }
-      .nav-page-badge {
-        font-size: 10px;
-        font-weight: 600;
-        color: rgba(255,255,255,0.4);
-        background: rgba(255,255,255,0.07);
-        border: 1px solid rgba(255,255,255,0.12);
-        padding: 3px 9px;
-        border-radius: 20px;
-        margin-right: 10px;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
+  /* ── INPUT PANEL ── */
+  .input-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field{ display:flex; flex-direction:column; gap:7px; font-size:12.5px; font-weight:600; color: var(--text-dim); }
+  .field.full-width{ grid-column: 1 / -1; }
+  .field input, .field textarea{
+    font-family: inherit; background: var(--panel-soft); border:1px solid var(--border-strong); border-radius: var(--radius-sm);
+    color: var(--text); padding: 10px 12px; font-size: 13.5px; font-weight:500; resize: vertical;
+  }
+  .field textarea{ line-height:1.5; font-variant-numeric: tabular-nums; }
+  .field input:focus, .field textarea:focus{ outline:none; border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
+  .action-row{ grid-column: 1/-1; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  button{ font-family: inherit; cursor:pointer; border:none; }
+  #parse-button{
+    background: var(--gold); color:#1a1304; font-weight:700; font-size:13.5px; padding: 11px 22px; border-radius: var(--radius-sm);
+    transition: transform 120ms, box-shadow 120ms;
+  }
+  #parse-button:hover{ box-shadow: 0 6px 18px rgba(245,197,24,0.35); }
+  #parse-button:active{ transform: scale(0.98); }
+  .secondary-button{
+    background: var(--panel); color: var(--text); font-weight:700; font-size:13.5px; padding: 10px 20px;
+    border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+  }
+  .secondary-button:hover{ background: var(--panel-alt); }
+  .parser-status{ margin:0; font-size:12px; color: var(--text-faint); }
 
-      .nav-user {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-right: 10px;
-        font-size: 12px;
-        color: rgba(255,255,255,0.5);
-      }
-      .nav-user-dot {
-        width: 7px; height: 7px;
-        border-radius: 50%;
-        background: #4ade80;
-        box-shadow: 0 0 6px rgba(74,222,128,0.6);
-      }
-      .nav-user strong {
-        color: var(--accent);
-        font-weight: 700;
-      }
+  /* ── TARGET EDITOR ── */
+  .total-target-row{ margin-bottom: 14px; max-width: 260px; }
+  .target-editor{ display:grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap:10px; }
+  .target-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; background: var(--panel-soft); border:1px solid var(--border); border-radius: var(--radius-sm); padding:8px 8px 8px 12px; }
+  .target-row span{ font-size:12.5px; color: var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .target-row input{ width: 82px; background: transparent; border:none; border-bottom:1px solid var(--border-strong); color: var(--gold-deep); font-weight:700; font-size:13px; text-align:right; padding:2px 0; font-family:inherit; font-variant-numeric: tabular-nums; }
+  .target-row input:focus{ outline:none; border-color: var(--gold); }
+  .hide-btn{
+    flex:none; width:24px; height:24px; border-radius:7px; border:1px solid var(--border-strong);
+    background: var(--panel); color: var(--text-faint); font-size:13px; line-height:1;
+    display:flex; align-items:center; justify-content:center; transition: background 120ms, color 120ms;
+  }
+  .hide-btn:hover{ background: var(--bad-soft); color: var(--bad); border-color: rgba(209,50,63,0.3); }
+  .target-editor-foot{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+  .ghost-button{ background: var(--panel-alt); color: var(--text-dim); font-size:12px; font-weight:600; padding:8px 14px; border-radius: var(--radius-sm); border:1px solid var(--border); }
+  .ghost-button:hover{ color: var(--text); background: var(--border-strong); }
+  .hidden-strip{ margin-top:16px; padding-top:14px; border-top:1px dashed var(--border-strong); display:none; flex-wrap:wrap; gap:8px; align-items:center; }
+  .hidden-strip.show{ display:flex; }
+  .hidden-strip-label{ font-size:11.5px; font-weight:700; color: var(--text-faint); margin-right:4px; }
+  .hidden-chip{ display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color: var(--text-dim); background: var(--panel-alt); border:1px solid var(--border); padding: 5px 6px 5px 11px; border-radius:20px; }
+  .hidden-chip button{ background: var(--panel); border:1px solid var(--border-strong); color: var(--text-dim); width:18px; height:18px; border-radius:50%; font-size:11px; line-height:1; display:flex; align-items:center; justify-content:center; }
+  .hidden-chip button:hover{ background: var(--good-soft); color: var(--good); }
 
-      .nav-btn {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        padding: 7px 13px;
-        border-radius: 7px;
-        font-size: 11.5px;
-        font-weight: 600;
-        font-family: 'Be Vietnam Pro', sans-serif;
-        cursor: pointer;
-        text-decoration: none;
-        transition: background 140ms, transform 140ms;
-        border: 1px solid transparent;
-        letter-spacing: 0.02em;
-        white-space: nowrap;
-      }
-      .nav-btn:active { transform: scale(0.97); }
+  /* ── HERO ── */
+  .hero-banner{
+    background: linear-gradient(135deg, rgba(245,197,24,0.14), rgba(255,255,255,0.5) 60%), var(--panel);
+    border: 1px solid var(--border-strong); border-radius: var(--radius-lg);
+    padding: 30px 30px 26px; margin-bottom: 22px; position:relative; overflow:hidden; box-shadow: var(--shadow-md);
+  }
+  .hero-kicker{ margin:0 0 6px; font-size:13px; font-weight:700; color: var(--gold-deep); }
+  .hero-banner h1{ margin:0 0 8px; font-size: clamp(24px,3.4vw,34px); font-weight:800; letter-spacing:-0.01em; color: var(--text); }
+  .hero-subtitle{ margin:0; font-size:14px; color: var(--text-dim); }
+  .hero-meta{ margin: 10px 0 0; font-size: 12.5px; color: var(--text-faint); display:flex; gap:18px; flex-wrap:wrap; }
+  .hero-meta b{ color: var(--text-dim); font-weight:700; }
 
-      .btn-home {
-        background: rgba(255,255,255,0.07);
-        border-color: rgba(255,255,255,0.12);
-        color: rgba(255,255,255,0.8);
-        margin-right: 6px;
-      }
-      .btn-home:hover {
-        background: rgba(255,255,255,0.13);
-        color: #fff;
-      }
+  .stat-strip{ display:grid; grid-template-columns: repeat(4,1fr); gap:12px; margin-bottom: 22px; }
+  .stat-chip{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; box-shadow: var(--shadow-sm); }
+  .stat-chip strong{ display:block; font-size: 19px; font-weight:800; font-variant-numeric: tabular-nums; }
+  .stat-chip span{ font-size: 11.5px; color: var(--text-faint); font-weight:600; }
 
-      .btn-logout {
-        background: rgba(239,68,68,0.12);
-        border-color: rgba(239,68,68,0.25);
-        color: #fca5a5;
-      }
-      .btn-logout:hover {
-        background: rgba(239,68,68,0.22);
-        color: #fff;
-      }
+  /* ── KPI GRID ── */
+  .kpi-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 22px; }
+  .kpi-card{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; border-left: 3px solid var(--border-strong); position:relative; box-shadow: var(--shadow-sm); }
+  .kpi-card.tone-good{ border-left-color: var(--good); }
+  .kpi-card.tone-bad{ border-left-color: var(--bad); }
+  .kpi-card.tone-gold{ border-left-color: var(--gold); }
+  .kpi-card.tone-info{ border-left-color: var(--info); }
+  .kpi-label{ font-size: 12.5px; font-weight:600; color: var(--text-dim); margin: 0 0 10px; }
+  .kpi-value{ font-size: 30px; font-weight:800; margin:0 0 8px; font-variant-numeric: tabular-nums; letter-spacing:-0.01em; color: var(--text); }
+  .kpi-value .unit{ font-size:14px; font-weight:600; color: var(--text-faint); margin-left:4px; }
+  .kpi-value.v-good{ color: var(--good); }
+  .kpi-value.v-bad{ color: var(--bad); }
+  .kpi-sub{ font-size: 12px; color: var(--text-faint); line-height:1.5; margin:0; }
+  .kpi-progress{ display:flex; gap:5px; margin: 10px 0 8px; }
+  .kpi-progress-track{ flex:1; height:6px; border-radius:4px; background: var(--panel-alt); overflow:hidden; }
+  .kpi-progress-fill{ height:100%; border-radius:4px; background: var(--gold); }
+  .kpi-progress-fill.alt{ background: var(--info); opacity:0.55; }
+  .kpi-badge{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding: 3px 9px; border-radius:20px; margin-top:2px; }
+  .kpi-badge.good{ background: var(--good-soft); color: var(--good); }
+  .kpi-badge.bad{ background: var(--bad-soft); color: var(--bad); }
 
-      .nav-icon {
-        font-size: 13px;
-        line-height: 1;
-      }
+  /* ── CHARTS ── */
+  .chart-grid{ display:grid; grid-template-columns: 1.35fr 1fr; gap: 18px; margin-bottom: 22px; align-items: stretch; }
+  .bar-list{ display:flex; flex-direction:column; gap: 9px; }
+  .bar-row{ display:grid; grid-template-columns: 150px 1fr 62px; align-items:center; gap:10px; }
+  .bar-row .bar-name{ font-size:12.5px; color: var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar-track{ position:relative; height: 18px; background: var(--panel-alt); border-radius:5px; overflow:hidden; }
+  .bar-fill{ position:absolute; top:0; bottom:0; left:0; border-radius:5px; }
+  .bar-fill.pos{ background: linear-gradient(90deg, rgba(20,138,74,0.55), var(--good)); }
+  .bar-fill.neg{ background: linear-gradient(90deg, rgba(209,50,63,0.55), var(--bad)); }
+  .bar-row .bar-val{ font-size:12.5px; font-weight:700; text-align:right; font-variant-numeric: tabular-nums; }
+  .bar-row .bar-val.pos{ color: var(--good); }
+  .bar-row .bar-val.neg{ color: var(--bad); }
 
-      @media (max-width: 560px) {
-        .nav-brand-name { display: none; }
-        .nav-user { display: none; }
-        .nav-page-badge { display: none; }
-        .nav-btn { padding: 6px 10px; font-size: 11px; }
-      }
-    </style>
-  </head>
-  <body>
+  .donut-layout{ display:flex; flex-direction:column; align-items:center; gap: 14px; }
+  .donut-interactive{ position:relative; width: 220px; height:220px; }
+  .donut-chart{ width:100%; height:100%; }
+  .donut-center{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; }
+  .donut-center p{ margin:0; font-size:11px; color: var(--text-faint); font-weight:600; }
+  .donut-center strong{ display:block; font-size:20px; font-weight:800; color: var(--text); }
+  .donut-center span{ font-size:10.5px; color: var(--text-faint); }
+  .donut-tooltip{ position:absolute; pointer-events:none; background:#1c2130; color:#fff; font-size:11.5px; padding:6px 10px; border-radius:7px; opacity:0; transition:opacity 120ms; white-space:nowrap; z-index:5; }
+  .donut-tooltip.show{ opacity:1; }
+  .legend{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px; width:100%; }
+  .legend-item{ display:flex; align-items:center; gap:7px; font-size:12px; color: var(--text-dim); }
+  .legend-dot{ width:9px; height:9px; border-radius:50%; flex:none; }
+  .legend-item b{ color: var(--text); font-weight:700; margin-left:auto; font-variant-numeric: tabular-nums; }
 
-    <!-- AUTH GUARD -->
-    <script>
-      (function(){
-        const s = localStorage.getItem('mwg_session');
-        if (!s) { window.location.replace('./index.html'); }
-      })();
-    </script>
+  /* ── TABLES ── */
+  .table-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px; }
+  .table-wrap{ overflow-x:auto; }
+  table{ width:100%; border-collapse: collapse; font-size: 12.5px; }
+  thead th{ text-align:left; font-weight:600; color: var(--text-faint); font-size:11px; padding: 8px 10px; border-bottom: 1px solid var(--border-strong); white-space:nowrap; cursor:default; }
+  thead th.sortable{ cursor:pointer; user-select:none; }
+  thead th.sortable:hover{ color: var(--text); }
+  thead th{ position:relative; }
+  .col-hide-btn{
+    display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px;
+    margin-left:6px; border-radius:4px; border:none; background:transparent; color: var(--text-faint);
+    font-size:9px; line-height:1; opacity:0; transition: opacity 120ms, background 120ms, color 120ms; vertical-align:middle;
+  }
+  thead th:hover .col-hide-btn{ opacity:1; }
+  .col-hide-btn:hover{ background: var(--bad-soft); color: var(--bad); }
+  .sort-arrow{ font-size:9px; margin-left:4px; opacity:0.6; }
+  tbody td{ padding: 9px 10px; border-bottom: 1px solid var(--border); color: var(--text-dim); white-space:nowrap; font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody td.name-cell{ color: var(--text); font-weight:600; white-space:normal; max-width:180px; }
+  tbody td.pos{ color: var(--good); font-weight:700; }
+  tbody td.neg{ color: var(--bad); font-weight:700; }
+  tbody tr.total-row td{ color: var(--text); font-weight:800; border-top: 1px solid var(--border-strong); background: var(--panel-soft); }
+  tbody tr:hover td{ background: var(--panel-soft); }
 
-    <!-- NAVBAR -->
-    <nav class="mwg-nav">
-      <a class="nav-brand" href="./main.html">
-        <span class="nav-brand-badge">MWG</span>
-        <span class="nav-brand-name">Business Intelligence</span>
-      </a>
-      <span class="nav-page-badge">Lũy kế</span>
-      <div class="nav-user">
-        <span class="nav-user-dot"></span>
-        <span>Đăng nhập: <strong id="nav-username">—</strong></span>
+  /* ── RESPONSIVE ── */
+  @media (max-width: 980px){
+    .kpi-grid{ grid-template-columns: repeat(2,1fr); }
+    .chart-grid{ grid-template-columns: 1fr; }
+    .table-grid{ grid-template-columns: 1fr; }
+    .stat-strip{ grid-template-columns: repeat(2,1fr); }
+    .input-grid{ grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px){
+    .kpi-grid{ grid-template-columns: 1fr; }
+    .bar-row{ grid-template-columns: 96px 1fr 48px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="mwg-nav">
+  <a class="nav-brand" href="./main.html">
+    <span class="nav-brand-badge">MWG</span>
+    <span class="nav-brand-name">Business Intelligence</span>
+  </a>
+  <span class="nav-page-badge">Lũy kế</span>
+  <a class="nav-btn" href="./main.html"><span>⌂</span> Trang chủ</a>
+</nav>
+
+<main class="dashboard-shell">
+
+  <section class="input-panel panel">
+    <div class="panel-head">
+      <div>
+        <p class="panel-kicker">Nhập dữ liệu thô</p>
+        <h2>Dán báo cáo mỗi ngày để tự động lọc</h2>
       </div>
-      <a class="nav-btn btn-home" href="./main.html">
-        <span class="nav-icon">⌂</span> Trang chủ
-      </a>
-      <button class="nav-btn btn-logout" onclick="navLogout()">
-        <span class="nav-icon">↩</span> Đăng xuất
-      </button>
-    </nav>
+      <span class="panel-tag">Parser nội bộ</span>
+    </div>
+    <div class="input-grid">
+      <label class="field">
+        <span>Ngày báo cáo</span>
+        <input id="report-date" type="date" />
+      </label>
+      <label class="field">
+        <span>Tên siêu thị</span>
+        <input id="store-name" type="text" value="485 - TGD_BDU_TDM - 222 Yersin" placeholder="Nhập tên siêu thị" />
+      </label>
+      <label class="field full-width">
+        <span>Dữ liệu báo cáo thô</span>
+        <textarea id="raw-input" rows="16" placeholder="Dán nguyên khối dữ liệu báo cáo vào đây..."></textarea>
+      </label>
+      <div class="action-row">
+        <button id="parse-button" type="button">Phân tích dữ liệu</button>
+        <button id="export-button" type="button" class="secondary-button">Tạo ảnh</button>
+        <p id="parser-status" class="parser-status">Dữ liệu mẫu đang được nạp sẵn để bạn thử nhanh.</p>
+      </div>
+    </div>
+  </section>
 
-    <!-- ORIGINAL CONTENT -->
-    <main class="dashboard-shell">
-      <section class="input-panel panel">
+  <section class="panel target-editor-panel">
+    <div class="panel-head">
+      <div>
+        <p class="panel-kicker">Chỉnh target ngành hàng</p>
+        <h2>Phân bổ target theo tỉ trọng DT quy đổi</h2>
+      </div>
+      <span class="panel-tag">Target override</span>
+    </div>
+    <div class="total-target-row">
+      <label class="field total-target-field">
+        <span>Target tổng (triệu đồng)</span>
+        <input id="total-target-input" type="number" step="0.1" />
+      </label>
+    </div>
+    <div id="target-editor" class="target-editor"></div>
+    <div class="target-editor-foot">
+      <button id="apply-target-button" type="button" class="secondary-button">Áp dụng target</button>
+      <button id="reset-target-button" type="button" class="ghost-button">Đặt lại theo tỉ trọng</button>
+    </div>
+    <div id="hidden-strip" class="hidden-strip">
+      <span class="hidden-strip-label">Đã ẩn:</span>
+      <div id="hidden-chip-list" style="display:contents;"></div>
+    </div>
+  </section>
+
+  <section id="report-capture" class="report-capture">
+   <div id="report-capture-top">
+    <header class="hero-banner">
+      <p class="hero-kicker">Dashboard doanh thu lũy kế</p>
+      <h1>BÁO CÁO KINH DOANH</h1>
+      <p id="hero-store-name" class="hero-subtitle">Siêu thị: —</p>
+      <p id="hero-meta" class="hero-meta"></p>
+    </header>
+
+    <section class="stat-strip" id="stat-strip"></section>
+
+    <section class="kpi-grid" id="kpi-grid"></section>
+
+    <section class="chart-grid">
+      <article class="panel">
         <div class="panel-head">
           <div>
-            <p class="panel-kicker">Nhập dữ liệu thô</p>
-            <h2>Dán báo cáo mỗi ngày để tự động lọc</h2>
+            <p class="panel-kicker">Tăng / giảm so với TB 3 tháng</p>
+            <h2>Biến động theo ngành hàng</h2>
           </div>
-          <span class="panel-tag">Parser nội bộ</span>
+          <span class="panel-tag">Cùng cửa sổ thời gian</span>
         </div>
+        <div class="bar-list" id="bar-chart"></div>
+      </article>
 
-        <div class="input-grid">
-          <label class="field">
-            <span>Ngày báo cáo</span>
-            <input id="report-date" type="date" />
-          </label>
-
-          <label class="field">
-            <span>Tên siêu thị</span>
-            <input
-              id="store-name"
-              type="text"
-              value="485 - TGD_BDU_TDM - 222 Yersin"
-              placeholder="Nhập tên siêu thị"
-            />
-          </label>
-
-          <label class="field full-width">
-            <span>Dữ liệu báo cáo thô</span>
-            <textarea
-              id="raw-input"
-              rows="14"
-              placeholder="Dán nguyên khối dữ liệu báo cáo vào đây..."
-            ></textarea>
-          </label>
-
-          <div class="action-row">
-            <button id="parse-button" type="button">Phân tích dữ liệu</button>
-            <button id="export-button" type="button" class="secondary-button">Tạo ảnh</button>
-            <p id="parser-status" class="parser-status">
-              Dữ liệu mẫu đang được nạp sẵn để bạn thử nhanh.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel target-editor-panel">
+      <article class="panel">
         <div class="panel-head">
           <div>
-            <p class="panel-kicker">Chỉnh target ngành hàng</p>
-            <h2>Sửa target đã đọc để tính lại dashboard</h2>
+            <p class="panel-kicker">Tỷ trọng DT quy đổi</p>
+            <h2>Cơ cấu nhóm hàng</h2>
           </div>
-          <span class="panel-tag">Target override</span>
+          <span class="panel-tag">Top đóng góp</span>
         </div>
-        <div class="total-target-row">
-          <label class="field total-target-field">
-            <span>Target tổng</span>
-            <input id="total-target-input" type="number" step="0.01" />
-          </label>
+        <div class="donut-layout">
+          <div class="donut-interactive">
+            <svg id="donut-chart" class="donut-chart" viewBox="0 0 220 220" aria-label="Biểu đồ tỷ trọng doanh thu" role="img"></svg>
+            <div id="donut-tooltip" class="donut-tooltip" aria-hidden="true"></div>
+            <div class="donut-center" id="donut-center"></div>
+          </div>
+          <div class="legend" id="donut-legend"></div>
         </div>
-        <div id="target-editor" class="target-editor"></div>
-      </section>
+      </article>
+    </section>
+   </div>
 
-      <section id="report-capture" class="report-capture">
-        <header class="hero-banner">
-          <p class="hero-kicker">Dashboard doanh thu theo ngày</p>
-          <h1>BÁO CÁO KINH DOANH</h1>
-          <p id="hero-store-name" class="hero-subtitle">Siêu thị: 485 - TGD_BDU_TDM - 222 Yersin</p>
-        </header>
+   <div id="report-capture-detail">
+    <section class="panel" style="margin-bottom:22px;">
+      <div class="panel-head">
+        <div>
+          <p class="panel-kicker">Chi tiết toàn bộ ngành hàng</p>
+          <h2>Bảng dữ liệu đầy đủ</h2>
+        </div>
+        <span class="panel-tag" id="full-table-count">— ngành</span>
+      </div>
+      <div class="table-wrap">
+        <table id="full-table">
+          <thead id="full-table-thead"></thead>
+          <tbody id="full-table-body"></tbody>
+        </table>
+      </div>
+      <div id="full-table-hidden-cols" class="hidden-strip">
+        <span class="hidden-strip-label">Cột đã ẩn:</span>
+        <div id="full-table-hidden-cols-list" style="display:contents;"></div>
+      </div>
+    </section>
 
-        <section class="kpi-grid" id="kpi-grid"></section>
+    <section class="table-grid">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker accent-good">Ngành hàng hiệu quả</p>
+            <h2>Tăng trưởng dương so với TB3T</h2>
+          </div>
+          <span class="panel-tag tag-good" id="good-count">— ngành</span>
+        </div>
+        <div class="table-wrap">
+          <table id="good-table-el">
+            <thead id="good-table-thead"></thead>
+            <tbody id="good-table"></tbody>
+          </table>
+        </div>
+        <div id="good-table-hidden-cols" class="hidden-strip">
+          <span class="hidden-strip-label">Cột đã ẩn:</span>
+          <div id="good-table-hidden-cols-list" style="display:contents;"></div>
+        </div>
+      </article>
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker accent-alert">Ngành hàng cần cải thiện</p>
+            <h2>Tăng trưởng âm hoặc chững lại</h2>
+          </div>
+          <span class="panel-tag tag-alert" id="alert-count">— ngành</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Ngành hàng</th><th>DT QĐ</th><th>Target</th><th>% HT</th><th>TB3T</th><th>% TT</th><th>DT dự kiến</th></tr></thead>
+            <tbody id="alert-table"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+   </div>
+  </section>
+</main>
 
-        <section class="chart-grid">
-          <article class="panel panel-wide">
-            <div class="panel-head">
-              <div>
-                <p class="panel-kicker">Tăng/Giảm cùng kỳ</p>
-                <h2>Biến động theo ngành hàng</h2>
-              </div>
-              <span class="panel-tag">So với tháng trước</span>
-            </div>
-            <div class="bar-chart-wrap">
-              <div class="bar-chart-axis" id="bar-chart-axis"></div>
-              <div class="bar-gridlines" aria-hidden="true"></div>
-              <div class="bar-chart" id="bar-chart"></div>
-            </div>
-          </article>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+/* ============================= SAMPLE DATA ============================= */
+const SAMPLE_RAW = `DT quy đổi
+2,008
+triệu đồng · lũy kế tới hết ngày 02/09
+% HT target
+14.6%
+Target trọn kỳ 13,738 · tiến độ 6.7%
+TT vs TB 3 tháng
++99.2%
+TB3T cùng cửa sổ: 1,008
+DT dự kiến
+?
+30,122
+nhịp 2 ngày → 30 ngày
+TLPVTC lũy kế
+26.7%
+282 bill / 1,056 khách · 1/1 ST có máy đếm
+Tỉ trọng trả góp
+46.4%
+DT trả góp 615 / 1,326
+Doanh thu theo cấp
+Tổng hợp
+Ngành hàng
+Nhân viên
+✓
+Tỉ trọng
+✓
+Target
+✓
+Tăng trưởng
+✓
+Dự kiến
+Off / Onl
+✓
+Trả góp
+NGÀNH HÀNG / NHÓM HÀNG
+SỐ LƯỢNG
+DOANH THU QĐ
+% TỈ TRỌNG
+DOANH THU
+TARGET
+% HT TARGET
+TB 3 THÁNG
+% TT
+DT DỰ KIẾN
+DT TRẢ GÓP
+% TRẢ GÓP
+13 - Điện thoại
+44	883	44.0%	750	—	—	490	+80.3%	13,241	441	58.8%
+22 - Laptop
+10	334	16.6%	254	—	—	152	+119.7%	5,007	98	38.7%
+244 - Tablet
+8	140	7.0%	109	—	—	35	+300.3%	2,094	31	28.3%
+16 - Phụ kiện tiện ích
+125	291	14.5%	85	—	—	155	+88.4%	4,367	15	17.6%
+23 - Wearable
+14	95	4.7%	34	—	—	48	+97.6%	1,426	0	0.0%
+1755 - Tủ lạnh, đông, mát
+1	38	1.9%	29	—	—	-0	—	566	29	100.0%
+664 - Sim Online
+23	121	6.0%	22	—	—	52	+135.2%	1,822	0	0.0%
+24 - Software
+6	11	0.6%	11	—	—	5	+125.6%	172	0	0.0%
+1274 - Đồng Hồ Thời Trang
+14	34	1.7%	11	—	—	21	+65.8%	511	0	0.0%
+184 - Phụ kiện trang trí
+50	32	1.6%	9	—	—	23	+38.9%	475	0	0.0%
+164 - VAS
+13	8	0.4%	2	—	—	11	-26.2%	123	0	0.0%
+364 - IT
+1	5	0.2%	2	—	—	3	+45.9%	72	0	0.0%
+1994 - Dịch vụ bảo hành, bảo dưỡng Điện máy xanh
+3	12	0.6%	2	—	—	2	+519.2%	173	0	0.0%
+344 - Thẻ cào điện tử
+12	2	0.1%	2	—	—	4	-58.0%	23	0	0.0%
+484 - Điện gia dụng
+3	2	0.1%	1	—	—	1	+100.2%	36	0	29.7%
+464 - Giao dịch AirTime
+5	1	0.0%	1	—	—	5	-83.6%	12	0	0.0%
+944 - Dịch vụ
+4	0	0.0%	0	—	—	0	-6.4%	1	0	0.0%
+18 - Sim trắng
+23	0	0.0%	0	—	—	0	—	0	0	—
+Tổng (18 dòng)	359	2,008	100.0%	1,326	13,738	14.6%	1,008	+99.2%	30,122	615	46.4%
+Đơn vị: triệu đồng`;
 
-          <article class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="panel-kicker">Tỷ trọng doanh thu</p>
-                <h2>Cơ cấu nhóm hàng</h2>
-              </div>
-              <span class="panel-tag">Top đóng góp</span>
-            </div>
-            <div class="donut-layout">
-              <div class="donut-interactive">
-                <svg
-                  id="donut-chart"
-                  class="donut-chart"
-                  viewBox="0 0 260 260"
-                  aria-label="Biểu đồ tỷ trọng doanh thu"
-                  role="img"
-                ></svg>
-                <div id="donut-tooltip" class="donut-tooltip" aria-hidden="true"></div>
-              </div>
-              <div class="donut-center">
-                <p>Tổng doanh thu</p>
-                <strong>13.049,7</strong>
-                <span>Triệu VNĐ</span>
-              </div>
-            </div>
-            <div class="legend" id="donut-legend"></div>
-          </article>
-        </section>
+/* ============================= STATE ============================= */
+let state = {
+  categories: [],
+  total: null,
+  top: {},
+  targetOverrides: {},
+  hidden: new Set(),
+  totalTarget: 0,
+  sort: { key: null, dir: 1 },
+  fullHiddenCols: new Set(),
+  goodHiddenCols: new Set(),
+  kpiPalette: null
+};
 
-        <section class="table-grid">
-          <article class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="panel-kicker accent-good">Ngành hàng hiệu quả</p>
-                <h2>Top tăng trưởng tích cực</h2>
-              </div>
-              <span class="panel-tag tag-good">7 ngành</span>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Ngành hàng</th>
-                    <th>MT ngày</th>
-                    <th>Target</th>
-                    <th>Lũy kế</th>
-                    <th>Còn lại</th>
-                    <th>% HT</th>
-                    <th>% HT dự kiến</th>
-                  </tr>
-                </thead>
-                <tbody id="good-table"></tbody>
-              </table>
-            </div>
-          </article>
+const FULL_TABLE_COLUMNS = [
+  { key: 'idx', label: '#' },
+  { key: 'name', label: 'Ngành hàng', sortable: true },
+  { key: 'qty', label: 'SL', sortable: true },
+  { key: 'revenueQD', label: 'DT QĐ', sortable: true },
+  { key: 'sharePct', label: '% Tỉ trọng', sortable: true },
+  { key: 'revenue', label: 'Doanh thu', sortable: true },
+  { key: 'target', label: 'Target', sortable: true },
+  { key: 'htPct', label: '% HT target', sortable: true },
+  { key: 'avg3m', label: 'TB 3 tháng', sortable: true },
+  { key: 'growthPct', label: '% TT', sortable: true },
+  { key: 'projected', label: 'DT dự kiến', sortable: true },
+  { key: 'installRev', label: 'DT trả góp', sortable: true },
+  { key: 'installPct', label: '% trả góp', sortable: true }
+];
 
-          <article class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="panel-kicker accent-alert">Ngành hàng cần cải thiện</p>
-                <h2>Nhóm cần tập trung đẩy</h2>
-              </div>
-              <span class="panel-tag tag-alert">5 ngành</span>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Ngành hàng</th>
-                    <th>MT ngày</th>
-                    <th>Target</th>
-                    <th>Lũy kế</th>
-                    <th>Còn lại</th>
-                    <th>% HT</th>
-                    <th>% HT dự kiến</th>
-                  </tr>
-                </thead>
-                <tbody id="alert-table"></tbody>
-              </table>
-            </div>
-          </article>
-        </section>
-      </section>
-    </main>
+const GOOD_TABLE_COLUMNS = [
+  { key: 'idx', label: '#' },
+  { key: 'name', label: 'Ngành hàng' },
+  { key: 'revenueQD', label: 'DT QĐ' },
+  { key: 'target', label: 'Target' },
+  { key: 'htPct', label: '% HT' },
+  { key: 'avg3m', label: 'TB3T' },
+  { key: 'growthPct', label: '% TT' },
+  { key: 'projected', label: 'DT dự kiến' }
+];
 
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-    <script src="script.js"></script>
+const NON_HIDEABLE_COLS = ['idx', 'name'];
 
-    <script>
-      // Set username in navbar
-      (function(){
-        try {
-          const s = JSON.parse(localStorage.getItem('mwg_session') || '{}');
-          document.getElementById('nav-username').textContent = s.displayName || s.username || '—';
-        } catch(e){}
-      })();
+/* Bộ màu hài hoà cho các thẻ KPI — mỗi lần phân tích dữ liệu sẽ random 1 bộ */
+const KPI_PALETTES = [
+  [ // Sunrise Pastel
+    { bg:'#FFF6DC', accent:'#E8B93A', text:'#8a6100' },
+    { bg:'#E7F1FF', accent:'#4C86F0', text:'#1c4ed8' },
+    { bg:'#E3F8EC', accent:'#2FAE6B', text:'#0d7a45' },
+    { bg:'#FDEAEF', accent:'#E4577B', text:'#b1355a' },
+    { bg:'#F1EBFC', accent:'#9163DA', text:'#6a3fa5' },
+    { bg:'#FFEEE1', accent:'#EF8C4C', text:'#ac5518' }
+  ],
+  [ // Ocean Cool
+    { bg:'#E3F7F6', accent:'#2CB3AB', text:'#0b6f6a' },
+    { bg:'#E9EDFE', accent:'#5A6AE0', text:'#3140b8' },
+    { bg:'#E7F8EE', accent:'#33B37B', text:'#147a4f' },
+    { bg:'#EAF1FB', accent:'#4E8ACB', text:'#2a5b96' },
+    { bg:'#F4EAF7', accent:'#A957B8', text:'#7a3486' },
+    { bg:'#FBF3E3', accent:'#D6A93D', text:'#8a6a1c' }
+  ],
+  [ // Autumn Warmth
+    { bg:'#FBF1D8', accent:'#D9AC33', text:'#7a5d0a' },
+    { bg:'#FBE7DD', accent:'#E1703C', text:'#a1451f' },
+    { bg:'#F0F4DF', accent:'#8FA83A', text:'#566b12' },
+    { bg:'#F8E6EA', accent:'#C24866', text:'#8a2d43' },
+    { bg:'#F7E9E0', accent:'#C97840', text:'#8a4a24' },
+    { bg:'#FDF3D6', accent:'#E0B93A', text:'#8a6a00' }
+  ],
+  [ // Berry Garden
+    { bg:'#FBE7EE', accent:'#D95084', text:'#9c2d5b' },
+    { bg:'#F0E7FA', accent:'#9A5AD1', text:'#6a2f9e' },
+    { bg:'#E4F5F4', accent:'#35B0A6', text:'#157b73' },
+    { bg:'#E7ECFB', accent:'#5468C9', text:'#2d3f9c' },
+    { bg:'#FDEBDD', accent:'#E4903F', text:'#a1560f' },
+    { bg:'#E9F5E3', accent:'#6CB13E', text:'#3d7a1e' }
+  ]
+];
+function pickKpiPalette(){
+  const base = KPI_PALETTES[Math.floor(Math.random()*KPI_PALETTES.length)];
+  const shuffled = [...base];
+  for(let i = shuffled.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
-      function navLogout() {
-        localStorage.removeItem('mwg_session');
-        window.location.href = './index.html';
+/* ============================= HELPERS ============================= */
+function num(str){
+  if(str === null || str === undefined) return null;
+  let s = String(str).trim();
+  if(s === '' || s === '—' || s === '-') return null;
+  s = s.replace(/\+/g,'').replace(/%/g,'').replace(/,/g,'');
+  const v = parseFloat(s);
+  return isNaN(v) ? null : v;
+}
+function fmt(v, digits){
+  if(v === null || v === undefined || isNaN(v)) return '—';
+  return v.toLocaleString('en-US', { minimumFractionDigits: digits||0, maximumFractionDigits: digits||0 });
+}
+function fmtPct(v, digits){
+  if(v === null || v === undefined || isNaN(v)) return '—';
+  const d = digits === undefined ? 1 : digits;
+  const sign = v > 0 ? '+' : '';
+  return sign + v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}) + '%';
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function displayName(name){
+  return String(name).replace(/^\s*\d+\s*-\s*/, '').trim();
+}
+function cellFor(row, key, idx){
+  switch(key){
+    case 'idx': return { html: String(idx+1), cls: '' };
+    case 'name': return { html: escapeHtml(displayName(row.name)), cls: 'name-cell' };
+    case 'qty': return { html: fmt(row.qty), cls: '' };
+    case 'revenueQD': return { html: fmt(row.revenueQD), cls: '' };
+    case 'sharePct': return { html: fmtPct(row.sharePct), cls: '' };
+    case 'revenue': return { html: fmt(row.revenue), cls: '' };
+    case 'target': return { html: fmt(row.target,1), cls: '' };
+    case 'htPct': return { html: fmtPct(row.htPct), cls: '' };
+    case 'avg3m': return { html: fmt(row.avg3m), cls: '' };
+    case 'growthPct': return { html: fmtPct(row.growthPct), cls: (row.growthPct||0)>=0 ? 'pos':'neg' };
+    case 'projected': return { html: fmt(row.projected), cls: '' };
+    case 'installRev': return { html: fmt(row.installRev), cls: '' };
+    case 'installPct': return { html: fmtPct(row.installPct), cls: '' };
+    default: return { html: '—', cls: '' };
+  }
+}
+function renderThead(theadId, columns, hiddenSet, sortState){
+  const visibleCols = columns.filter(c => !hiddenSet.has(c.key));
+  const html = '<tr>' + visibleCols.map(c => {
+    const cls = c.sortable ? 'sortable' : '';
+    const arrow = (sortState && sortState.key === c.key) ? `<span class="sort-arrow">${sortState.dir===1?'▲':'▼'}</span>` : '';
+    const hideBtn = NON_HIDEABLE_COLS.includes(c.key) ? '' : `<button type="button" class="col-hide-btn" data-colhide="${c.key}" title="Ẩn cột này">✕</button>`;
+    return `<th class="${cls}" data-key="${c.key}">${c.label}${arrow}${hideBtn}</th>`;
+  }).join('') + '</tr>';
+  document.getElementById(theadId).innerHTML = html;
+}
+function renderColHiddenStrip(stripListId, columns, hiddenSet, onUnhide){
+  const listEl = document.getElementById(stripListId);
+  const stripEl = listEl.closest('.hidden-strip');
+  const keys = Array.from(hiddenSet);
+  if(keys.length === 0){
+    stripEl.classList.remove('show');
+    listEl.innerHTML = '';
+    return;
+  }
+  stripEl.classList.add('show');
+  listEl.innerHTML = keys.map(k => {
+    const col = columns.find(c => c.key === k);
+    return `<span class="hidden-chip">${escapeHtml(col ? col.label : k)}<button type="button" data-colshow="${k}" title="Hiện lại cột">＋</button></span>`;
+  }).join('');
+  listEl.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => { hiddenSet.delete(btn.dataset.colshow); onUnhide(); });
+  });
+}
+function extractAfterLabel(lines, label, count){
+  const idx = lines.findIndex(l => l.trim() === label);
+  if(idx === -1) return [];
+  const out = [];
+  let i = idx + 1;
+  while(out.length < count && i < lines.length){
+    const l = lines[i].trim();
+    if(l !== '' && l !== '?') out.push(l);
+    i++;
+  }
+  return out;
+}
+function matchNum(str, regex){
+  if(!str) return null;
+  const m = str.match(regex);
+  return m ? num(m[1]) : null;
+}
+
+/* ============================= PARSER ============================= */
+function parseRaw(raw){
+  const lines = raw.split('\n');
+
+  const top = {};
+  const dtqd = extractAfterLabel(lines, 'DT quy đổi', 2);
+  top.dtQuyDoi = num(dtqd[0]);
+  top.dtQuyDoiDate = dtqd[1] ? (dtqd[1].match(/ngày\s*([\d\/]+)/) || [])[1] : null;
+
+  const ht = extractAfterLabel(lines, '% HT target', 2);
+  top.htTargetPct = num(ht[0]);
+  top.targetTronKy = matchNum(ht[1], /Target trọn kỳ\s*([\d.,]+)/);
+  top.tienDoPct = matchNum(ht[1], /tiến độ\s*([\d.,]+)\s*%/);
+
+  const tt = extractAfterLabel(lines, 'TT vs TB 3 tháng', 2);
+  top.growthVsAvgPct = num(tt[0]);
+  top.avg3mWindow = matchNum(tt[1], /:\s*([\d.,]+)/);
+
+  const dk = extractAfterLabel(lines, 'DT dự kiến', 2);
+  top.projected = num(dk[0]);
+  top.nhipNgay = matchNum(dk[1], /nhịp\s*(\d+)\s*ngày/);
+
+  const tl = extractAfterLabel(lines, 'TLPVTC lũy kế', 2);
+  top.tlpvtcPct = num(tl[0]);
+  const tlMatch = (tl[1]||'').match(/([\d.,]+)\s*bill\s*\/\s*([\d.,]+)\s*khách/);
+  top.bill = tlMatch ? num(tlMatch[1]) : null;
+  top.khach = tlMatch ? num(tlMatch[2]) : null;
+  const stMatch = (tl[1]||'').match(/(\d+)\s*\/\s*(\d+)\s*ST/);
+  top.stCoMayDem = stMatch ? stMatch[1] : null;
+  top.stTong = stMatch ? stMatch[2] : null;
+
+  const tg = extractAfterLabel(lines, 'Tỉ trọng trả góp', 2);
+  top.installPct = num(tg[0]);
+  const tgMatch = (tg[1]||'').match(/([\d.,]+)\s*\/\s*([\d.,]+)/);
+  top.installRevTotal = tgMatch ? num(tgMatch[1]) : null;
+  top.revenueTotal = tgMatch ? num(tgMatch[2]) : null;
+
+  // table
+  let headerEndIdx = lines.findIndex(l => l.trim() === '% TRẢ GÓP');
+  let startIdx = headerEndIdx !== -1 ? headerEndIdx + 1 : -1;
+  const categories = [];
+  let total = null;
+
+  if(startIdx !== -1){
+    let pendingName = null;
+    for(let i = startIdx; i < lines.length; i++){
+      const rawLine = lines[i];
+      if(rawLine === undefined) continue;
+      const line = rawLine.trim();
+      if(line === '') continue;
+      if(/^Đơn vị/i.test(line)) break;
+
+      let parts = rawLine.split('\t').map(s=>s.trim()).filter(s=>s!=='');
+      if(parts.length < 2){
+        parts = line.split(/\s{2,}/).map(s=>s.trim()).filter(s=>s!=='');
       }
-    </script>
-  </body>
+
+      if(parts.length === 12){
+        const name = parts[0];
+        const row = buildRow(name, parts.slice(1));
+        if(/^t[ổo]ng/i.test(name)) total = row; else categories.push(row);
+        pendingName = null;
+      } else if(parts.length === 11 && pendingName){
+        categories.push(buildRow(pendingName, parts));
+        pendingName = null;
+      } else if(parts.length === 1){
+        pendingName = parts[0];
+      }
+    }
+  }
+
+  return { top, categories, total };
+}
+
+function buildRow(name, values){
+  return {
+    name: name,
+    qty: num(values[0]),
+    revenueQD: num(values[1]),
+    sharePct: num(values[2]),
+    revenue: num(values[3]),
+    target: num(values[4]),
+    htPct: num(values[5]),
+    avg3m: num(values[6]),
+    growthPct: num(values[7]),
+    projected: num(values[8]),
+    installRev: num(values[9]),
+    installPct: num(values[10])
+  };
+}
+
+/* ============================= DERIVED DATA ============================= */
+function getVisibleCategories(){
+  return state.categories.filter(c => !state.hidden.has(c.name));
+}
+function computeEffectiveTotal(cats){
+  const sum = (key) => cats.reduce((a,c) => a + (c[key]||0), 0);
+  const revenueQD = sum('revenueQD');
+  const revenue = sum('revenue');
+  const avg3m = sum('avg3m');
+  const qty = sum('qty');
+  const projected = sum('projected');
+  const installRev = sum('installRev');
+  return {
+    name: 'Tổng (' + cats.length + ' dòng)',
+    qty, revenueQD, revenue,
+    sharePct: 100,
+    target: state.totalTarget,
+    htPct: state.totalTarget > 0 ? (revenueQD/state.totalTarget*100) : null,
+    avg3m,
+    growthPct: avg3m > 0 ? ((revenueQD-avg3m)/avg3m*100) : null,
+    projected,
+    installRev,
+    installPct: revenue > 0 ? (installRev/revenue*100) : null
+  };
+}
+
+/* ============================= TARGET LOGIC ============================= */
+function applyTargets(totalTarget){
+  state.totalTarget = totalTarget;
+  const visible = getVisibleCategories();
+  const sumQD = visible.reduce((a,c) => a + (c.revenueQD||0), 0);
+  visible.forEach(c => {
+    const override = state.targetOverrides[c.name];
+    let target;
+    if(override !== undefined && override !== null && override !== ''){
+      target = Number(override);
+    } else if(sumQD > 0){
+      target = totalTarget * (c.revenueQD||0) / sumQD;
+    } else {
+      target = totalTarget / visible.length;
+    }
+    c.target = target;
+    c.htPct = target > 0 ? (c.revenueQD/target*100) : null;
+  });
+}
+
+/* ============================= RENDER ============================= */
+function renderHero(){
+  const store = document.getElementById('store-name').value.trim() || '—';
+  const date = document.getElementById('report-date').value;
+  document.getElementById('hero-store-name').textContent = 'Siêu thị: ' + store;
+  const bits = [];
+  if(state.top.dtQuyDoiDate) bits.push('<b>Lũy kế tới ngày</b> ' + state.top.dtQuyDoiDate);
+  if(date) bits.push('<b>Ngày nhập</b> ' + date);
+  const visibleCount = getVisibleCategories().length;
+  bits.push('<b>' + visibleCount + '</b> ngành hàng hiển thị' + (state.hidden.size ? ' · <b>' + state.hidden.size + '</b> đang ẩn' : ''));
+  document.getElementById('hero-meta').innerHTML = bits.join('<span style="opacity:.4"> · </span>');
+}
+
+function renderStatStrip(){
+  const t = state.total || {};
+  const top = state.top;
+  const chips = [
+    { label: 'Số ngành hàng (gốc)', value: fmt(state.categories.length) },
+    { label: 'Tổng số lượng', value: fmt(t.qty) },
+    { label: 'Doanh thu thực (tr.đ)', value: fmt(t.revenue) },
+    { label: 'DT quy đổi (tr.đ)', value: fmt(t.revenueQD ?? top.dtQuyDoi) }
+  ];
+  document.getElementById('stat-strip').innerHTML = chips.map(c =>
+    `<div class="stat-chip"><strong>${c.value}</strong><span>${c.label}</span></div>`
+  ).join('');
+}
+
+function renderKPI(){
+  const top = state.top;
+  const t = state.total || {};
+  const grandRevenueQD = t.revenueQD ?? top.dtQuyDoi;
+  const liveHtTargetPct = state.totalTarget > 0 ? (grandRevenueQD/state.totalTarget*100) : null;
+  const aheadOfPace = (liveHtTargetPct !== null && top.tienDoPct !== null) ? (liveHtTargetPct - top.tienDoPct) : null;
+  const projectedVsTarget = (top.projected && state.totalTarget > 0) ? (top.projected / state.totalTarget * 100) : null;
+
+  const cards = [];
+
+  cards.push({
+    tone: 'gold', label: 'DT quy đổi', value: fmt(top.dtQuyDoi) + '<span class="unit">tr.đ</span>',
+    sub: 'Lũy kế tới hết ngày ' + (top.dtQuyDoiDate || '—')
+  });
+
+  cards.push({
+    tone: 'info', label: '% HT target', value: fmtPct(liveHtTargetPct),
+    sub: `Target tổng hiện tại ${fmt(state.totalTarget,1)} tr.đ · tiến độ thời gian ${fmtPct(top.tienDoPct)}`,
+    progress: [
+      { pct: Math.min(liveHtTargetPct||0,100) },
+      { pct: Math.min(top.tienDoPct||0,100) }
+    ],
+    badge: aheadOfPace !== null ? { text: (aheadOfPace>=0?'Vượt tiến độ +':'Chậm tiến độ ') + fmt(Math.abs(aheadOfPace),1) + 'đpt', good: aheadOfPace>=0 } : null
+  });
+
+  cards.push({
+    tone: (top.growthVsAvgPct||0) >= 0 ? 'good':'bad',
+    label: 'TT vs TB 3 tháng', value: fmtPct(top.growthVsAvgPct), valueClass: (top.growthVsAvgPct||0)>=0?'v-good':'v-bad',
+    sub: 'TB 3 tháng cùng cửa sổ: ' + fmt(top.avg3mWindow) + ' tr.đ'
+  });
+
+  cards.push({
+    tone: 'gold', label: 'DT dự kiến (30 ngày)', value: fmt(top.projected) + '<span class="unit">tr.đ</span>',
+    sub: 'Ngoại suy từ nhịp ' + (top.nhipNgay||'—') + ' ngày đầu kỳ',
+    badge: projectedVsTarget !== null ? { text: 'Dự kiến đạt ' + fmt(projectedVsTarget,0) + '% target', good: projectedVsTarget>=100 } : null
+  });
+
+  cards.push({
+    tone: 'info', label: 'TLPVTC lũy kế', value: fmtPct(top.tlpvtcPct),
+    sub: `${fmt(top.bill)} bill / ${fmt(top.khach)} khách · ${top.stCoMayDem||'—'}/${top.stTong||'—'} ST có máy đếm`
+  });
+
+  cards.push({
+    tone: 'gold', label: 'Tỉ trọng trả góp', value: fmtPct(top.installPct),
+    sub: `DT trả góp ${fmt(top.installRevTotal)} / ${fmt(top.revenueTotal)} tr.đ (trên doanh thu thực)`
+  });
+
+  document.getElementById('kpi-grid').innerHTML = cards.map((c,i) => {
+    const p = state.kpiPalette ? state.kpiPalette[i % state.kpiPalette.length] : null;
+    const cardStyle = p ? `background:${p.bg}; border-left-color:${p.accent};` : '';
+    // Thẻ tăng trưởng (TT vs TB3T) giữ màu xanh/đỏ theo ý nghĩa thực tế, không dùng màu random
+    const valueStyle = (p && !c.valueClass) ? `color:${p.text};` : '';
+    return `
+    <div class="kpi-card" style="${cardStyle}">
+      <p class="kpi-label">${c.label}</p>
+      <p class="kpi-value ${c.valueClass||''}" style="${valueStyle}">${c.value}</p>
+      ${c.progress ? `<div class="kpi-progress">
+        <div class="kpi-progress-track"><div class="kpi-progress-fill" style="width:${c.progress[0].pct}%;${p?`background:${p.accent};`:''}"></div></div>
+        <div class="kpi-progress-track"><div class="kpi-progress-fill alt" style="width:${c.progress[1].pct}%"></div></div>
+      </div>` : ''}
+      <p class="kpi-sub">${c.sub}</p>
+      ${c.badge ? `<span class="kpi-badge ${c.badge.good?'good':'bad'}">${c.badge.text}</span>` : ''}
+    </div>
+  `;
+  }).join('');
+}
+
+function renderBarChart(){
+  const cats = [...getVisibleCategories()].sort((a,b) => (b.growthPct??-999) - (a.growthPct??-999));
+  const maxAbs = Math.max(1, ...cats.map(c => Math.abs(c.growthPct||0)));
+  document.getElementById('bar-chart').innerHTML = cats.map(c => {
+    const g = c.growthPct;
+    const pos = (g||0) >= 0;
+    const width = g === null ? 0 : Math.max(2, Math.abs(g)/maxAbs*100);
+    return `<div class="bar-row">
+      <span class="bar-name" title="${escapeHtml(displayName(c.name))}">${escapeHtml(displayName(c.name))}</span>
+      <div class="bar-track"><div class="bar-fill ${pos?'pos':'neg'}" style="width:${width}%"></div></div>
+      <span class="bar-val ${pos?'pos':'neg'}">${fmtPct(g)}</span>
+    </div>`;
+  }).join('');
+}
+
+const DONUT_COLORS = ['#f5c518','#2f6fed','#148a4a','#a855f7','#f0803c','#0ea5b7','#94a3b8'];
+function renderDonut(){
+  // Tổng doanh thu luôn tính trên TOÀN BỘ ngành hàng (kể cả đang ẩn) — ngành hàng ẩn
+  // được gộp vào lát "Khác" thay vì bị loại khỏi tổng, để tổng DT quy đổi không đổi khi ẩn/hiện.
+  const all = state.categories;
+  const hiddenSet = state.hidden;
+  const visibleSorted = all.filter(c => !hiddenSet.has(c.name)).sort((a,b) => (b.revenueQD||0)-(a.revenueQD||0));
+  const top6 = visibleSorted.slice(0,6);
+  const restVisible = visibleSorted.slice(6);
+  const hiddenCats = all.filter(c => hiddenSet.has(c.name));
+  const restCats = restVisible.concat(hiddenCats);
+  const restSum = restCats.reduce((a,c) => a + (c.revenueQD||0), 0);
+  const slices = top6.map(c => ({ name: displayName(c.name), value: c.revenueQD||0 }));
+  if(restSum > 0) slices.push({ name: 'Khác (' + restCats.length + ' ngành)', value: restSum });
+
+  const totalQD = slices.reduce((a,s) => a+s.value, 0) || 1;
+  const r = 84, cx = 110, cy = 110, circumference = 2*Math.PI*r;
+  let offset = 0;
+  const svg = document.getElementById('donut-chart');
+  const tooltip = document.getElementById('donut-tooltip');
+  let svgParts = [`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(15,23,42,0.07)" stroke-width="28"/>`];
+
+  slices.forEach((s, i) => {
+    const frac = s.value/totalQD;
+    const len = frac*circumference;
+    const color = DONUT_COLORS[i % DONUT_COLORS.length];
+    const dashoffset = -offset;
+    svgParts.push(`<circle data-name="${escapeHtml(s.name)}" data-val="${s.value}" data-pct="${(frac*100).toFixed(1)}" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="28" stroke-dasharray="${len} ${circumference-len}" stroke-dashoffset="${dashoffset}" transform="rotate(-90 ${cx} ${cy})" style="cursor:pointer; transition: stroke-width 120ms;"/>`);
+    offset += len;
+  });
+  svg.innerHTML = svgParts.join('');
+
+  svg.querySelectorAll('circle[data-name]').forEach(el => {
+    el.addEventListener('mousemove', (e) => {
+      const rect = svg.parentElement.getBoundingClientRect();
+      tooltip.innerHTML = `<b>${el.dataset.name}</b><br>${Number(el.dataset.val).toLocaleString('en-US')} tr.đ · ${el.dataset.pct}%`;
+      tooltip.style.left = (e.clientX - rect.left + 12) + 'px';
+      tooltip.style.top = (e.clientY - rect.top + 12) + 'px';
+      tooltip.classList.add('show');
+      el.setAttribute('stroke-width','32');
+    });
+    el.addEventListener('mouseleave', () => { tooltip.classList.remove('show'); el.setAttribute('stroke-width','28'); });
+  });
+
+  document.getElementById('donut-center').innerHTML = `<p>Tổng DT quy đổi</p><strong>${fmt(totalQD)}</strong><span>Triệu VNĐ</span>`;
+  document.getElementById('donut-legend').innerHTML = slices.map((s,i) => `
+    <div class="legend-item">
+      <span class="legend-dot" style="background:${DONUT_COLORS[i % DONUT_COLORS.length]}"></span>
+      <span title="${escapeHtml(s.name)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(s.name)}</span>
+      <b>${(s.value/totalQD*100).toFixed(1)}%</b>
+    </div>`).join('');
+}
+
+function renderFullTable(){
+  const visible = getVisibleCategories();
+  document.getElementById('full-table-count').textContent = visible.length + ' ngành';
+
+  const cols = FULL_TABLE_COLUMNS.filter(c => !state.fullHiddenCols.has(c.key));
+  renderThead('full-table-thead', FULL_TABLE_COLUMNS, state.fullHiddenCols, state.sort);
+
+  let rows = [...visible];
+  if(state.sort.key){
+    const k = state.sort.key, dir = state.sort.dir;
+    rows.sort((a,b) => {
+      let av = a[k], bv = b[k];
+      if(k === 'name') return dir*displayName(av).localeCompare(displayName(bv));
+      av = av===null?-Infinity:av; bv = bv===null?-Infinity:bv;
+      return dir*(av-bv);
+    });
+  }
+  const body = rows.map((c,i) => '<tr>' + cols.map(col => {
+    const cell = cellFor(c, col.key, i);
+    return `<td class="${cell.cls}">${cell.html}</td>`;
+  }).join('') + '</tr>').join('');
+
+  const t = computeEffectiveTotal(visible);
+  const totalRow = '<tr class="total-row">' + cols.map(col => {
+    if(col.key === 'idx') return '<td></td>';
+    const cell = cellFor(t, col.key, -1);
+    return `<td class="${cell.cls}">${cell.html}</td>`;
+  }).join('') + '</tr>';
+
+  document.getElementById('full-table-body').innerHTML = body + totalRow;
+  renderColHiddenStrip('full-table-hidden-cols-list', FULL_TABLE_COLUMNS, state.fullHiddenCols, () => renderFullTable());
+}
+
+function renderGoodAlertTables(){
+  const visible = getVisibleCategories();
+  const good = visible.filter(c => c.growthPct !== null && c.growthPct >= 0).sort((a,b) => (b.growthPct||0)-(a.growthPct||0));
+  const alert = visible.filter(c => c.growthPct === null || c.growthPct < 0).sort((a,b) => (a.growthPct??-999)-(b.growthPct??-999));
+
+  document.getElementById('good-count').textContent = good.length + ' ngành';
+  document.getElementById('alert-count').textContent = alert.length + ' ngành';
+
+  // Good table: dynamic, hideable columns
+  const goodCols = GOOD_TABLE_COLUMNS.filter(c => !state.goodHiddenCols.has(c.key));
+  renderThead('good-table-thead', GOOD_TABLE_COLUMNS, state.goodHiddenCols, null);
+  const goodBody = good.map((c,i) => '<tr>' + goodCols.map(col => {
+    const cell = cellFor(c, col.key, i);
+    return `<td class="${cell.cls}">${cell.html}</td>`;
+  }).join('') + '</tr>').join('');
+  document.getElementById('good-table').innerHTML = goodBody || `<tr><td colspan="${goodCols.length}" style="text-align:center;color:var(--text-faint);padding:18px 0;">Không có dữ liệu</td></tr>`;
+  renderColHiddenStrip('good-table-hidden-cols-list', GOOD_TABLE_COLUMNS, state.goodHiddenCols, () => renderGoodAlertTables());
+
+  // Alert table: static columns (unchanged)
+  const rowTpl = (c,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td class="name-cell">${escapeHtml(displayName(c.name))}</td>
+      <td>${fmt(c.revenueQD)}</td>
+      <td>${fmt(c.target,1)}</td>
+      <td>${fmtPct(c.htPct)}</td>
+      <td>${fmt(c.avg3m)}</td>
+      <td class="${(c.growthPct||0)>=0?'pos':'neg'}">${fmtPct(c.growthPct)}</td>
+      <td>${fmt(c.projected)}</td>
+    </tr>`;
+  document.getElementById('alert-table').innerHTML = alert.map(rowTpl).join('') || `<tr><td colspan="8" style="text-align:center;color:var(--text-faint);padding:18px 0;">Không có dữ liệu</td></tr>`;
+}
+
+function renderTargetEditor(){
+  const totalTargetInput = document.getElementById('total-target-input');
+  if(!totalTargetInput.dataset.touched){
+    totalTargetInput.value = state.top.targetTronKy ?? (state.total ? state.total.target : '') ?? '';
+  }
+  const visible = getVisibleCategories();
+  document.getElementById('target-editor').innerHTML = visible.map(c => `
+    <div class="target-row">
+      <span title="${escapeHtml(displayName(c.name))}">${escapeHtml(displayName(c.name))}</span>
+      <input type="number" step="0.1" data-name="${escapeHtml(c.name)}" value="${c.target!==null && c.target!==undefined ? c.target.toFixed(1) : ''}" />
+      <button type="button" class="hide-btn" data-hide="${escapeHtml(c.name)}" title="Ẩn ngành hàng này">✕</button>
+    </div>`).join('');
+
+  document.getElementById('target-editor').querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('change', () => {
+      state.targetOverrides[inp.dataset.name] = inp.value === '' ? null : Number(inp.value);
+      applyTargets(state.totalTarget);
+      renderAll(false);
+    });
+  });
+  document.getElementById('target-editor').querySelectorAll('.hide-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.hidden.add(btn.dataset.hide);
+      applyTargets(state.totalTarget);
+      renderAll();
+    });
+  });
+
+  renderHiddenStrip();
+}
+
+function renderHiddenStrip(){
+  const strip = document.getElementById('hidden-strip');
+  const list = document.getElementById('hidden-chip-list');
+  const names = Array.from(state.hidden);
+  if(names.length === 0){
+    strip.classList.remove('show');
+    list.innerHTML = '';
+    return;
+  }
+  strip.classList.add('show');
+  list.innerHTML = names.map(n => `
+    <span class="hidden-chip">${escapeHtml(displayName(n))}<button type="button" data-show="${escapeHtml(n)}" title="Hiện lại">＋</button></span>
+  `).join('');
+  list.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.hidden.delete(btn.dataset.show);
+      applyTargets(state.totalTarget);
+      renderAll();
+    });
+  });
+}
+
+function renderAll(rebuildEditor){
+  renderHero();
+  renderStatStrip();
+  renderKPI();
+  renderBarChart();
+  renderDonut();
+  renderFullTable();
+  renderGoodAlertTables();
+  if(rebuildEditor !== false) renderTargetEditor();
+}
+
+/* ============================= EVENTS ============================= */
+document.getElementById('parse-button').addEventListener('click', () => {
+  const raw = document.getElementById('raw-input').value;
+  const status = document.getElementById('parser-status');
+  try{
+    const parsed = parseRaw(raw);
+    if(!parsed.categories.length){
+      status.textContent = 'Không tìm thấy dòng ngành hàng nào — kiểm tra lại định dạng dữ liệu dán vào.';
+      return;
+    }
+    state.top = parsed.top;
+    state.categories = parsed.categories;
+    state.total = parsed.total;
+    state.targetOverrides = {};
+    state.hidden = new Set();
+    state.fullHiddenCols = new Set();
+    state.goodHiddenCols = new Set();
+    state.sort = { key: null, dir: 1 };
+    state.kpiPalette = pickKpiPalette();
+    document.getElementById('total-target-input').dataset.touched = '';
+    const totalTarget = parsed.top.targetTronKy || (parsed.total ? parsed.total.target : 0) || 0;
+    applyTargets(totalTarget);
+    renderAll();
+    status.textContent = `Đã phân tích ${parsed.categories.length} ngành hàng thành công.`;
+  }catch(err){
+    console.error(err);
+    status.textContent = 'Có lỗi khi phân tích dữ liệu. Vui lòng kiểm tra định dạng.';
+  }
+});
+
+document.getElementById('total-target-input').addEventListener('input', function(){
+  this.dataset.touched = '1';
+});
+document.getElementById('total-target-input').addEventListener('change', function(){
+  const totalTarget = Number(this.value) || 0;
+  applyTargets(totalTarget);
+  renderAll(false);
+});
+document.getElementById('apply-target-button').addEventListener('click', () => {
+  const totalTarget = Number(document.getElementById('total-target-input').value) || 0;
+  applyTargets(totalTarget);
+  renderAll(false);
+});
+document.getElementById('reset-target-button').addEventListener('click', () => {
+  state.targetOverrides = {};
+  const totalTarget = Number(document.getElementById('total-target-input').value) || state.top.targetTronKy || 0;
+  applyTargets(totalTarget);
+  renderAll();
+});
+
+document.getElementById('full-table').addEventListener('click', (e) => {
+  const hideBtn = e.target.closest('.col-hide-btn');
+  if(hideBtn){
+    state.fullHiddenCols.add(hideBtn.dataset.colhide);
+    renderFullTable();
+    return;
+  }
+  const th = e.target.closest('th.sortable');
+  if(!th) return;
+  const key = th.dataset.key;
+  if(state.sort.key === key){ state.sort.dir *= -1; } else { state.sort = { key, dir: 1 }; }
+  renderFullTable();
+});
+
+document.getElementById('good-table-el').addEventListener('click', (e) => {
+  const hideBtn = e.target.closest('.col-hide-btn');
+  if(!hideBtn) return;
+  state.goodHiddenCols.add(hideBtn.dataset.colhide);
+  renderGoodAlertTables();
+});
+
+document.getElementById('export-button').addEventListener('click', () => {
+  const status = document.getElementById('parser-status');
+  status.textContent = 'Đang tạo ảnh báo cáo...';
+  const store = (document.getElementById('store-name').value || 'bao-cao').trim().replace(/[^\w\-]+/g,'_');
+  const date = document.getElementById('report-date').value || new Date().toISOString().slice(0,10);
+
+  function captureAndDownload(el, suffix){
+    const nav = document.querySelector('.mwg-nav');
+    const prevVisibility = nav ? nav.style.visibility : '';
+    if(nav) nav.style.visibility = 'hidden';
+    return html2canvas(el, { backgroundColor: '#eef1f6', scale: 2 }).then(canvas => {
+      if(nav) nav.style.visibility = prevVisibility;
+      const link = document.createElement('a');
+      link.download = `bao-cao-${store}-${date}-${suffix}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }).catch(err => {
+      if(nav) nav.style.visibility = prevVisibility;
+      throw err;
+    });
+  }
+
+  captureAndDownload(document.getElementById('report-capture-top'), 'tong-quan')
+    .then(() => new Promise(r => setTimeout(r, 300)))
+    .then(() => captureAndDownload(document.getElementById('report-capture-detail'), 'chi-tiet'))
+    .then(() => { status.textContent = 'Đã tạo 2 ảnh báo cáo (tổng quan + chi tiết) thành công.'; })
+    .catch(err => {
+      console.error(err);
+      status.textContent = 'Không thể tạo ảnh. Vui lòng thử lại.';
+    });
+});
+
+/* ============================= INIT ============================= */
+(function init(){
+  document.getElementById('raw-input').value = SAMPLE_RAW;
+  const today = new Date();
+  document.getElementById('report-date').value = today.toISOString().slice(0,10);
+  document.getElementById('parse-button').click();
+})();
+</script>
+</body>
 </html>
