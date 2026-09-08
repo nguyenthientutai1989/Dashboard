@@ -10,7 +10,7 @@
 <style>
   :root{
     --nav-h: 52px;
-    --bg: #eef1f6;
+    --bg: #f0f4f8;
     --panel: #ffffff;
     --panel-soft: #f5f7fb;
     --panel-alt: #eef1f7;
@@ -37,10 +37,7 @@
   *{ box-sizing: border-box; }
   html,body{ margin:0; padding:0; }
   body{
-    background:
-      radial-gradient(1100px 520px at 10% -8%, rgba(245,197,24,0.10), transparent 60%),
-      radial-gradient(900px 460px at 100% 0%, rgba(47,111,237,0.07), transparent 55%),
-      var(--bg);
+    background: var(--bg);
     color: var(--text);
     font-family: 'Be Vietnam Pro', sans-serif;
     padding-top: calc(var(--nav-h) + 20px);
@@ -239,12 +236,12 @@
 <body>
 
 <nav class="mwg-nav">
-  <a class="nav-brand" href="./main.html">
+  <a class="nav-brand" href="./index.html">
     <span class="nav-brand-badge">MWG</span>
     <span class="nav-brand-name">Business Intelligence</span>
   </a>
   <span class="nav-page-badge">Lũy kế</span>
-  <a class="nav-btn" href="./main.html"><span>⌂</span> Trang chủ</a>
+  <a class="nav-btn" href="./index.html"><span>⌂</span> Trang chủ</a>
 </nav>
 
 <main class="dashboard-shell">
@@ -1184,7 +1181,7 @@ document.getElementById('export-button').addEventListener('click', () => {
     const nav = document.querySelector('.mwg-nav');
     const prevVisibility = nav ? nav.style.visibility : '';
     if(nav) nav.style.visibility = 'hidden';
-    return html2canvas(el, { backgroundColor: '#eef1f6', scale: 2 }).then(canvas => {
+    return html2canvas(el, { backgroundColor: '#f0f4f8', scale: 2 }).then(canvas => {
       if(nav) nav.style.visibility = prevVisibility;
       const link = document.createElement('a');
       link.download = `bao-cao-${store}-${date}-${suffix}.png`;

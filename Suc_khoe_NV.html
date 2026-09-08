@@ -21,7 +21,7 @@
 
     <style>
       :root {
-        --bg: #f3f5f7;
+        --bg: #f0f4f8;
         --card: #ffffff;
         --text: #111827;
         --muted: #6b7280;
@@ -52,17 +52,7 @@
 
       body {
         margin: 0;
-        background: radial-gradient(
-            1200px 600px at 20% -10%,
-            rgba(249, 115, 22, 0.18),
-            transparent 60%
-          ),
-          radial-gradient(
-            1200px 600px at 80% -10%,
-            rgba(37, 99, 235, 0.14),
-            transparent 55%
-          ),
-          var(--bg);
+        background: var(--bg);
         color: var(--text);
         font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial,
           sans-serif;
@@ -1018,19 +1008,12 @@
               <span class="pill" id="pillEmployees">0 NV</span>
             </div>
             <div class="card-body">
-              <div class="file-upload-box" style="border:1px dashed rgba(37,99,235,.35);background:rgba(37,99,235,.04);border-radius:14px;padding:14px;">
-                <div style="font-weight:800;margin-bottom:6px;">📁 Upload file doanh thu nhân viên</div>
-                <div class="cell-muted" style="margin-bottom:10px;">Chọn file Excel xuất trực tiếp từ hệ thống (.xlsx / .xls / .csv).</div>
-                <input id="fileEmployees" type="file" accept=".xlsx,.xls,.csv" style="display:block;width:100%;" />
-                <div id="employeeFileStatus" class="helper" style="margin-top:8px;">Chưa chọn file.</div>
-              </div>
               <textarea
                 id="taEmployees"
-                style="display:none"
-                aria-hidden="true"
+                placeholder="Dán dữ liệu nhân viên copy từ báo cáo web vào đây...&#10;Ví dụ:&#10;154850 - Trần Thị Thanh Trúc&#10;137	522	12.3%	394	—	—	0	—	95	24.2%"
               ></textarea>
               <div class="helper">
-                <span>Dữ liệu lấy từ cột <b>DOANH THU QĐ (TR)</b>.</span>
+                <span>Dữ liệu lấy từ cột <b>DOANH THU QĐ</b>. Dán cả khối (có thể gồm dòng tiêu đề) rồi bấm Đọc lại.</span>
                 <button class="btn ghost small" id="btnParseEmployees" type="button">
                   Đọc lại
                 </button>
@@ -1759,22 +1742,45 @@
 
         const out = [];
         if (revenueCol >= 0) {
+          let pendingFirst = null;
           for (let i = dataStart; i < rows.length; i++) {
             const cells = rows[i];
-            if (cells.length < revenueCol + 1) continue;
             const first = String(cells[0] || '').trim();
             if (!first) continue;
             const nfirst = normHeader(first);
-            if (nfirst === 'NHAN VIEN' || nfirst === 'TONG' || nfirst.startsWith('TONG (')) continue;
-            if (!isEmployeeRow(first)) continue;
+            if (nfirst === 'NHAN VIEN' || nfirst === 'TONG' || nfirst.startsWith('TONG (')) { pendingFirst = null; continue; }
+            if (/^Đơn vị/i.test(first)) { pendingFirst = null; continue; }
 
-            // Chuẩn mới: "154850 - Trần Thị Thanh Trúc"
+            let effectiveCells;
+            if (isEmployeeRow(first)) {
+              if (cells.length >= revenueCol + 1) {
+                // Định dạng cũ (từ file Excel): tên + toàn bộ số liệu nằm chung 1 dòng.
+                effectiveCells = cells;
+                pendingFirst = null;
+              } else {
+                // Định dạng mới (copy dán từ web): dòng này chỉ có mã + tên,
+                // số liệu nằm ở (các) dòng kế tiếp — lưu lại chờ ghép.
+                pendingFirst = first;
+                continue;
+              }
+            } else if (pendingFirst) {
+              // Dòng số liệu nối theo dòng tên đã lưu ở trên.
+              effectiveCells = [pendingFirst, ...cells];
+              pendingFirst = null;
+            } else {
+              continue;
+            }
+
+            if (effectiveCells.length < revenueCol + 1) continue;
+            const rowFirst = String(effectiveCells[0] || '').trim();
+
+            // Chuẩn: "154850 - Trần Thị Thanh Trúc"
             // Đặc biệt cho phép "online - Online - 18001060".
-            const m = first.match(/^\s*([^\-]+?)\s*-\s*(.+?)\s*$/);
+            const m = rowFirst.match(/^\s*([^\-]+?)\s*-\s*(.+?)\s*$/);
             if (!m) continue;
             const empId = m[1].trim();
             const name = m[2].trim();
-            const revenue = parseNumber(cells[revenueCol]);
+            const revenue = parseNumber(effectiveCells[revenueCol]);
             if (!empId || !name || !Number.isFinite(revenue)) continue;
             out.push({ id: uid('emp'), name, empId, revenue, group: 'Chung' });
           }
@@ -2637,7 +2643,7 @@
         if (!store || !day) return;
 
         $("pillTargets").textContent = `${(day.targetText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
-        $("pillEmployees").textContent = `${(day.employeeText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
+        $("pillEmployees").textContent = `${(day.employees || []).length} NV`;
         $("pillSales").textContent = `${(day.salesText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
 
         $("pillStore").textContent = store.name || "Chưa chọn";
@@ -2739,71 +2745,8 @@
         $("taEmployees").addEventListener("input", parseAndRenderDebounced);
         $("taSales").addEventListener("input", parseAndRenderDebounced);
 
-        // Trường 2: upload Excel/CSV từ hệ thống và chuyển thành dữ liệu chuẩn cho parser hiện có.
-        $("fileEmployees").addEventListener("change", async (e) => {
-          const file = e.target.files && e.target.files[0];
-          if (!file) return;
-          const status = $("employeeFileStatus");
-          status.textContent = "Đang đọc file…";
-          try {
-            if (typeof XLSX === "undefined") throw new Error("Không tải được thư viện đọc Excel. Hãy mở file khi có kết nối Internet.");
-            const buf = await file.arrayBuffer();
-            const wb = XLSX.read(buf, { type: "array", cellDates: false });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            if (!ws) throw new Error("Không tìm thấy sheet dữ liệu.");
-            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", raw: true });
-            if (!rows.length) throw new Error("File không có dữ liệu.");
-
-            const norm = (v) => String(v ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/Đ/g,"D").toUpperCase().replace(/\s+/g," ").trim();
-            const header = rows[0].map(norm);
-            const findCol = (...names) => {
-              for (const name of names) {
-                const n = norm(name);
-                const idx = header.findIndex(h => h === n || h.includes(n));
-                if (idx >= 0) return idx;
-              }
-              return -1;
-            };
-            const idCol = findCol("MÃ NHÂN VIÊN", "MA NHAN VIEN", "MÃ NV");
-            const nameCol = findCol("TÊN NHÂN VIÊN", "TEN NHAN VIEN", "NHÂN VIÊN");
-            const qtyCol = findCol("SỐ LƯỢNG", "SO LUONG");
-            const dtCol = findCol("DOANH THU (TR)", "DOANH THU");
-            const qdCol = findCol("DOANH THU QĐ (TR)", "DOANH THU QD", "DTQD");
-            if (idCol < 0 || nameCol < 0 || qdCol < 0) {
-              throw new Error("Không tìm thấy đủ cột MÃ NHÂN VIÊN, TÊN NHÂN VIÊN và DOANH THU QĐ (TR).");
-            }
-
-            const parseCellNumber = (v) => {
-              if (typeof v === "number") return Number.isFinite(v) ? v : NaN;
-              let x = String(v ?? "").trim().replace(/,/g, "");
-              if (!x || x === "—" || x === "-") return NaN;
-              return Number(x);
-            };
-            const outRows = [["NHÂN VIÊN","SỐ LƯỢNG","DOANH THU","% TỈ TRỌNG","DOANH THU QĐ"]];
-            let count = 0;
-            for (let r = 1; r < rows.length; r++) {
-              const row = rows[r] || [];
-              const empId = String(row[idCol] ?? "").trim();
-              const name = String(row[nameCol] ?? "").trim();
-              if (!empId || !name) continue;
-              const qd = parseCellNumber(row[qdCol]);
-              if (!Number.isFinite(qd)) continue;
-              const qty = qtyCol >= 0 ? row[qtyCol] ?? "" : "";
-              const dt = dtCol >= 0 ? row[dtCol] ?? "" : "";
-              outRows.push([`${empId} - ${name}`, qty, dt, "", qd]);
-              count++;
-            }
-            if (!count) throw new Error("Không đọc được dòng nhân viên nào.");
-
-            // Đưa về text TSV chuẩn để toàn bộ luồng phân tích hiện tại dùng chung một nguồn dữ liệu.
-            $("taEmployees").value = outRows.map(row => row.map(v => String(v ?? "")).join("\t")).join("\n");
-            status.textContent = `✓ Đã đọc ${count} nhân viên • ${file.name}`;
-            parseAndRenderDebounced();
-          } catch (err) {
-            console.error(err);
-            status.textContent = `✕ ${err?.message || "Không đọc được file."}`;
-          }
-        });
+        // Trường 2: nhập doanh thu nhân viên bằng copy/dán trực tiếp (công ty không còn
+        // cho xuất file Excel), dùng chung textarea taEmployees + parser hiện có.
 
         // Parse buttons
         $("btnParseTargets").addEventListener("click", () => {
@@ -2923,7 +2866,7 @@
         async function captureElementPng(el, filename) {
           try {
             const canvas = await window.html2canvas(el, {
-              backgroundColor: "#f3f5f7",
+              backgroundColor: "#f0f4f8",
               scale: window.devicePixelRatio || 2,
               useCORS: true,
             });
@@ -3078,7 +3021,7 @@
                   const h = Math.min(tileMaxCssH, H - y);
 
                   const tile = await window.html2canvas(wrapper, {
-                    backgroundColor: "#f3f5f7",
+                    backgroundColor: "#f0f4f8",
                     scale,
                     useCORS: true,
                     allowTaint: true,
@@ -3103,7 +3046,7 @@
               a.click();
             } else {
               const canvas = await window.html2canvas(wrapper, {
-                backgroundColor: "#f3f5f7",
+                backgroundColor: "#f0f4f8",
                 scale,
                 useCORS: true,
                 allowTaint: true,
