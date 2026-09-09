@@ -422,6 +422,16 @@
             style="width:100%; height:calc(100vh - 108px); min-height:640px; border:0; border-radius:14px; background:var(--bg-card); box-shadow:var(--shadow-card);"></iframe>
         </div>
 
+        <div id="view-sieuthi" style="display:none;">
+          <iframe id="sieuthi-frame" title="BI Realtime Siêu Thị"
+            style="width:100%; height:calc(100vh - 108px); min-height:640px; border:0; border-radius:14px; background:var(--bg-card); box-shadow:var(--shadow-card);"></iframe>
+        </div>
+
+        <div id="view-diem5sao" style="display:none;">
+          <iframe id="diem5sao-frame" title="Chấm điểm 5 sao"
+            style="width:100%; height:calc(100vh - 108px); min-height:640px; border:0; border-radius:14px; background:var(--bg-card); box-shadow:var(--shadow-card);"></iframe>
+        </div>
+
         </main>
         <div data-shell-footer></div>
       </div>
@@ -496,7 +506,9 @@
           'index.html': { el: document.getElementById('view-dashboard'), crumb: 'Tổng quan' },
           'dashboard_luy_ke.html': { el: document.getElementById('view-bi-luyke'), crumb: 'BI Lũy kế', iframe: document.getElementById('bi-luyke-frame') },
           'dashboard-ict-v2_7.html': { el: document.getElementById('view-ict'), crumb: 'Báo cáo ICT', iframe: document.getElementById('ict-frame') },
-          'Suc_khoe_NV.html': { el: document.getElementById('view-suckhoe'), crumb: 'Sức khỏe NV', iframe: document.getElementById('suckhoe-frame') }
+          'Suc_khoe_NV.html': { el: document.getElementById('view-suckhoe'), crumb: 'Sức khỏe NV', iframe: document.getElementById('suckhoe-frame') },
+          'dashboard_sieu_thi.html': { el: document.getElementById('view-sieuthi'), crumb: 'BI Realtime Siêu Thị', iframe: document.getElementById('sieuthi-frame') },
+          'tool_diem_5_sao.html': { el: document.getElementById('view-diem5sao'), crumb: 'Chấm điểm 5 sao', iframe: document.getElementById('diem5sao-frame') }
         };
 
         function setActiveNav(href){
