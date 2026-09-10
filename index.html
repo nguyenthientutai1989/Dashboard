@@ -487,23 +487,38 @@
 
       /* ── Lưới ngành hàng thi đua (dữ liệu thật từ Google Sheet) ── */
       .comp-grid{
-        display:grid; grid-template-columns:repeat(auto-fill, minmax(112px, 1fr));
-        gap:14px 10px;
+        display:grid; grid-template-columns:repeat(auto-fill, minmax(196px, 1fr));
+        gap:16px;
       }
-      .comp-card{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; }
-      .comp-ring{ position:relative; width:76px; height:76px; }
+      .comp-card{
+        display:flex; flex-direction:column; gap:10px;
+        background:var(--bg-card); border:1px solid var(--border); border-radius:14px;
+        padding:16px 16px 20px;
+      }
+      .comp-card-title{ font-size:13.5px; font-weight:700; color:var(--t-base); line-height:1.35; min-height:36px; }
+      .comp-stats{ display:flex; flex-direction:column; gap:6px; }
+      .comp-stat-row{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; font-size:12.5px; }
+      .comp-stat-row .lbl{ color:var(--t-muted); font-weight:500; white-space:nowrap; }
+      .comp-stat-row .val{ font-weight:700; color:var(--t-base); font-variant-numeric:tabular-nums; }
+      .comp-stat-row .val.good{ color:var(--success); }
+      .comp-stat-row .val.bad{ color:var(--danger); }
+      .comp-stat-row .val.flat{ color:var(--t-muted); }
+      .comp-ring-wrap{ display:flex; justify-content:center; padding-top:4px; }
+      .comp-ring{ position:relative; width:112px; height:112px; }
       .comp-ring svg{ width:100%; height:100%; transform:rotate(-90deg); }
-      .comp-ring .ring-track{ fill:none; stroke:var(--border); stroke-width:7; }
-      .comp-ring .ring-fill{ fill:none; stroke-width:7; stroke-linecap:round; transition:stroke-dashoffset 500ms ease; }
-      .comp-ring .ring-fill.good{ stroke:var(--success); }
-      .comp-ring .ring-fill.bad{ stroke:var(--danger); }
+      .comp-ring .ring-track{ fill:none; stroke:var(--border); stroke-width:8; }
+      .comp-ring .ring-fill{ fill:none; stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 500ms ease; }
+      .comp-ring .ring-fill.good{ stroke:#16a34a; }
+      .comp-ring .ring-fill.bad{ stroke:#dc2626; }
+      .comp-ring .ring-fill.flat{ stroke:var(--border); }
+      .comp-ring .ring-dot{ fill:#c7cdd6; }
       .comp-ring .ring-pct{
         position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-        font-size:13px; font-weight:800; color:var(--t-base);
+        font-size:20px; font-weight:800; color:var(--t-base); font-variant-numeric:tabular-nums;
       }
-      .comp-ring .ring-pct.good{ color:var(--success); }
-      .comp-ring .ring-pct.bad{ color:var(--danger); }
-      .comp-name{ font-size:11.5px; font-weight:600; color:var(--t-muted); line-height:1.35; max-width:120px; }
+      .comp-ring .ring-pct.good{ color:#16a34a; }
+      .comp-ring .ring-pct.bad{ color:#dc2626; }
+      .comp-ring .ring-pct.flat{ color:#9ca3af; }
       .comp-empty{ font-size:13px; color:var(--t-muted); padding:20px 0; text-align:center; }
       .comp-status-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--success); margin-right:6px; }
       .comp-status-dot.err{ background:var(--danger); }
@@ -1016,6 +1031,7 @@
             if(normVN(row[2]) !== 'TARGET') continue; // dòng tiêu đề khối (cột C = "TARGET")
             var name = String(row[0]||'').trim();
             if(!name) continue;
+            var unitLabel = normVN(row[1]) === 'SO LUONG' ? 'SL Realtime' : 'DT Realtime';
             // tìm dòng "TỔNG" gần nhất phía dưới (trong vòng 8 dòng) để lấy số liệu
             for(var j=i+1; j<Math.min(i+8, rows.length); j++){
               var rj = rows[j] || [];
@@ -1023,7 +1039,14 @@
                 var target = parseVNNum(rj[2]);
                 var forecast = parseVNNum(rj[4]);
                 if(target && target !== 0 && !isNaN(forecast)){
-                  out.push({ name: name, target: target, forecastPct: forecast });
+                  out.push({
+                    name: name,
+                    unitLabel: unitLabel,
+                    realtimeVal: parseVNNum(rj[1]),
+                    target: target,
+                    htPct: parseVNNum(rj[3]),
+                    forecastPct: forecast
+                  });
                 }
                 break;
               }
@@ -1045,22 +1068,35 @@
           // Sắp xếp theo % dự kiến tăng dần — ngành hàng yếu nhất hiện trước để dễ theo dõi.
           list.sort(function(a,b){ return a.forecastPct - b.forecastPct; });
 
-          var R = 32, C = 2*Math.PI*R;
+          var fmtNum = function(n){ return isNaN(n) ? '—' : n.toLocaleString('en-US', {maximumFractionDigits:0}); };
+          var fmtPct = function(n){ return isNaN(n) ? '—' : (n % 1 === 0 ? n.toFixed(0) : n.toFixed(1)) + '%'; };
+
+          var R = 44, C = 2*Math.PI*R;
           grid.innerHTML = list.map(function(item){
-            var good = item.forecastPct >= 100;
-            var visualPct = Math.max(0, Math.min(100, item.forecastPct));
+            // "Chưa có dữ liệu hôm nay" (Realtime = 0) → vòng xám trung tính, khác với "đang dưới target" (đỏ).
+            var noData = !item.realtimeVal || item.realtimeVal === 0;
+            var good = !noData && item.forecastPct >= 100;
+            var tone = noData ? 'flat' : (good ? 'good' : 'bad');
+            var visualPct = noData ? 0 : Math.max(0, Math.min(100, item.forecastPct));
             var offset = C * (1 - visualPct/100);
-            var pctText = (item.forecastPct % 1 === 0 ? item.forecastPct.toFixed(0) : item.forecastPct.toFixed(1)) + '%';
+            var pctText = noData ? '0%' : fmtPct(item.forecastPct);
+
             return '' +
-              '<div class="comp-card" title="'+escapeHtmlLocal(item.name)+': target '+item.target.toLocaleString('en-US')+'tr">' +
-                '<div class="comp-ring">' +
-                  '<svg viewBox="0 0 80 80">' +
-                    '<circle class="ring-track" cx="40" cy="40" r="'+R+'"/>' +
-                    '<circle class="ring-fill '+(good?'good':'bad')+'" cx="40" cy="40" r="'+R+'" stroke-dasharray="'+C.toFixed(2)+'" stroke-dashoffset="'+offset.toFixed(2)+'"/>' +
-                  '</svg>' +
-                  '<span class="ring-pct '+(good?'good':'bad')+'">'+pctText+'</span>' +
+              '<div class="comp-card" title="'+escapeHtmlLocal(item.name)+': target '+item.target.toLocaleString('en-US')+'">' +
+                '<div class="comp-card-title">'+escapeHtmlLocal(item.name)+'</div>' +
+                '<div class="comp-stats">' +
+                  '<div class="comp-stat-row"><span class="lbl">'+item.unitLabel+'</span><span class="val">'+fmtNum(item.realtimeVal)+'</span></div>' +
+                  '<div class="comp-stat-row"><span class="lbl">Target</span><span class="val">'+fmtNum(item.target)+'</span></div>' +
+                  '<div class="comp-stat-row"><span class="lbl">% HT Target</span><span class="val '+tone+'">'+fmtPct(item.htPct)+'</span></div>' +
                 '</div>' +
-                '<div class="comp-name">'+escapeHtmlLocal(item.name)+'</div>' +
+                '<div class="comp-ring-wrap"><div class="comp-ring">' +
+                  '<svg viewBox="0 0 100 100">' +
+                    '<circle class="ring-track" cx="50" cy="50" r="'+R+'"/>' +
+                    '<circle class="ring-fill '+tone+'" cx="50" cy="50" r="'+R+'" stroke-dasharray="'+C.toFixed(2)+'" stroke-dashoffset="'+offset.toFixed(2)+'"/>' +
+                    (noData ? '<circle class="ring-dot" cx="50" cy="'+(50-R)+'" r="3"/>' : '') +
+                  '</svg>' +
+                  '<span class="ring-pct '+tone+'">'+pctText+'</span>' +
+                '</div></div>' +
               '</div>';
           }).join('');
         }
