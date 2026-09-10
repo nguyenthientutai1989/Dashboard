@@ -278,18 +278,15 @@ table.exp-tbl tbody tr:last-child td{background:var(--bg3);font-weight:700;color
 </style>
 </head>
 <body>
-<script>(function(){if(!localStorage.getItem('mwg_session'))window.location.replace('./index.html');})();</script>
 
 <!-- NAV -->
 <nav class="nav">
-  <a class="nav-brand" href="./main.html">
+  <a class="nav-brand" href="./index.html">
     <span class="nav-logo-badge">MWG</span>
     <span class="nav-logo-name">BI Bán Kèm</span>
   </a>
   <span class="nav-page-chip">485 · 222 Yersin</span>
-  <div class="nav-user"><span class="nav-dot"></span>Xin chào, <strong id="nav-user-nm">—</strong></div>
-  <a class="nav-btn btn-home" href="./main.html">🏠 Trang chủ</a>
-  <button class="nav-btn btn-logout" onclick="navLogout()">↩ Đăng xuất</button>
+  <a class="nav-btn btn-home" href="./index.html">🏠 Trang chủ</a>
 </nav>
 
 <div class="wrap">
@@ -602,10 +599,6 @@ function isInstallment(r){
 
 // ── GLOBAL ──
 let G={rows:[],empMeta:{},selectedEmps:new Set(),parsed:null};
-
-// ── AUTH ──
-(function(){try{const s=JSON.parse(localStorage.getItem('mwg_session')||'{}');document.getElementById('nav-user-nm').textContent=s.displayName||s.username||'—';}catch(e){}})();
-function navLogout(){localStorage.removeItem('mwg_session');window.location.href='./index.html';}
 
 // ── STEP 1 ──
 function loadEmployees(){
@@ -1300,7 +1293,6 @@ function pctToneClass(val,ref){
 
 // Init
 (function(){
-  try{const s=JSON.parse(localStorage.getItem('mwg_session')||'{}');document.getElementById('nav-user-nm').textContent=s.displayName||s.username||'—';}catch(e){}
   const d=new Date();document.getElementById('inp-month').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 })();
 </script>

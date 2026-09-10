@@ -432,6 +432,11 @@
             style="width:100%; height:calc(100vh - 108px); min-height:640px; border:0; border-radius:14px; background:var(--bg-card); box-shadow:var(--shadow-card);"></iframe>
         </div>
 
+        <div id="view-bankem" style="display:none;">
+          <iframe id="bankem-frame" title="BI Bán Kèm"
+            style="width:100%; height:calc(100vh - 108px); min-height:640px; border:0; border-radius:14px; background:var(--bg-card); box-shadow:var(--shadow-card);"></iframe>
+        </div>
+
         </main>
         <div data-shell-footer></div>
       </div>
@@ -508,7 +513,8 @@
           'dashboard-ict-v2_7.html': { el: document.getElementById('view-ict'), crumb: 'Báo cáo ICT', iframe: document.getElementById('ict-frame') },
           'Suc_khoe_NV.html': { el: document.getElementById('view-suckhoe'), crumb: 'Sức khỏe NV', iframe: document.getElementById('suckhoe-frame') },
           'dashboard_sieu_thi.html': { el: document.getElementById('view-sieuthi'), crumb: 'BI Realtime Siêu Thị', iframe: document.getElementById('sieuthi-frame') },
-          'tool_diem_5_sao.html': { el: document.getElementById('view-diem5sao'), crumb: 'Chấm điểm 5 sao', iframe: document.getElementById('diem5sao-frame') }
+          'tool_diem_5_sao.html': { el: document.getElementById('view-diem5sao'), crumb: 'Chấm điểm 5 sao', iframe: document.getElementById('diem5sao-frame') },
+          'dashboard_ban_kem.html': { el: document.getElementById('view-bankem'), crumb: 'BI Bán Kèm', iframe: document.getElementById('bankem-frame') }
         };
 
         function setActiveNav(href){

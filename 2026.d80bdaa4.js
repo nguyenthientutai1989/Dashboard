@@ -43,6 +43,8 @@ const NAV = [
         icon: '<path d="M3 3v18h18"/><path d="M7 15l3-4 3 3 5-7"/>' },
       { key: 'diem-5-sao', text: 'Chấm điểm 5 sao', href: 'tool_diem_5_sao.html', badge: { kind: 'new', text: '5★' },
         icon: '<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>' },
+      { key: 'ban-kem', text: 'BI Bán Kèm', href: 'dashboard_ban_kem.html', badge: { kind: 'new', text: 'BK' },
+        icon: '<circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.5 2.5h2l2.6 13.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6l1.6-8.4H6"/>' },
       { key: 'docs', text: 'Tài liệu hướng dẫn', href: 'https://adminator.colorlib.com/docs/', badge: { kind: 'new', text: 'DOCS' },
         icon: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>' },
       { key: 'pro', text: 'Nâng cấp Pro', href: 'https://dashboardpack.com/?utm_source=colorlib&utm_medium=adminator-demo&utm_campaign=sidebar-go-pro', badge: { kind: 'pro', text: 'PRO' },
