@@ -2766,49 +2766,37 @@
         // mới nhất mà không cần ai nhập tay lại vào sheet.
         const SHEET_SYNC_URL = "https://script.google.com/macros/s/AKfycbwjRRYBYa-PsNcSJtmG50xBzJ11LvjyN62Fp5Ov8ejMPizELqS0ppMQbE82hDJpbDOLLg/exec";
 
-        function pushTargetsToSheet(categories) {
-          const statusEl = $("targetSyncStatus");
-          if (!categories || !categories.length) {
-            if (statusEl) { statusEl.textContent = "Không có ngành hàng nào để đồng bộ."; statusEl.className = "sync-status"; }
-            return;
-          }
-          if (statusEl) { statusEl.textContent = "⏳ Đang đồng bộ lên Google Sheet…"; statusEl.className = "sync-status wait"; }
+function pushTextareaToSheet() {
+  const textarea = $("taTargets");
+  const statusEl = $("targetSyncStatus");
+  if (!textarea) return;
+  const rawData = textarea.value;
+  if (!rawData.trim()) {
+    if (statusEl) { statusEl.textContent = "Textarea đang trống."; statusEl.className = "sync-status err"; }
+    return;
+  }
+  if (statusEl) { statusEl.textContent = "⏳ Đang đồng bộ lên Google Sheet…"; statusEl.className = "sync-status wait"; }
+  fetch(SHEET_SYNC_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ data: rawData })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (!res || !res.ok) throw new Error((res && res.error) || "Phản hồi không hợp lệ từ Apps Script");
+    const now = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+    if (statusEl) { statusEl.textContent = `✓ Đã đồng bộ ${res.rows} dòng × ${res.columns} cột lên Google Sheet lúc ${now}`; statusEl.className = "sync-status ok"; }
+  })
+  .catch(err => {
+    console.error("Đồng bộ Google Sheet thất bại:", err);
+    if (statusEl) { statusEl.textContent = "✗ Không đồng bộ được lên Google Sheet: " + err.message; statusEl.className = "sync-status err"; }
+  });
+}
 
-          const items = categories.map((c) => ({ name: c.name, target: c.target }));
-
-          fetch(SHEET_SYNC_URL, {
-            method: "POST",
-            // Cố tình dùng text/plain để trình duyệt không gửi preflight OPTIONS
-            // (Google Apps Script Web App không xử lý preflight CORS).
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ items }),
-          })
-            .then((r) => r.json())
-            .then((res) => {
-              if (res && res.ok) {
-                const now = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-                if (statusEl) {
-                  statusEl.textContent = `✓ Đã đồng bộ ${res.updated} ngành hàng lên Google Sheet lúc ${now}`;
-                  statusEl.className = "sync-status ok";
-                }
-              } else {
-                throw new Error((res && res.error) || "Phản hồi không hợp lệ từ Apps Script");
-              }
-            })
-            .catch((err) => {
-              console.error("Đồng bộ Google Sheet thất bại:", err);
-              if (statusEl) {
-                statusEl.textContent = "✗ Không đồng bộ được lên Google Sheet (kiểm tra kết nối / quyền truy cập script).";
-                statusEl.className = "sync-status err";
-              }
-            });
-        }
-
-        // Parse buttons
-        $("btnParseTargets").addEventListener("click", () => {
-          parseAndRenderDebounced();
-          pushTargetsToSheet(parseTargetsText($("taTargets").value));
-        });
+$("btnParseTargets").addEventListener("click", () => {
+  parseAndRenderDebounced();
+  pushTextareaToSheet();
+}););
         $("btnParseEmployees").addEventListener("click", () => {
           parseAndRenderDebounced();
         });
