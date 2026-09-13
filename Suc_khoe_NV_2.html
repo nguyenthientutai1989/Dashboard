@@ -1,0 +1,3389 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard Phân Tích Hiệu Suất NV Bán Hàng</title>
+
+    <!-- Font (optional, graceful fallback to system font) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- SheetJS for Excel upload in Trường 2 -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- html2canvas for "Chụp ảnh" -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    <style>
+      :root {
+        --bg: #f0f4f8;
+        --card: #ffffff;
+        --text: #111827;
+        --muted: #6b7280;
+        --border: rgba(17, 24, 39, 0.12);
+        --shadow: 0 10px 26px rgba(17, 24, 39, 0.08);
+        --shadow-soft: 0 6px 16px rgba(17, 24, 39, 0.08);
+        --radius: 18px;
+
+        --orange: #f97316;
+        --orange-dark: #ea580c;
+        --blue: #2563eb;
+        --green: #16a34a;
+        --red: #dc2626;
+        --slate: #334155;
+
+        --rowA: rgba(2, 132, 199, 0.06);
+        --rowB: rgba(148, 163, 184, 0.06);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          sans-serif;
+        line-height: 1.35;
+      }
+
+      .topbar {
+        background: linear-gradient(90deg, var(--orange), #fb923c);
+        color: white;
+        padding: 16px 20px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        box-shadow: 0 6px 18px rgba(249, 115, 22, 0.35);
+      }
+
+      .topbar .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .badge {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(6px);
+      }
+
+      .title {
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        font-size: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .subtitle {
+        font-size: 12px;
+        opacity: 0.92;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 18px auto 56px;
+        padding: 0 16px;
+      }
+
+      .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      @media (max-width: 1100px) {
+        .cards-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .cards-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid rgba(17, 24, 39, 0.08);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-soft);
+        overflow: hidden;
+      }
+
+      .card-header {
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .card-header h3 {
+        margin: 0;
+        font-size: 13px;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .pill {
+        font-size: 11px;
+        color: #0f172a;
+        background: rgba(249, 115, 22, 0.14);
+        border: 1px solid rgba(249, 115, 22, 0.26);
+        padding: 4px 8px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+
+      .card-body {
+        padding: 14px 16px 16px;
+      }
+
+      /* Quản lý & lịch sử: allow vertical scroll when content grows */
+      #cardManage .card-body {
+        max-height: clamp(260px, 45vh, 420px);
+        overflow-y: auto;
+        overflow-x: visible; /* don't clip the store action buttons on narrow widths */
+        scrollbar-gutter: stable;
+      }
+
+      #cardManage .store-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      #cardManage .store-row select {
+        flex: 1 1 220px;
+        min-width: 220px;
+      }
+
+      #cardManage .card-body::-webkit-scrollbar {
+        width: 10px;
+      }
+      #cardManage .card-body::-webkit-scrollbar-thumb {
+        background: rgba(15, 23, 42, 0.22);
+        border-radius: 999px;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+      }
+      #cardManage .card-body::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.06);
+        border-radius: 999px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 210px;
+        resize: vertical;
+        border-radius: 14px;
+        border: 1px solid rgba(17, 24, 39, 0.14);
+        padding: 12px 12px;
+        font: inherit;
+        color: inherit;
+        outline: none;
+        background: #fbfdff;
+        box-shadow: inset 0 1px 0 rgba(17, 24, 39, 0.03);
+      }
+
+      textarea:focus {
+        border-color: rgba(37, 99, 235, 0.45);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+
+      .helper {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .sync-status {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--muted);
+        min-height: 16px;
+      }
+      .sync-status.ok { color: #16a34a; font-weight: 600; }
+      .sync-status.err { color: #dc2626; font-weight: 600; }
+      .sync-status.wait { color: var(--muted); font-style: italic; }
+
+      .list {
+        margin-top: 12px;
+        border: 1px dashed rgba(17, 24, 39, 0.18);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      .list-row {
+        display: grid;
+        grid-template-columns: 1.6fr 0.6fr auto;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 10px;
+        border-bottom: 1px solid rgba(17, 24, 39, 0.06);
+        background: white;
+      }
+
+      .list-row:nth-child(even) {
+        background: rgba(148, 163, 184, 0.06);
+      }
+
+      .list-row:last-child {
+        border-bottom: 0;
+      }
+
+      .list-row .mini {
+        width: 100%;
+        border: 1px solid rgba(17, 24, 39, 0.12);
+        border-radius: 12px;
+        padding: 8px 10px;
+        font: inherit;
+        background: white;
+        outline: none;
+      }
+
+      .list-row .mini:focus {
+        border-color: rgba(37, 99, 235, 0.45);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+
+      .row-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        cursor: pointer;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font: inherit;
+        font-weight: 700;
+        color: white;
+        box-shadow: 0 10px 18px rgba(17, 24, 39, 0.14);
+        transition: transform 0.12s ease, filter 0.12s ease,
+          box-shadow 0.12s ease;
+        user-select: none;
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+        box-shadow: 0 8px 14px rgba(17, 24, 39, 0.14);
+      }
+
+      .btn.secondary {
+        background: #64748b;
+      }
+
+      .btn.primary {
+        background: linear-gradient(180deg, #3b82f6, var(--blue));
+      }
+
+      .btn.success {
+        background: linear-gradient(180deg, #22c55e, var(--green));
+      }
+
+      .btn.danger {
+        background: linear-gradient(180deg, #ef4444, var(--red));
+      }
+
+      .btn.ghost {
+        background: rgba(15, 23, 42, 0.05);
+        color: #0f172a;
+        box-shadow: none;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        font-weight: 700;
+      }
+
+      .btn.small {
+        padding: 8px 10px;
+        border-radius: 12px;
+        font-weight: 800;
+        box-shadow: none;
+      }
+
+      .btn.icon {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 14px;
+      }
+
+      .btn.icon.plus {
+        background: rgba(37, 99, 235, 0.12);
+        color: #1d4ed8;
+        border: 1px solid rgba(37, 99, 235, 0.22);
+        box-shadow: none;
+      }
+
+      .btn.icon.edit {
+        background: rgba(249, 115, 22, 0.14);
+        color: #9a3412;
+        border: 1px solid rgba(249, 115, 22, 0.26);
+        box-shadow: none;
+      }
+
+      .btn.icon.minus {
+        background: rgba(220, 38, 38, 0.12);
+        color: #b91c1c;
+        border: 1px solid rgba(220, 38, 38, 0.22);
+        box-shadow: none;
+      }
+
+      .actions-row {
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .output-wrap {
+        margin-top: 18px;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 18px 2px 12px;
+      }
+
+      .section-title h2 {
+        margin: 0;
+        font-size: 14px;
+        letter-spacing: 0.25px;
+        text-transform: uppercase;
+        color: #0f172a;
+        font-weight: 900;
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .grids {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      @media (max-width: 1100px) {
+        .grids {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Ẩn Grid nhóm thi đua (giữ code nhưng không hiển thị) */
+      #cardGridGroups {
+        display: none;
+      }
+
+      /* Tăng chiều cao hiển thị cho 2 grid chính */
+      #cardGridCats .card-body {
+        max-height: clamp(560px, 78vh, 980px);
+        overflow-y: auto;
+      }
+      #cardGridEmps .card-body {
+        max-height: clamp(520px, 72vh, 900px);
+        overflow-y: auto;
+      }
+
+	      .table {
+	        width: 100%;
+	        border-collapse: separate;
+	        border-spacing: 0;
+	        overflow: hidden;
+	        border-radius: 14px;
+	        border: 1px solid rgba(17, 24, 39, 0.12);
+	        min-width: 760px; /* enable horizontal scroll when content is long */
+	      }
+
+      /* Grid cats/emps: không ép min-width lớn để tránh tạo scrollbar ngang */
+      .table.table-cats,
+      .table.table-emps {
+        min-width: 0;
+      }
+
+      /* Input trong bảng: giống style list-row */
+      .table .mini {
+        width: 100%;
+        border: 1px solid rgba(17, 24, 39, 0.12);
+        border-radius: 12px;
+        padding: 8px 10px;
+        font: inherit;
+        background: white;
+        outline: none;
+        min-width: 0;
+      }
+      .table .mini:focus {
+        border-color: rgba(37, 99, 235, 0.45);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+
+      /* Thu gọn cột tên + cho xuống dòng để không kéo dài thanh cuộn */
+      .table.table-cats thead th:nth-child(2),
+      .table.table-cats tbody td:nth-child(2) {
+        width: 260px;
+        max-width: 260px;
+        white-space: normal !important;
+        word-break: break-word;
+      }
+      .table.table-emps thead th:nth-child(2),
+      .table.table-emps tbody td:nth-child(2) {
+        width: 280px;
+        max-width: 280px;
+        white-space: normal !important;
+        word-break: break-word;
+      }
+
+      .table.table-emps tbody td:nth-child(2) .cell-muted {
+        white-space: normal !important;
+      }
+
+      .table thead th {
+        background: linear-gradient(180deg, rgba(249, 115, 22, 0.9), var(--orange));
+        color: white;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.35px;
+        padding: 10px 10px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+	      .table tbody td {
+	        padding: 10px 10px;
+	        border-top: 1px solid rgba(17, 24, 39, 0.08);
+	        background: white;
+	        vertical-align: middle;
+	        font-size: 13px;
+	      }
+
+      .table thead th,
+      .table tbody td {
+        white-space: nowrap;
+      }
+
+      /* Grid ngành hàng: target cell hiển thị gọn theo chiều dọc (không kéo ngang phải cuộn) */
+      .cat-target-col,
+      .cat-target-cell {
+        white-space: normal !important;
+      }
+      .cat-target {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+        min-width: 0;
+      }
+      .cat-target-row {
+        display: grid;
+        grid-template-columns: 58px minmax(0, 1fr);
+        gap: 8px;
+        align-items: center;
+      }
+      .cat-target-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.25px;
+      }
+      .cat-target-meta {
+        font-size: 12px;
+        color: var(--slate);
+        font-weight: 800;
+      }
+
+      .th-cat {
+        white-space: normal;
+        line-height: 1.15;
+        max-width: 150px;
+      }
+
+      .cell-cat {
+        white-space: normal;
+        text-align: center;
+        font-weight: 900;
+      }
+
+      .cell-cat .sub {
+        font-weight: 800;
+        font-size: 12px;
+        color: rgba(15, 23, 42, 0.72);
+      }
+
+      .cell-cat.good {
+        background: rgba(34, 197, 94, 0.12) !important;
+        border-left: 1px solid rgba(34, 197, 94, 0.18);
+        border-right: 1px solid rgba(34, 197, 94, 0.18);
+        color: #14532d;
+      }
+
+      .cell-cat.bad {
+        background: rgba(244, 63, 94, 0.10) !important;
+        border-left: 1px solid rgba(244, 63, 94, 0.16);
+        border-right: 1px solid rgba(244, 63, 94, 0.16);
+        color: #7f1d1d;
+      }
+
+      .cell-cat .pct {
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .cell-cat.good .pct {
+        color: #166534;
+      }
+
+      .cell-cat.bad .pct {
+        color: #be123c;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 14px;
+	      }
+
+	      .table-scroll::-webkit-scrollbar {
+	        height: 10px;
+	      }
+
+	      .table-scroll::-webkit-scrollbar-thumb {
+	        background: rgba(15, 23, 42, 0.22);
+	        border-radius: 999px;
+	        border: 2px solid rgba(255, 255, 255, 0.7);
+	      }
+
+	      .table-scroll::-webkit-scrollbar-track {
+	        background: rgba(15, 23, 42, 0.06);
+	        border-radius: 999px;
+	      }
+
+      .table tbody tr:nth-child(odd) td {
+        background: var(--rowA);
+      }
+      .table tbody tr:nth-child(even) td {
+        background: var(--rowB);
+      }
+
+      .cell-muted {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .cell-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      .drag {
+        cursor: grab;
+        width: 26px;
+        height: 26px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(15, 23, 42, 0.04);
+        color: #0f172a;
+        user-select: none;
+      }
+
+      .analysis {
+        margin-top: 16px;
+      }
+
+      .split-tables {
+        display: grid;
+        gap: 14px;
+      }
+
+      .report-header {
+        margin-top: 16px;
+        background: linear-gradient(90deg, #166534, #16a34a);
+        color: white;
+        border-radius: 18px;
+        border: 1px solid rgba(20, 83, 45, 0.22);
+        box-shadow: 0 14px 26px rgba(22, 163, 74, 0.20);
+        overflow: hidden;
+      }
+
+      .report-header .inner {
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        text-align: center;
+      }
+
+      .report-header .h1 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        font-weight: 900;
+      }
+
+      .report-header .sub {
+        margin-top: 6px;
+        font-size: 13px;
+        opacity: 0.95;
+        font-weight: 700;
+      }
+
+      .report-header .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        font-weight: 800;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      /* Make sales-detail table more compact (optimize for screenshots) */
+      #salesDetailCard .table thead th {
+        font-size: 10px;
+        padding: 5px 5px;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.3;
+        text-align: center;
+        vertical-align: bottom;
+      }
+
+      #salesDetailCard .table tbody td {
+        padding: 5px 5px;
+        font-size: 11px;
+        text-align: center;
+      }
+
+      #salesDetailCard .cell-cat {
+        min-width: 90px;
+        max-width: 110px;
+      }
+
+      #salesDetailCard .rank-badge {
+        height: 28px;
+        min-width: 40px;
+        padding: 0 8px;
+        font-size: 11px;
+        box-shadow: 0 8px 14px rgba(15, 23, 42, 0.08);
+      }
+
+      #salesDetailCard .rank-badge .icon {
+        font-size: 13px;
+      }
+
+      #salesDetailCard .cell-cat .pct {
+        font-size: 11px;
+      }
+
+      .analysis-controls {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 200px;
+      }
+
+      .label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+
+      select,
+      input[type="text"],
+      input[type="number"],
+      input[type="date"] {
+        border: 1px solid rgba(17, 24, 39, 0.14);
+        border-radius: 14px;
+        padding: 10px 12px;
+        font: inherit;
+        outline: none;
+        background: white;
+      }
+
+      select:focus,
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      input[type="date"]:focus {
+        border-color: rgba(37, 99, 235, 0.45);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+
+      .danger-zone {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+      }
+
+      .progress {
+        height: 10px;
+        width: 100%;
+        background: rgba(15, 23, 42, 0.12);
+        border-radius: 999px;
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+      }
+
+      .bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+      }
+
+      .bar.red {
+        background: linear-gradient(90deg, #fb7185, #dc2626);
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .tag.ok {
+        color: #14532d;
+        border-color: rgba(34, 197, 94, 0.35);
+        background: rgba(34, 197, 94, 0.1);
+      }
+
+      .tag.bad {
+        color: #7f1d1d;
+        border-color: rgba(220, 38, 38, 0.35);
+        background: rgba(220, 38, 38, 0.1);
+      }
+
+      .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 44px;
+        height: 32px;
+        padding: 0 10px;
+        border-radius: 999px;
+        font-weight: 900;
+        font-size: 12px;
+        border: 1px solid rgba(15, 23, 42, 0.14);
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.10);
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      .rank-badge .icon {
+        font-size: 14px;
+        line-height: 1;
+      }
+
+      .rank-badge.gold {
+        color: #3b2f0b;
+        border-color: rgba(245, 158, 11, 0.45);
+        background: linear-gradient(180deg, rgba(253, 230, 138, 0.92), rgba(245, 158, 11, 0.45));
+      }
+
+      .rank-badge.silver {
+        color: #0f172a;
+        border-color: rgba(148, 163, 184, 0.65);
+        background: linear-gradient(180deg, rgba(241, 245, 249, 0.95), rgba(148, 163, 184, 0.38));
+      }
+
+      .rank-badge.bronze {
+        color: #3b1f10;
+        border-color: rgba(234, 88, 12, 0.45);
+        background: linear-gradient(180deg, rgba(255, 237, 213, 0.95), rgba(234, 88, 12, 0.28));
+      }
+
+      .mono {
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum";
+      }
+
+      .note {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.04);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        color: var(--muted);
+        font-size: 12px;
+      }
+    
+    /* ── MWG NAVBAR ── */
+    :root { --nav-h: 52px; }
+    .mwg-nav {
+      position: sticky; top: 0; z-index: 9999;
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 20px; height: var(--nav-h);
+      background: rgba(10,14,24,0.95);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(14px);
+      font-family: 'Inter', sans-serif;
+    }
+    .mwg-nav-brand {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; margin-right: auto;
+    }
+    .mwg-nav-badge {
+      background: #f5c518; color: #111;
+      font-size: 9px; font-weight: 800; letter-spacing: 0.1em;
+      padding: 3px 8px; border-radius: 5px; line-height: 1;
+    }
+    .mwg-nav-name {
+      font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.85);
+    }
+    .mwg-nav-chip {
+      font-size: 10px; color: rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 3px 10px; border-radius: 20px;
+      letter-spacing: 0.03em; white-space: nowrap;
+    }
+    .mwg-nav-user {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: rgba(255,255,255,0.5);
+      margin-right: 6px; white-space: nowrap;
+    }
+    .mwg-nav-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 6px rgba(74,222,128,0.5);
+      flex-shrink: 0;
+    }
+    .mwg-nav-user strong { color: #f5c518; font-weight: 600; }
+    .mwg-nav-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 13px; border-radius: 7px;
+      font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
+      cursor: pointer; border: 1px solid transparent;
+      text-decoration: none; transition: all 140ms; white-space: nowrap;
+    }
+    .mwg-nav-btn:active { transform: scale(.97); }
+    .mwg-btn-home {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.14); color: rgba(255,255,255,0.8);
+    }
+    .mwg-btn-home:hover { background: rgba(255,255,255,0.13); color: #fff; }
+    .mwg-btn-logout {
+      background: rgba(239,68,68,0.1);
+      border-color: rgba(239,68,68,0.25); color: #fca5a5;
+    }
+    .mwg-btn-logout:hover { background: rgba(239,68,68,0.2); }
+    @media(max-width:560px){
+      .mwg-nav-name, .mwg-nav-chip, .mwg-nav-user { display: none; }
+      .mwg-nav-btn { padding: 6px 10px; }
+    }
+</style>
+  </head>
+
+  <body>
+
+    <!-- MWG NAVBAR -->
+    <nav class="mwg-nav">
+      <a class="mwg-nav-brand" href="./main.html">
+        <span class="mwg-nav-badge">MWG</span>
+        <span class="mwg-nav-name">Business Intelligence</span>
+      </a>
+      <span class="mwg-nav-chip">Sức khoẻ NV</span>
+      <div class="mwg-nav-user">
+        <span class="mwg-nav-dot"></span>
+        Chạy cục bộ
+      </div>
+      <a class="mwg-nav-btn mwg-btn-home" href="./main.html">⌂ Trang chủ</a>
+    </nav>
+
+    <header class="topbar">
+      <div class="wrap">
+        <div class="brand">
+          <div class="badge" aria-hidden="true">📊</div>
+          <div style="min-width: 0">
+            <div class="title">Dashboard Phân Tích Hiệu Suất Nhân Viên</div>
+            <div class="subtitle">
+              HTML + CSS + JS thuần • Lưu localStorage • Chụp PNG
+            </div>
+          </div>
+        </div>
+        <div class="subtitle" id="clock"></div>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- ==========================================================
+           I. KHU NHẬP LIỆU (4 cards)
+           ========================================================== -->
+      <section class="input-wrap">
+        <div class="cards-grid">
+          <!-- 1) Target ngành hàng -->
+          <article class="card" id="cardTargets">
+            <div class="card-header">
+              <h3>1. Nhập target ngành hàng</h3>
+              <span class="pill" id="pillTargets">0 dòng</span>
+            </div>
+            <div class="card-body">
+              <textarea
+                id="taTargets"
+                placeholder="Ví dụ:\nSMARTPHONE FLAGSHIP & TABLET ANDROID 490.69\nĐIỆN THOẠI REALME 123.60"
+              ></textarea>
+              <div class="helper">
+                <span>Parse: tách <b>tên</b> + <b>target</b> (số cuối dòng)</span>
+                <button class="btn ghost small" id="btnParseTargets" type="button">
+                  Parse
+                </button>
+              </div>
+              <div id="targetSyncStatus" class="sync-status"></div>
+              <div class="list" id="listTargets" aria-label="Danh sách ngành hàng"></div>
+            </div>
+          </article>
+
+          <!-- 2) Doanh thu nhân viên -->
+          <article class="card" id="cardEmployees">
+            <div class="card-header">
+              <h3>2. Nhập doanh thu nhân viên</h3>
+              <span class="pill" id="pillEmployees">0 NV</span>
+            </div>
+            <div class="card-body">
+              <textarea
+                id="taEmployees"
+                placeholder="Dán dữ liệu nhân viên copy từ báo cáo web vào đây...&#10;Ví dụ:&#10;154850 - Trần Thị Thanh Trúc&#10;137	522	12.3%	394	—	—	0	—	95	24.2%"
+              ></textarea>
+              <div class="helper">
+                <span>Dữ liệu lấy từ cột <b>DOANH THU QĐ</b>. Dán cả khối (có thể gồm dòng tiêu đề) rồi bấm Đọc lại.</span>
+                <button class="btn ghost small" id="btnParseEmployees" type="button">
+                  Đọc lại
+                </button>
+              </div>
+              <div class="list" id="listEmployees" aria-label="Danh sách nhân viên"></div>
+            </div>
+          </article>
+
+          <!-- 3) Chi tiết bán -->
+          <article class="card" id="cardSales">
+            <div class="card-header">
+              <h3>3. Nhập chi tiết bán</h3>
+              <span class="pill" id="pillSales">0 dòng</span>
+            </div>
+            <div class="card-body">
+              <textarea
+                id="taSales"
+                placeholder="Dữ liệu raw. Hệ thống parse theo vài format:\n\nA) Mỗi dòng: MãNV | Ngành hàng | Doanh số\n   178116 | ĐIỆN THOẠI REALME | 12.5\n\nB) Block theo NV:\n   Tên NV - 178116\n   SMARTPHONE ... 10\n   ĐIỆN THOẠI REALME 2\n\nC) Paste ma trận (Phòng ban):\n   Phòng ban\n   Ngành 1\n   Ngành 2\n   ...\n   DTLK   DTLK ... (header dạng tab)\n   Hồng Văn Chiến - 84765   0.00  0.00 ...\n\nLưu ý: chỉ giữ cột ngành hàng đã có ở mục (1)."
+              ></textarea>
+              <div class="helper">
+                <span>Parse: mapping theo <b>nhân viên</b> + <b>ngành hàng</b></span>
+                <button class="btn ghost small" id="btnParseSales" type="button">
+                  Parse
+                </button>
+              </div>
+              <div class="note" id="salesNote">
+                Nếu bạn muốn “SỐ NH H.T” chính xác, hãy cung cấp chi tiết bán theo
+                format B hoặc A.
+              </div>
+            </div>
+          </article>
+
+          <!-- 4) Quản lý & lịch sử -->
+          <article class="card" id="cardManage">
+            <div class="card-header">
+              <h3>Quản lý &amp; lịch sử</h3>
+              <span class="pill" id="pillStore">Chưa chọn</span>
+            </div>
+            <div class="card-body">
+	              <div class="field">
+	                <div class="label">Chọn siêu thị</div>
+	                <div class="store-row">
+	                  <select id="selStore"></select>
+	                  <button class="btn icon plus" id="btnAddStore" type="button" title="Thêm siêu thị">
+	                    +
+	                  </button>
+	                  <button class="btn icon edit" id="btnEditStore" type="button" title="Sửa siêu thị">
+	                    ✎
+	                  </button>
+                  <button class="btn icon minus" id="btnDeleteStore" type="button" title="Xóa siêu thị">
+                    −
+                  </button>
+                </div>
+              </div>
+
+              <div class="field" style="margin-top: 12px">
+                <div class="label">Xem dữ liệu theo ngày</div>
+                <input id="inpDate" type="date" />
+                <div class="cell-muted">
+                  Các ngày đã lưu sẽ tự có dữ liệu khi chọn.
+                </div>
+              </div>
+
+              <div class="field" style="margin-top: 12px">
+                <div class="label">Target tháng siêu thị</div>
+                <input
+                  id="inpStoreMonthlyTarget"
+                  type="number"
+                  inputmode="decimal"
+                  placeholder="Ví dụ: 14100"
+                />
+              </div>
+
+              <div class="danger-zone">
+                <button class="btn danger" id="btnDeleteDay" type="button" style="width: 100%">
+                  🗑️ Xóa dữ liệu ngày này
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="actions-row">
+          <button class="btn secondary" id="btnBack" type="button">‹ Quay lại</button>
+          <button class="btn primary" id="btnAnalyzeSave" type="button">
+            Phân tích &amp; Lưu dữ liệu
+          </button>
+          <button class="btn success" id="btnCaptureAnalysis" type="button">
+            ⬇ Lưu ảnh Bảng phân tích
+          </button>
+          <button class="btn success" id="btnCaptureSales" type="button">
+            ⬇ Lưu ảnh Chi tiết bán
+          </button>
+        </div>
+      </section>
+
+      <!-- ==========================================================
+           II + III. KHU HIỂN THỊ DỮ LIỆU + PHÂN TÍCH
+           ========================================================== -->
+      <section class="output-wrap">
+        <div class="section-title">
+          <h2>Dữ liệu đã parse</h2>
+          <div class="hint" id="summaryHint">Nhập dữ liệu phía trên để hiển thị.</div>
+        </div>
+
+        <div class="grids">
+          <!-- Grid ngành hàng -->
+          <article class="card" id="cardGridCats">
+            <div class="card-header">
+              <h3>Grid ngành hàng</h3>
+              <span class="pill" id="pillGridCats">0</span>
+            </div>
+            <div class="card-body" style="padding-top: 10px">
+              <div class="table-scroll">
+                <table class="table table-cats" aria-label="Grid ngành hàng">
+                  <thead>
+                    <tr>
+                      <th style="width: 44px">#</th>
+                      <th style="width: 260px">Tên ngành hàng</th>
+                      <th class="cat-target-col" style="width: 220px">Target (gốc / % / cuối)</th>
+                      <th style="width: 156px; text-align: right">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyCats"></tbody>
+                </table>
+              </div>
+              <div class="note">
+                Reorder: kéo biểu tượng ☰ hoặc dùng nút ↑ ↓.
+              </div>
+            </div>
+          </article>
+
+          <!-- Grid nhân viên -->
+          <article class="card" id="cardGridEmps">
+            <div class="card-header">
+              <h3>Grid nhân viên</h3>
+              <span class="pill" id="pillGridEmps">0</span>
+            </div>
+            <div class="card-body" style="padding-top: 10px">
+              <div class="table-scroll">
+                <table class="table table-emps" aria-label="Grid nhân viên">
+                  <thead>
+                    <tr>
+                      <th style="width: 44px">#</th>
+                      <th style="width: 280px">Nhân viên</th>
+                      <th style="width: 110px">Mã</th>
+                      <th style="width: 150px">Doanh thu</th>
+                      <th style="width: 160px; text-align: right">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyEmps"></tbody>
+                </table>
+              </div>
+              <div class="note">
+                Bạn có thể nhập nhóm bằng <span class="mono">[Nhóm]</span> ở đầu
+                dòng trong ô doanh thu nhân viên.
+              </div>
+            </div>
+          </article>
+
+          <!-- Grid nhóm thi đua -->
+          <article class="card" id="cardGridGroups">
+            <div class="card-header">
+              <h3>Grid nhóm thi đua</h3>
+              <span class="pill" id="pillGridGroups">0</span>
+            </div>
+            <div class="card-body" style="padding-top: 10px">
+              <div class="table-scroll">
+                <table class="table" aria-label="Grid nhóm thi đua">
+                  <thead>
+                    <tr>
+                      <th>Nhóm</th>
+                      <th style="width: 80px">NV</th>
+                      <th style="width: 120px; text-align: right">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyGroups"></tbody>
+                </table>
+              </div>
+              <div class="note">
+                Xóa nhóm chỉ ảnh hưởng filter/hiển thị, không xóa nhân viên.
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Shared report header for both tables -->
+        <section class="report-header" id="reportHeader" aria-label="Header báo cáo">
+          <div class="inner">
+            <div>
+              <h2 class="h1">HIỆU QUẢ THI ĐUA NGÀNH HÀNG THEO NV</h2>
+              <div class="sub">
+                Siêu thị:
+                <span class="mono" id="txtReportStore">—</span>
+              </div>
+            </div>
+            <div class="chip" title="Lấy từ combobox 'Chọn siêu thị'">
+              🏬 <span id="txtReportStoreChip">—</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Analysis -->
+        <article class="card analysis" id="analysisCard">
+          <div class="card-header">
+            <h3>Bảng phân tích (theo ngày)</h3>
+            <span class="pill" id="pillAnalysis">Chưa phân tích</span>
+          </div>
+          <div class="card-body">
+            <div class="analysis-controls">
+              <div class="field" style="min-width: 260px">
+                <div class="label">Lọc nhóm</div>
+                <select id="selGroupFilter"></select>
+              </div>
+              <div class="field">
+                <div class="label">Tùy chọn</div>
+                <label style="display: flex; gap: 10px; align-items: center">
+                  <input id="chkExcludeZero" type="checkbox" />
+                  <span class="cell-muted">Ẩn NV doanh thu = 0</span>
+                </label>
+              </div>
+              <div class="field" style="min-width: 340px">
+	                <div class="label">Công thức</div>
+	                <div class="cell-muted">
+	                  Mỗi người =
+	                  <span class="mono" id="txtPerPerson">0</span> • Tiến độ ngày =
+	                  <span class="mono" id="txtProgress">0%</span>
+	                </div>
+	              </div>
+	            </div>
+
+            <div style="margin-top: 12px">
+              <div class="table-scroll">
+                <table class="table" aria-label="Bảng kết quả phân tích">
+                  <thead>
+                    <tr>
+                      <th style="width: 60px">Hạng</th>
+                      <th>Nhân viên</th>
+                      <th style="width: 110px">Số NH H.T</th>
+                      <th style="width: 140px">Lũy kế DT</th>
+                      <th style="width: 140px">Target tháng</th>
+                      <th style="width: 130px">Còn lại</th>
+                      <th style="width: 170px">% dự kiến HT</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyAnalysis"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="note" id="analysisNote"></div>
+          </div>
+        </article>
+
+        <!-- Sales detail tables (from input #3) -->
+        <article class="card analysis" id="salesDetailCard">
+          <div class="card-header">
+            <h3>Chi tiết bán theo ngành hàng</h3>
+            <span class="pill" id="pillSalesDetail">Tối đa 10 NH/bảng</span>
+          </div>
+          <div class="card-body">
+            <div class="note" id="salesDetailNote"></div>
+            <div class="split-tables" id="salesDetailTables"></div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      /**
+       * Dashboard single-file (no framework)
+       * - Parse 3 inputs (target categories, employee revenue, sales details)
+       * - Editable grids, reorder categories
+       * - Analysis by date progression and store monthly target
+       * - Persist per store + per day in localStorage
+       */
+
+      // =========================
+      // Helpers
+      // =========================
+      const LS_KEY = "sales-dashboard:v1";
+
+      const $ = (id) => document.getElementById(id);
+
+      function todayISO() {
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
+      function daysInMonth(yyyy, mm1to12) {
+        return new Date(yyyy, mm1to12, 0).getDate();
+      }
+
+      function clamp(n, a, b) {
+        return Math.max(a, Math.min(b, n));
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function normKey(s) {
+        return String(s || "")
+          .trim()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replaceAll("Đ", "D")
+          .replaceAll("đ", "d")
+          .toUpperCase();
+      }
+
+      function abbreviateName(fullName) {
+        const parts = String(fullName || "")
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean);
+        if (parts.length <= 2) return parts.join(" ");
+        const first = parts[0];
+        const last = parts[parts.length - 1];
+        const mids = parts.slice(1, -1).map((p) => (p ? p[0] : "")).filter(Boolean);
+        return [first, ...mids, last].join(" ");
+      }
+
+      function formatNumber(n, digits = 2) {
+        if (!Number.isFinite(n)) return "0";
+        const opts =
+          digits === 0
+            ? { maximumFractionDigits: 0 }
+            : { minimumFractionDigits: 0, maximumFractionDigits: digits };
+        return n.toLocaleString("en-US", opts);
+      }
+
+      function parseNumber(raw) {
+        // Accept: "3,266.94", "14100", "490.69", "59.13%", "0.00", "Infinity%"
+        const s = String(raw ?? "").trim().replace(/\s+/g, "");
+        if (!s) return NaN;
+        // Extract the first numeric token (ignore %, text, etc.)
+        const m = s.match(/-?[\d.,]+/);
+        if (!m) return NaN;
+        const token = m[0];
+
+        // If contains both comma and dot: assume comma is thousands separator
+        if (token.includes(",") && token.includes(".")) {
+          const cleaned = token.replaceAll(",", "");
+          const v = Number.parseFloat(cleaned);
+          return Number.isFinite(v) ? v : NaN;
+        }
+
+        // If only comma: assume thousands separator -> remove commas
+        if (token.includes(",") && !token.includes(".")) {
+          const cleaned = token.replaceAll(",", "");
+          const v = Number.parseFloat(cleaned);
+          return Number.isFinite(v) ? v : NaN;
+        }
+
+        // Only dot (or none)
+        const v = Number.parseFloat(token);
+        return Number.isFinite(v) ? v : NaN;
+      }
+
+      function normalizeBoostPct(v) {
+        const n = Number(v);
+        if (!Number.isFinite(n)) return 110;
+        // giới hạn để tránh nhập sai quá lớn/âm
+        return clamp(n, 0, 500);
+      }
+
+      function effectiveCategoryTarget(cat) {
+        const base = Number(cat?.target || 0);
+        const pct = normalizeBoostPct(cat?.boostPct);
+        return (base * pct) / 100;
+      }
+
+      function debounce(fn, ms = 300) {
+        let t = null;
+        return (...args) => {
+          if (t) window.clearTimeout(t);
+          t = window.setTimeout(() => fn(...args), ms);
+        };
+      }
+
+      function uid(prefix = "id") {
+        return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now().toString(
+          16
+        )}`;
+      }
+
+      // =========================
+      // State
+      // =========================
+      const state = {
+        stores: {}, // { [storeKey]: { key, name, monthlyTarget, days: { [dateIso]: dayData } } }
+        ui: {
+          selectedStoreKey: "",
+          selectedDate: todayISO(),
+          groupFilter: "__ALL__",
+          excludeZero: false,
+        },
+      };
+
+      function emptyDayData() {
+        return {
+          targetText: "",
+          employeeText: "",
+          salesText: "",
+          categories: [], // [{id,name,target}]
+          employees: [], // [{id,name,empId,revenue,group}]
+          sales: {}, // { [empId]: { [categoryName]: amount } }
+          hiddenGroups: [], // groups bị "xóa" khỏi hiển thị
+          updatedAt: Date.now(),
+        };
+      }
+
+      function ensureDayDefaults(day) {
+        if (!day || typeof day !== "object") return;
+        if (!Array.isArray(day.categories)) day.categories = [];
+        for (const c of day.categories) {
+          if (!c || typeof c !== "object") continue;
+          if (!("boostPct" in c)) c.boostPct = 110;
+          c.boostPct = normalizeBoostPct(c.boostPct);
+        }
+      }
+
+      function ensureSeedStores() {
+        // Seed 1 store for first-time user (similar to screenshot)
+        if (Object.keys(state.stores).length) return;
+        const key = uid("store");
+        state.stores[key] = {
+          key,
+          name: "485 - TGC",
+          monthlyTarget: 14100,
+          days: {},
+        };
+        state.ui.selectedStoreKey = key;
+      }
+
+      function getActiveStore() {
+        return state.stores[state.ui.selectedStoreKey] || null;
+      }
+
+      function getActiveDayData(createIfMissing = true) {
+        const store = getActiveStore();
+        if (!store) return null;
+        const date = state.ui.selectedDate;
+        if (!store.days[date] && createIfMissing) store.days[date] = emptyDayData();
+        const day = store.days[date] || null;
+        ensureDayDefaults(day);
+        return day;
+      }
+
+      // =========================
+      // Persistence
+      // =========================
+      function loadFromLocalStorage() {
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (!raw) return;
+          const data = JSON.parse(raw);
+          if (!data || typeof data !== "object") return;
+          if (!data.stores || typeof data.stores !== "object") return;
+          state.stores = data.stores;
+          state.ui = { ...state.ui, ...(data.ui || {}) };
+          // One-time migration from the previous hard-coded 120% default to 110%.
+          for (const store of Object.values(state.stores)) {
+            for (const day of Object.values(store?.days || {})) {
+              for (const c of day?.categories || []) {
+                if (c && Number(c.boostPct) === 120) c.boostPct = 110;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to load localStorage", e);
+        }
+      }
+
+      function saveToLocalStorage() {
+        try {
+          const payload = {
+            stores: state.stores,
+            ui: state.ui,
+          };
+          localStorage.setItem(LS_KEY, JSON.stringify(payload));
+        } catch (e) {
+          console.warn("Failed to save localStorage", e);
+        }
+      }
+
+      // =========================
+      // Parsing
+      // =========================
+      function cleanPastedCell(value) {
+        return String(value ?? "")
+          .replace(/^\s*\|\s*/, "")
+          .replace(/\s*\|\s*$/, "")
+          .replace(/\*\*/g, "")
+          .replace(/`/g, "")
+          .replace(/<[^>]*>/g, "")
+          .replace(/svgsvg/gi, "")
+          .trim();
+      }
+
+      function splitPastedRow(line) {
+        const raw = String(line ?? "").trim();
+        if (!raw) return [];
+        if (raw.includes("|")) {
+          const cells = raw.split("|").map(cleanPastedCell);
+          if (cells.length && cells[0] === "") cells.shift();
+          if (cells.length && cells[cells.length - 1] === "") cells.pop();
+          return cells;
+        }
+        if (raw.includes("\t")) {
+          return raw.split("\t").map(cleanPastedCell);
+        }
+        return [cleanPastedCell(raw)];
+      }
+
+      function categoryFromReportHeader(cell, marker) {
+        let s = cleanPastedCell(cell);
+        if (!s) return "";
+        const upper = s.toUpperCase();
+        const pos = upper.indexOf(marker.toUpperCase());
+        if (pos >= 0) s = s.slice(0, pos);
+        // The copied report concatenates the measure label with the category
+        // in the first markdown cell (e.g. "Nồi cơmDOANH THU...").
+        s = s.replace(/(?:DOANH THU|SỐ LƯỢNG)\s*$/i, "");
+        return s.trim();
+      }
+
+      function parseTargetsText(text) {
+        const rawLines = String(text || "").split(/\r?\n/);
+        const lines = rawLines.map((l) => String(l).trim()).filter(Boolean);
+        const out = [];
+
+        // FORMAT MỚI (copy trực tiếp từ báo cáo):
+        // Tên ngành hàng
+        // DOANH THU | TARGET | ...  hoặc  SỐ LƯỢNG | TARGET | ...
+        // TỔNG
+        // doanh_thu_or_qty | TARGET | ...
+        // TGD_BDU_TDM ...
+        //
+        // Quan trọng: KHÔNG parse từng dòng có số ở cuối. Ta chỉ tạo 1 ngành
+        // hàng khi gặp đúng HEADER có TARGET, rồi lấy TARGET từ dòng ngay sau TỔNG.
+        for (let i = 0; i < lines.length; i++) {
+          const header = cleanPastedCell(lines[i]);
+          const headerUpper = header
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replaceAll("Đ", "D")
+            .toUpperCase();
+
+          // Header phải có TARGET và một trong hai chỉ tiêu chính.
+          if (!headerUpper.includes("TARGET")) continue;
+          if (!headerUpper.includes("DOANH THU") && !headerUpper.includes("SO LUONG")) continue;
+
+          // Tên ngành hàng nằm ở dòng ngay trước header trong format plain-text.
+          let name = "";
+          for (let k = i - 1; k >= 0 && k >= i - 3; k--) {
+            const candidate = cleanPastedCell(lines[k]);
+            if (!candidate) continue;
+            const cu = candidate
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replaceAll("Đ", "D")
+              .toUpperCase();
+            if (cu === "TỔNG" || cu === "TONG") continue;
+            if (cu.includes("TARGET") || cu.includes("TOP/BOTTOM") || cu.includes("HẠNG VÙNG")) continue;
+            name = candidate;
+            break;
+          }
+
+          // Với markdown/table paste, tên ngành hàng có thể dính ngay vào header.
+          if (!name) {
+            name = categoryFromReportHeader(header, "TARGET");
+          }
+          if (!name) continue;
+
+          // Tìm TỔNG trong block này, nhưng KHÔNG đi xuyên qua header kế tiếp.
+          let target = NaN;
+          for (let j = i + 1; j < lines.length; j++) {
+            const row = cleanPastedCell(lines[j]);
+            const rowUpper = row
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replaceAll("Đ", "D")
+              .toUpperCase();
+
+            // Gặp header của ngành tiếp theo mà chưa có TỔNG => block lỗi, dừng.
+            if (j > i + 1 && rowUpper.includes("TARGET") &&
+                (rowUpper.includes("DOANH THU") || rowUpper.includes("SO LUONG"))) {
+              break;
+            }
+
+            if (rowUpper !== "TỔNG" && rowUpper !== "TONG") continue;
+
+            // TỔNG có thể nằm một dòng riêng, nên đọc dòng kế tiếp.
+            let dataLine = "";
+            for (let k = j + 1; k < Math.min(j + 4, lines.length); k++) {
+              const candidate = cleanPastedCell(lines[k]);
+              if (!candidate) continue;
+              const cu = candidate
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replaceAll("Đ", "D")
+                .toUpperCase();
+              if (cu === "TỔNG" || cu === "TONG") continue;
+              if (cu.includes("TARGET") && (cu.includes("DOANH THU") || cu.includes("SO LUONG"))) break;
+              if (/^TGD[_\s-]/i.test(candidate)) continue;
+              dataLine = candidate;
+              break;
+            }
+
+            if (!dataLine) break;
+
+            const cells = splitPastedRow(dataLine);
+            let nums = [];
+            if (cells.length > 1) {
+              nums = cells.map(parseNumber).filter(Number.isFinite);
+            } else {
+              // Plain text không có tab: lấy các số từ trái sang phải.
+              // Giá trị target luôn là số thứ 2 trong dòng tổng.
+              const matches = dataLine.match(/-?\d[\d,.]*/g) || [];
+              nums = matches.map(parseNumber).filter(Number.isFinite);
+            }
+            if (nums.length >= 2) target = nums[1];
+            else if (nums.length === 1) target = nums[0];
+            break;
+          }
+
+          if (Number.isFinite(target)) {
+            out.push({ id: uid("cat"), name, target, boostPct: 110 });
+          }
+        }
+
+        // Legacy/simple format: chỉ dùng khi KHÔNG nhận diện được format mới.
+        // Không được fallback nếu format mới đã có header nhưng một block lỗi,
+        // vì fallback sẽ biến doanh thu/rank thành "ngành hàng" rác.
+        if (out.length) return out;
+        const hasNewFormat = lines.some((line) => {
+          const u = cleanPastedCell(line).toUpperCase();
+          return u.includes("TARGET") && (u.includes("DOANH THU") || u.includes("SỐ LƯỢNG") || u.includes("SO LUONG"));
+        });
+        if (hasNewFormat) return [];
+
+        for (const line of lines) {
+          const m = line.match(/(-?\d[\d.,]*)\s*$/);
+          if (!m) continue;
+          const target = parseNumber(m[1]);
+          if (!Number.isFinite(target)) continue;
+          const name = cleanPastedCell(line.slice(0, m.index).trim());
+          if (!name || /^TỔNG$/i.test(name) || /^TGD[_\s-]/i.test(name)) continue;
+          out.push({ id: uid("cat"), name, target, boostPct: 110 });
+        }
+        return out;
+      }
+
+      function parseEmployeesText(text) {
+        const rawLines = String(text || '').split(/\r?\n/);
+        const lines = rawLines.map(l => String(l).replace(/^"+|"+$/g, '').trim()).filter(Boolean);
+
+        const normHeader = s => String(s || '')
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/Đ/g, 'D').toUpperCase().replace(/\s+/g, ' ').trim();
+
+        const rows = lines.map(splitPastedRow);
+        const isEmployeeLabel = s => normHeader(s) === 'NHAN VIEN';
+        const isEmployeeRow = s => /^\s*[^\t|]+?\s+-\s+.+/.test(String(s || ''));
+
+        // FORMAT MỚI MWG:
+        // NHÂN VIÊN
+        // SỐ LƯỢNG
+        // DOANH THU
+        // % TỈ TRỌNG
+        // DOANH THU QĐ
+        // TARGET ...
+        // rồi mới tới các dòng dữ liệu TAB-separated.
+        // Header là từng dòng riêng, nên DTQĐ luôn là cột thứ 5 (index 4).
+        let revenueCol = -1;
+        let dataStart = 0;
+
+        const employeeHeaderLine = lines.findIndex(isEmployeeLabel);
+        if (employeeHeaderLine >= 0) {
+          const headerOrder = [];
+          for (let i = employeeHeaderLine; i < Math.min(lines.length, employeeHeaderLine + 20); i++) {
+            const cells = splitPastedRow(lines[i]);
+            if (cells.length > 1) {
+              const hs = cells.map(normHeader);
+              const q = hs.findIndex(x => x === 'DOANH THU QD' || x.includes('DOANH THU QD'));
+              if (q >= 0) { revenueCol = q; dataStart = i + 1; break; }
+            } else {
+              const h = normHeader(lines[i]);
+              if (h === 'DOANH THU QD' || h.includes('DOANH THU QD')) {
+                revenueCol = headerOrder.length;
+                dataStart = i + 1;
+                break;
+              }
+              // Chỉ gom các header hợp lệ; không gom vô hạn sang vùng dữ liệu.
+              if (['NHAN VIEN','SO LUONG','DOANH THU','% TI TRONG','TARGET','% HT TARGET','TB 3 THANG','% TT','DT OFFLINE','DT ONLINE','% ONL','DT TRA GOP','% TRA GOP'].includes(h)) {
+                headerOrder.push(h);
+              } else if (headerOrder.length) {
+                break;
+              }
+            }
+          }
+        }
+
+        // FORMAT CŨ: header nằm cùng một dòng tab-separated.
+        if (revenueCol < 0) {
+          for (let i = 0; i < rows.length; i++) {
+            const cells = rows[i];
+            if (cells.length < 2) continue;
+            const hs = cells.map(normHeader);
+            if (!hs.some(x => x === 'NHAN VIEN' || x.startsWith('NHAN VIEN'))) continue;
+            revenueCol = hs.findIndex(x => x === 'DOANH THU QD' || x.includes('DOANH THU QD'));
+            if (revenueCol < 0) revenueCol = hs.findIndex(x => x === 'DOANH THU' || x === 'DTQD');
+            dataStart = i + 1;
+            break;
+          }
+        }
+
+        const out = [];
+        if (revenueCol >= 0) {
+          let pendingFirst = null;
+          for (let i = dataStart; i < rows.length; i++) {
+            const cells = rows[i];
+            const first = String(cells[0] || '').trim();
+            if (!first) continue;
+            const nfirst = normHeader(first);
+            if (nfirst === 'NHAN VIEN' || nfirst === 'TONG' || nfirst.startsWith('TONG (')) { pendingFirst = null; continue; }
+            if (/^Đơn vị/i.test(first)) { pendingFirst = null; continue; }
+
+            let effectiveCells;
+            if (isEmployeeRow(first)) {
+              if (cells.length >= revenueCol + 1) {
+                // Định dạng cũ (từ file Excel): tên + toàn bộ số liệu nằm chung 1 dòng.
+                effectiveCells = cells;
+                pendingFirst = null;
+              } else {
+                // Định dạng mới (copy dán từ web): dòng này chỉ có mã + tên,
+                // số liệu nằm ở (các) dòng kế tiếp — lưu lại chờ ghép.
+                pendingFirst = first;
+                continue;
+              }
+            } else if (pendingFirst) {
+              // Dòng số liệu nối theo dòng tên đã lưu ở trên.
+              effectiveCells = [pendingFirst, ...cells];
+              pendingFirst = null;
+            } else {
+              continue;
+            }
+
+            if (effectiveCells.length < revenueCol + 1) continue;
+            const rowFirst = String(effectiveCells[0] || '').trim();
+
+            // Chuẩn: "154850 - Trần Thị Thanh Trúc"
+            // Đặc biệt cho phép "online - Online - 18001060".
+            const m = rowFirst.match(/^\s*([^\-]+?)\s*-\s*(.+?)\s*$/);
+            if (!m) continue;
+            const empId = m[1].trim();
+            const name = m[2].trim();
+            const revenue = parseNumber(effectiveCells[revenueCol]);
+            if (!empId || !name || !Number.isFinite(revenue)) continue;
+            out.push({ id: uid('emp'), name, empId, revenue, group: 'Chung' });
+          }
+        }
+
+        // Fallback cho format một dòng: "Mã - Tên - doanh thu".
+        if (out.length) return out;
+        for (const line of lines) {
+          const m = line.match(/^\s*([^\s]+)\s*-\s*(.+?)\s+(-?\d[\d.,]*)\s*$/);
+          if (!m) continue;
+          const empId = m[1].trim();
+          const name = m[2].trim();
+          const revenue = parseNumber(m[3]);
+          if (empId && name && Number.isFinite(revenue)) out.push({ id: uid('emp'), name, empId, revenue, group: 'Chung' });
+        }
+        return out;
+      }
+
+      function parseSalesText(text, employees, categories) {
+        // TRƯỜNG 3 — parser theo đúng format báo cáo MWG.
+        // Chỉ nhận NHÂN VIÊN có MÃ SỐ (ID toàn số). Bỏ hoàn toàn các record
+        // đặc biệt như "online - Online - 18001060".
+        const normId = (v) => String(v ?? '').trim().replace(/\.0+$/, '');
+        const normName = (v) => normKey(String(v ?? '')).replace(/\s+/g, ' ').trim();
+        const catKey = (v) => normKey(String(v ?? '')).replace(/\s+/g, ' ').trim();
+
+        const empById = new Map();
+        const empByName = new Map();
+        for (const e of employees || []) {
+          const id = normId(e.empId);
+          const name = normName(e.name);
+          if (/^\d+$/.test(id)) empById.set(id, id);
+          if (name) empByName.set(name, id);
+        }
+
+        const catNames = (categories || []).map(c => c?.name).filter(Boolean);
+        const resolveCategory = (raw) => {
+          const k = catKey(raw);
+          if (!k) return null;
+          const exact = catNames.find(n => catKey(n) === k);
+          if (exact) return exact;
+          // Cho phép khác biệt nhỏ do copy/paste nhưng không tự đoán quá xa.
+          let best = null, bestScore = 0;
+          for (const n of catNames) {
+            const nk = catKey(n);
+            if (!nk) continue;
+            const score = nk.includes(k) ? k.length / nk.length : (k.includes(nk) ? nk.length / k.length : 0);
+            if (score > bestScore) { bestScore = score; best = n; }
+          }
+          return bestScore >= 0.85 ? best : null;
+        };
+
+        const lines = String(text || '').split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+        const salesByEmp = {};
+        let currentCategory = null;
+        let blocks = 0, parsedRows = 0, unmatchedBlocks = 0;
+
+        const isTotal = s => /^TỔNG(?:\s*\(.*\))?$/i.test(s) || /^TONG(?:\s*\(.*\))?$/i.test(s);
+        const isHeaderMeasure = s => /^(?:DOANH THU|SỐ LƯỢNG)\b/i.test(s);
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const cells = splitPastedRow(line);
+          const first = cleanPastedCell(cells[0] || '');
+          if (!first) continue;
+
+          // QUAN TRỌNG: trong dữ liệu copy từ hệ thống, tên ngành hàng và
+          // "DOANH THU/SỐ LƯỢNG" thường dính trong cùng ô đầu tiên:
+          // "Nồi cơmDOANH THU". Chỉ cần tìm marker ở bất kỳ vị trí nào.
+          const markerMatch = first.match(/^(.*?)(DOANH THU|SỐ LƯỢNG)\b/i);
+          if (markerMatch && markerMatch[1].trim()) {
+            const rawCategory = markerMatch[1].trim();
+            const resolved = resolveCategory(rawCategory);
+            currentCategory = resolved;
+            if (resolved) blocks++; else unmatchedBlocks++;
+            continue;
+          }
+
+          // Format text tách riêng: dòng "DOANH THU" / "SỐ LƯỢNG",
+          // tên ngành hàng nằm ở dòng ngay trước đó.
+          if (isHeaderMeasure(first)) {
+            let rawCategory = '';
+            for (let k = i - 1; k >= 0; k--) {
+              const prev = cleanPastedCell(lines[k]);
+              if (!prev || isTotal(prev) || isHeaderMeasure(prev)) continue;
+              if (/TARGET|HẠNG|TOP\/?BOTTOM|BỘ PHẬN/i.test(prev)) continue;
+              rawCategory = prev;
+              break;
+            }
+            const resolved = resolveCategory(rawCategory);
+            currentCategory = resolved;
+            if (resolved) blocks++; else unmatchedBlocks++;
+            continue;
+          }
+
+          if (!currentCategory || isTotal(first)) continue;
+
+          // CHỈ nhận nhân viên có mã số rõ ràng. Không nhận "online".
+          const empMatch = first.match(/^(\d+)\s*-\s*(.+)$/);
+          if (!empMatch) continue;
+
+          const sourceId = normId(empMatch[1]);
+          const sourceName = empMatch[2].trim();
+          if (!/^\d+$/.test(sourceId)) continue;
+
+          // Ghép ưu tiên bằng MÃ NV; nếu không có trong Trường 2 thì thử tên.
+          let canonicalId = empById.get(sourceId);
+          if (!canonicalId) canonicalId = empByName.get(normName(sourceName));
+          if (!canonicalId) continue;
+
+          // Số liệu có thể nằm ngay trên cùng dòng (cells[1], format 1 dòng/NV)
+          // HOẶC ở dòng kế tiếp (format export gốc MWG: nhãn NV và số liệu
+          // tách làm 2 dòng riêng, giống hệt format của Trường 1 & Trường 2).
+          let amount = cells.length > 1 ? parseNumber(cells[1]) : NaN;
+          let consumedNext = false;
+          if (!Number.isFinite(amount)) {
+            const nextLine = lines[i + 1];
+            if (nextLine !== undefined) {
+              const nextCells = splitPastedRow(nextLine);
+              const nextFirst = cleanPastedCell(nextCells[0] || '');
+              // Dòng kế tiếp phải THỰC SỰ là dòng dữ liệu (nhiều cột), không phải
+              // một nhãn khác (NV mới / TỔNG / header ngành hàng mới).
+              const isAnotherLabel =
+                /^(\d+)\s*-\s*(.+)$/.test(nextFirst) ||
+                isTotal(nextFirst) ||
+                isHeaderMeasure(nextFirst) ||
+                /(DOANH THU|SỐ LƯỢNG)\b/i.test(nextFirst);
+              if (nextCells.length > 1 && !isAnotherLabel) {
+                amount = parseNumber(nextCells[0]);
+                consumedNext = true;
+              }
+            }
+          }
+          if (!Number.isFinite(amount)) continue;
+
+          if (!salesByEmp[canonicalId]) salesByEmp[canonicalId] = {};
+          salesByEmp[canonicalId][currentCategory] = amount;
+          parsedRows++;
+          if (consumedNext) i++; // đã dùng dòng kế tiếp làm dữ liệu, bỏ qua nó
+        }
+
+        Object.defineProperty(salesByEmp, '__meta', {
+          value: { blocks, parsedRows, unmatchedBlocks },
+          enumerable: false
+        });
+        return salesByEmp;
+      }
+
+      // =========================
+      // Render: Inputs (editable lists)
+      // =========================
+      function renderTargetsList(day) {
+        const el = $("listTargets");
+        if (!day.categories.length) {
+          el.innerHTML =
+            '<div class="note">Chưa có ngành hàng được parse.</div>';
+          return;
+        }
+        el.innerHTML = day.categories
+          .map(
+            (c, idx) => `
+            <div class="list-row" data-type="cat" data-id="${escapeHtml(c.id)}">
+              <input class="mini" data-field="name" value="${escapeHtml(c.name)}" />
+              <input class="mini mono" data-field="target" value="${escapeHtml(String(c.target))}" />
+              <div class="row-actions">
+                <button class="btn ghost small" data-act="up" title="Lên">↑</button>
+                <button class="btn ghost small" data-act="down" title="Xuống">↓</button>
+                <button class="btn danger small" data-act="del" title="Xóa">X</button>
+              </div>
+            </div>
+          `
+          )
+          .join("");
+      }
+
+      function renderEmployeesList(day) {
+        const el = $("listEmployees");
+        if (!day.employees.length) {
+          el.innerHTML = '<div class="note">Chưa có nhân viên được parse.</div>';
+          return;
+        }
+        el.innerHTML = day.employees
+          .map(
+            (e) => `
+            <div class="list-row" data-type="emp" data-id="${escapeHtml(e.id)}" style="grid-template-columns: 1fr 0.55fr 0.55fr auto">
+              <input class="mini" data-field="name" value="${escapeHtml(e.name)}" />
+              <input class="mini mono" data-field="empId" value="${escapeHtml(e.empId)}" />
+              <input class="mini mono" data-field="revenue" value="${escapeHtml(String(e.revenue))}" />
+              <div class="row-actions">
+                <button class="btn danger small" data-act="del" title="Xóa">X</button>
+              </div>
+            </div>
+          `
+          )
+          .join("");
+      }
+
+      // =========================
+      // Render: Grids (tables)
+      // =========================
+      function renderCatsGrid(day) {
+        const tb = $("tbodyCats");
+        if (!day.categories.length) {
+          tb.innerHTML =
+            '<tr><td colspan="4" class="cell-muted">Chưa có dữ liệu.</td></tr>';
+          $("pillGridCats").textContent = "0";
+          return;
+        }
+        $("pillGridCats").textContent = String(day.categories.length);
+        tb.innerHTML = day.categories
+          .map((c, idx) => {
+            const baseTarget = Number(c.target || 0);
+            const pct = normalizeBoostPct(c.boostPct);
+            const finalTarget = (baseTarget * pct) / 100;
+            return `
+              <tr draggable="true" data-rowtype="cat" data-id="${escapeHtml(c.id)}">
+                <td class="mono" style="display:flex; gap:8px; align-items:center">
+                  <span class="drag" title="Kéo để reorder" aria-hidden="true">☰</span>
+                  ${idx + 1}
+                </td>
+                <td>
+                  <input class="mini" data-grid="cat" data-field="name" data-id="${escapeHtml(
+                    c.id
+                  )}" value="${escapeHtml(c.name)}" />
+                </td>
+                <td class="cat-target-cell">
+                  <div class="cat-target">
+                    <div class="cat-target-row">
+                      <div class="cat-target-label">Gốc</div>
+                      <input class="mini mono" data-grid="cat" data-field="target" data-id="${escapeHtml(
+                        c.id
+                      )}" value="${escapeHtml(String(c.target ?? ""))}" />
+                    </div>
+                    <div class="cat-target-row">
+                      <div class="cat-target-label">%</div>
+                      <input class="mini mono" data-grid="cat" data-field="boostPct" data-id="${escapeHtml(
+                        c.id
+                      )}" value="${escapeHtml(String(c.boostPct ?? 110))}" />
+                    </div>
+                    <div class="cat-target-meta mono">Cuối: ${formatNumber(finalTarget, 2)}</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="cell-actions">
+                    <button class="btn ghost small" data-grid-act="up" data-id="${escapeHtml(
+                      c.id
+                    )}">↑</button>
+                    <button class="btn ghost small" data-grid-act="down" data-id="${escapeHtml(
+                      c.id
+                    )}">↓</button>
+                    <button class="btn danger small" data-grid-act="delcat" data-id="${escapeHtml(
+                      c.id
+                    )}">Xóa</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderEmpsGrid(day) {
+        const tb = $("tbodyEmps");
+        if (!day.employees.length) {
+          tb.innerHTML =
+            '<tr><td colspan="5" class="cell-muted">Chưa có dữ liệu.</td></tr>';
+          $("pillGridEmps").textContent = "0";
+          return;
+        }
+        $("pillGridEmps").textContent = String(day.employees.length);
+        tb.innerHTML = day.employees
+          .map((e, idx) => {
+            return `
+              <tr data-rowtype="emp" data-id="${escapeHtml(e.id)}">
+                <td class="mono">${idx + 1}</td>
+                <td>
+                  <div style="font-weight:800">${escapeHtml(e.name)}</div>
+                  <div class="cell-muted">Nhóm: ${escapeHtml(e.group || "Chung")}</div>
+                </td>
+                <td class="mono">${escapeHtml(e.empId)}</td>
+                <td>
+                  <input class="mini mono" data-grid="emp" data-field="revenue" data-id="${escapeHtml(
+                    e.id
+                  )}" value="${escapeHtml(String(e.revenue))}" />
+                </td>
+                <td>
+                  <div class="cell-actions">
+                    <button class="btn danger small" data-grid-act="delemp" data-id="${escapeHtml(
+                      e.id
+                    )}">Xóa</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderGroupsGrid(day) {
+        const groups = deriveGroups(day.employees, day.hiddenGroups);
+        const tb = $("tbodyGroups");
+        if (!groups.length) {
+          tb.innerHTML =
+            '<tr><td colspan="3" class="cell-muted">Chưa có nhóm.</td></tr>';
+          $("pillGridGroups").textContent = "0";
+          return;
+        }
+        $("pillGridGroups").textContent = String(groups.length);
+
+        // Count employees per group
+        const counts = new Map();
+        for (const e of day.employees) {
+          const g = (e.group || "Chung").trim() || "Chung";
+          if ((day.hiddenGroups || []).includes(g)) continue; // respect hidden groups
+          counts.set(g, (counts.get(g) || 0) + 1);
+        }
+
+        tb.innerHTML = groups
+          .map(
+            (g) => `
+              <tr>
+                <td style="font-weight:800">${escapeHtml(g)}</td>
+                <td class="mono">${counts.get(g) || 0}</td>
+                <td>
+                  <div class="cell-actions">
+                    <button class="btn danger small" data-grid-act="delgroup" data-group="${escapeHtml(
+                      g
+                    )}">Xóa</button>
+                  </div>
+                </td>
+              </tr>
+            `
+          )
+          .join("");
+      }
+
+      function deriveGroups(employees, hiddenGroups) {
+        const set = new Set();
+        for (const e of employees || []) {
+          const g = (e.group || "Chung").trim() || "Chung";
+          set.add(g);
+        }
+        let groups = [...set].sort((a, b) => a.localeCompare(b, "vi"));
+        if (Array.isArray(hiddenGroups) && hiddenGroups.length) {
+          groups = groups.filter((g) => !hiddenGroups.includes(g));
+        }
+        return groups;
+      }
+
+      function renderGroupFilter(day) {
+        const sel = $("selGroupFilter");
+        const groups = deriveGroups(day.employees, day.hiddenGroups);
+        const options = [
+          { value: "__ALL__", label: "Tất cả nhóm" },
+          ...groups.map((g) => ({ value: g, label: g })),
+        ];
+        sel.innerHTML = options
+          .map((o) => `<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`)
+          .join("");
+        sel.value = state.ui.groupFilter || "__ALL__";
+      }
+
+      // =========================
+      // Analysis
+      // =========================
+	      function computeAnalysis(day, storeMonthlyTarget, dateIso) {
+	        const d = new Date(dateIso + "T00:00:00");
+	        const yyyy = d.getFullYear();
+	        const mm = d.getMonth() + 1;
+	        const dd = d.getDate();
+	        const dim = daysInMonth(yyyy, mm);
+	        const progress = dim ? dd / dim : 0;
+
+        // Filter employees
+        const group = state.ui.groupFilter || "__ALL__";
+        let employees = day.employees.slice();
+        if (group !== "__ALL__") {
+          employees = employees.filter((e) => (e.group || "Chung") === group);
+        }
+        if (state.ui.excludeZero) {
+          employees = employees.filter((e) => Number(e.revenue || 0) > 0);
+        }
+
+	        const count = employees.length || 0;
+	        const perPersonTarget = count ? storeMonthlyTarget / count : 0;
+	        const expected = perPersonTarget * progress;
+
+	        // Category completion rule (Số NH H.T) - MUST match "Chi tiết bán":
+	        // - Chỉ tính các ngành hàng thi đua ở mục (1) có target > 0
+	        // - Target ngành hàng theo NV = Target_NH_cuối / số NV đang lọc
+	        // - % dự kiến ngành hàng = DT_NH / (Target_NH_cuối_theo_NV * tiến độ ngày)
+	        // - 1 ngành hàng "hoàn tất" khi % dự kiến >= 100%
+	        const eligibleCategories = (day.categories || []).filter(
+	          (c) => effectiveCategoryTarget(c) > 0
+	        );
+	        const totalCategories = eligibleCategories.length;
+
+	        // Sales detail per employee per category (đã được filter theo mục 1 ở parser)
+	        const sales = day.sales || {};
+
+	        const rows = employees
+	          .map((e) => {
+		            const revenue = Number(e.revenue || 0);
+		            const empSales = sales[e.empId] || {};
+		            let completedCategories = 0;
+		            for (const cat of eligibleCategories) {
+		              const catTarget = effectiveCategoryTarget(cat);
+		              const perPersonCatTarget = count ? catTarget / count : 0;
+		              if (!(perPersonCatTarget > 0)) continue;
+		              const catRevenue = Number(empSales[cat.name] || 0);
+		              const denom = perPersonCatTarget * progress;
+		              if (!(denom > 0)) continue;
+		              const pct = (catRevenue / denom) * 100;
+		              if (pct >= 100) completedCategories++;
+		            }
+
+	            const remaining = perPersonTarget - revenue;
+	            const ratioExpected = expected > 0 ? revenue / expected : 0;
+	            const percentExpected = expected > 0 ? ratioExpected * 100 : 0;
+	            const ok = revenue >= expected;
+
+	            return {
+	              e,
+	              revenue,
+	              completedCategories,
+	              perPersonTarget,
+	              remaining,
+	              expected,
+	              ratioExpected,
+	              percentExpected,
+	              ok,
+	            };
+	          })
+	          .sort((a, b) => b.revenue - a.revenue);
+
+	        return {
+	          progress,
+	          perPersonTarget,
+	          expected,
+	          employeesFiltered: count,
+	          totalCategories,
+	          rows,
+	        };
+      }
+
+      function chunkArray(arr, size) {
+        const out = [];
+        for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+        return out;
+      }
+
+      function computeSalesDetail(day, dateIso) {
+        // Reuse current filters (group + exclude zero) to match analysis view
+        const group = state.ui.groupFilter || "__ALL__";
+        let employees = day.employees.slice();
+        if (group !== "__ALL__") {
+          employees = employees.filter((e) => (e.group || "Chung") === group);
+        }
+        if (state.ui.excludeZero) {
+          employees = employees.filter((e) => Number(e.revenue || 0) > 0);
+        }
+
+        const d = new Date(String(dateIso || state.ui.selectedDate) + "T00:00:00");
+        const yyyy = d.getFullYear();
+        const mm = d.getMonth() + 1;
+        const dd = d.getDate();
+        const dim = daysInMonth(yyyy, mm);
+        const progress = dim ? dd / dim : 0;
+
+        const employeeCount = employees.length || 0;
+        const sales = day.sales || {};
+        const categories = (day.categories || []).filter((c) => effectiveCategoryTarget(c) > 0);
+        const totalCategories = categories.length;
+
+        // Per employee completion: completed if projected% >= 100%
+        // projected% = actual / ((catTarget/employeeCount) * progress)
+        const rows = employees
+          .map((e) => {
+            const empSales = sales[e.empId] || {};
+            let completed = 0;
+            for (const cat of categories) {
+              const perPersonTarget = employeeCount
+                ? effectiveCategoryTarget(cat) / employeeCount
+                : 0;
+              const denom = perPersonTarget * progress;
+              if (!(denom > 0)) continue;
+              const actual = Number(empSales[cat.name] || 0);
+              const pct = (actual / denom) * 100;
+              if (pct >= 100) completed++;
+            }
+            return {
+              e,
+              revenue: Number(e.revenue || 0),
+              completed,
+            };
+          })
+          // Sort for sales-detail table: SL NH HT (desc) then DTQĐ (desc)
+          .sort((a, b) => {
+            if (b.completed !== a.completed) return b.completed - a.completed;
+            return b.revenue - a.revenue;
+          });
+
+        // Totals per category
+        const totalsByCat = new Map();
+        for (const cat of categories) totalsByCat.set(cat.name, 0);
+        for (const r of rows) {
+          const empSales = sales[r.e.empId] || {};
+          for (const cat of categories) {
+            const v = Number(empSales[cat.name] || 0);
+            if (Number.isFinite(v)) totalsByCat.set(cat.name, (totalsByCat.get(cat.name) || 0) + v);
+          }
+        }
+
+        // Store-level completion across categories: projected% >= 100%
+        // projected% = sumActual / (catTargetCuoi * progress)
+        let storeCompleted = 0;
+        for (const cat of categories) {
+          const sumActual = totalsByCat.get(cat.name) || 0;
+          const denom = effectiveCategoryTarget(cat) * progress;
+          if (denom > 0 && Number(sumActual) / denom >= 1) storeCompleted++;
+        }
+
+        const totalRevenue = rows.reduce((s, r) => s + (Number(r.revenue) || 0), 0);
+
+        return {
+          rows,
+          categories,
+          employeeCount,
+          totalCategories,
+          totalsByCat,
+          storeCompleted,
+          totalRevenue,
+          progress,
+        };
+      }
+
+      function renderAnalysis(day) {
+	        const store = getActiveStore();
+	        const dateIso = state.ui.selectedDate;
+	        const monthly = Number(store?.monthlyTarget || 0);
+	        const result = computeAnalysis(day, monthly, dateIso);
+
+	        $("txtPerPerson").textContent = formatNumber(result.perPersonTarget, 2);
+	        $("txtProgress").textContent = `${Math.round(result.progress * 100)}%`;
+	        $("analysisNote").innerHTML = "";
+
+        const tb = $("tbodyAnalysis");
+        if (!result.rows.length) {
+          tb.innerHTML =
+            '<tr><td colspan="7" class="cell-muted">Chưa có nhân viên sau khi lọc.</td></tr>';
+          $("pillAnalysis").textContent = "Không có dữ liệu";
+          return;
+        }
+
+	        $("pillAnalysis").textContent = `NV: ${result.employeesFiltered}`;
+	        tb.innerHTML = result.rows
+	          .map((r, idx) => {
+              const rank = idx + 1;
+              const rankBadge =
+                rank === 1
+                  ? '<span class="rank-badge gold" title="Hạng 1"><span class="icon">🏆</span>#1</span>'
+                  : rank === 2
+                    ? '<span class="rank-badge silver" title="Hạng 2"><span class="icon">🥈</span>#2</span>'
+                    : rank === 3
+                      ? '<span class="rank-badge bronze" title="Hạng 3"><span class="icon">🥉</span>#3</span>'
+                      : `<span class="mono" style="font-weight:900">#${rank}</span>`;
+
+	            const pct = Number.isFinite(r.percentExpected) ? r.percentExpected : 0;
+	            const width = clamp(pct, 0, 140); // allow >100% but cap visual
+	            const barClass = r.ok ? "bar" : "bar red";
+	            const tagClass = r.ok ? "tag ok" : "tag bad";
+	            const tagText = r.ok ? "Đạt" : "Chưa đạt";
+
+	            return `
+	              <tr>
+	                <td>${rankBadge}</td>
+	                <td>
+	                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+	                    <div>
+	                      <div style="font-weight:900">${escapeHtml(r.e.name)}</div>
+                      <div class="cell-muted mono">${escapeHtml(r.e.empId)} • Nhóm: ${escapeHtml(
+              r.e.group || "Chung"
+            )}</div>
+                    </div>
+                    <span class="${tagClass}">${tagText}</span>
+                  </div>
+	                </td>
+	                <td class="mono" style="font-weight:900">${r.completedCategories}/${result.totalCategories}</td>
+	                <td class="mono" style="font-weight:900">${formatNumber(r.revenue, 2)}</td>
+	                <td class="mono">${formatNumber(r.perPersonTarget, 2)}</td>
+	                <td class="mono">${formatNumber(r.remaining, 2)}</td>
+	                <td>
+	                  <div style="display:flex; align-items:center; gap:10px">
+                    <div class="progress" title="So với expected theo tiến độ ngày">
+                      <div class="${barClass}" style="width:${width}%"></div>
+                    </div>
+	                    <div class="mono" style="min-width:64px; text-align:right; font-weight:900">
+	                      ${formatNumber(pct, 0)}%
+	                    </div>
+	                  </div>
+	                </td>
+	              </tr>
+	            `;
+	          })
+	          .join("");
+	      }
+
+      // =========================
+      // Sync: textarea <-> state
+      // =========================
+      function syncTextareasFromDay(day) {
+        $("taTargets").value = day.targetText || "";
+        $("taEmployees").value = day.employeeText || "";
+        $("taSales").value = day.salesText || "";
+      }
+
+      function renderSalesDetailTables(day) {
+        const box = $("salesDetailTables");
+        const note = $("salesDetailNote");
+        const pill = $("pillSalesDetail");
+
+        const detail = computeSalesDetail(day, state.ui.selectedDate);
+        pill.textContent = `${detail.totalCategories} NH • ${detail.rows.length} NV`;
+
+        if (!detail.employeeCount || !detail.totalCategories) {
+          note.textContent =
+            "Cần có (1) ngành hàng target và (2) nhân viên + (3) chi tiết bán để lên bảng.";
+          box.innerHTML = "";
+          return;
+        }
+
+        note.innerHTML = "";
+
+        const chunks = chunkArray(detail.categories, 10);
+        const tablesHtml = chunks
+          .map((catsChunk, idxChunk) => {
+            const theadCats = catsChunk
+              .map((c) => `<th style="width:90px;word-break:break-word;white-space:normal;line-height:1.25"><div class="th-cat" style="font-size:9px">${escapeHtml(c.name)}</div></th>`)
+              .join("");
+
+            const bodyRows = detail.rows
+              .map((r, idx) => {
+                const rank = idx + 1;
+                const rankBadge =
+                  rank === 1
+                    ? '<span class="rank-badge gold" title="Hạng 1"><span class="icon">🏆</span>#1</span>'
+                    : rank === 2
+                      ? '<span class="rank-badge silver" title="Hạng 2"><span class="icon">🥈</span>#2</span>'
+                      : rank === 3
+                        ? '<span class="rank-badge bronze" title="Hạng 3"><span class="icon">🥉</span>#3</span>'
+                        : `<span class="mono" style="font-weight:900">#${rank}</span>`;
+
+                const empSales = (day.sales || {})[r.e.empId] || {};
+                const cells = catsChunk
+                  .map((cat) => {
+                    const actual = Number(empSales[cat.name] || 0);
+                    const perPersonTarget = detail.employeeCount
+                      ? effectiveCategoryTarget(cat) / detail.employeeCount
+                      : 0;
+                    const denom = perPersonTarget * detail.progress;
+                    const pct = denom > 0 ? (actual / denom) * 100 : 0;
+                    const good = pct >= 100;
+                    const cls = good ? "cell-cat good" : "cell-cat bad";
+                    return `
+                      <td class="${cls}">
+                        <div class="mono">${formatNumber(actual, 2)} / ${formatNumber(
+                      perPersonTarget,
+                      2
+                    )}</div>
+                        <div class="pct mono" style="color:var(--blue);font-weight:700">${formatNumber(pct, 0)}%</div>
+                      </td>
+                    `;
+                  })
+                  .join("");
+
+                return `
+                  <tr>
+                    <td>${rankBadge}</td>
+                    <td>
+                      <div style="font-weight:900">${escapeHtml(abbreviateName(r.e.name))}</div>
+                      <div class="cell-muted mono">${escapeHtml(r.e.empId)}</div>
+                    </td>
+                    <td class="mono" style="font-weight:900; color: var(--red)">${formatNumber(
+                      r.revenue,
+                      2
+                    )}</td>
+                    <td class="mono" style="font-weight:900; color: var(--green)">${r.completed}/${detail.totalCategories}</td>
+                    ${cells}
+                  </tr>
+                `;
+              })
+              .join("");
+
+            // Footer totals
+            const footerCells = catsChunk
+              .map((cat) => {
+                const sumActual = Number(detail.totalsByCat.get(cat.name) || 0);
+                const finalTarget = effectiveCategoryTarget(cat);
+                const denom = finalTarget * detail.progress;
+                const pct = denom > 0 ? (sumActual / denom) * 100 : 0;
+                const good = pct >= 100;
+                const cls = good ? "cell-cat good" : "cell-cat bad";
+                return `
+                  <td class="${cls}">
+                    <div class="mono">${formatNumber(sumActual, 2)} / ${formatNumber(
+                  finalTarget,
+                  2
+                )}</div>
+                    <div class="pct mono" style="color:var(--blue);font-weight:700">${formatNumber(pct, 0)}%</div>
+                  </td>
+                `;
+              })
+              .join("");
+
+            const footer = `
+              <tr>
+                <td class="mono" style="font-weight:900">Tổng</td>
+                <td class="mono"></td>
+                <td class="mono" style="font-weight:900; color: var(--red)">${formatNumber(
+                  detail.totalRevenue,
+                  2
+                )}</td>
+                <td class="mono" style="font-weight:900; color: var(--green)">${detail.storeCompleted}/${detail.totalCategories}</td>
+                ${footerCells}
+              </tr>
+            `;
+
+            return `
+              <div class="table-scroll">
+                <table class="table" aria-label="Chi tiết bán (bảng ${idxChunk + 1})">
+                  <thead>
+                    <tr>
+                      <th style="width:44px">Hạng</th>
+                      <th style="width:140px">Nhân viên</th>
+                      <th style="width:70px">DTQĐ</th>
+                      <th style="width:66px">SL<br>NH HT</th>
+                      ${theadCats}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${bodyRows}
+                    ${footer}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          })
+          .join("");
+
+        box.innerHTML = tablesHtml;
+      }
+
+      function syncDayFromTextareas(day) {
+        day.targetText = $("taTargets").value || "";
+        day.employeeText = $("taEmployees").value || "";
+        day.salesText = $("taSales").value || "";
+      }
+
+      function rebuildParsed(day) {
+        // Parse targets + employees
+        const prevCats = Array.isArray(day.categories) ? day.categories : [];
+        const prevByName = new Map(
+          prevCats
+            .filter((c) => c && typeof c === "object")
+            .map((c) => [normKey(c.name), c])
+        );
+
+        day.categories = parseTargetsText(day.targetText);
+        // Preserve stable id + boostPct (để không mất focus và giữ % target)
+        for (const c of day.categories) {
+          const prev = prevByName.get(normKey(c.name));
+          if (prev) {
+            if (prev.id) c.id = prev.id;
+            if ("boostPct" in prev) c.boostPct = normalizeBoostPct(prev.boostPct);
+          }
+          if (!("boostPct" in c)) c.boostPct = 110;
+          c.boostPct = normalizeBoostPct(c.boostPct);
+        }
+        day.employees = parseEmployeesText(day.employeeText);
+
+        // Keep hiddenGroups stable, but remove groups that no longer exist in employees
+        if (!Array.isArray(day.hiddenGroups)) day.hiddenGroups = [];
+        const derivedAll = new Set(deriveGroups(day.employees, []));
+        day.hiddenGroups = day.hiddenGroups.filter((g) => derivedAll.has(g));
+
+        // Parse sales detail
+        day.sales = parseSalesText(day.salesText, day.employees, day.categories);
+        const salesEmpCount = Object.keys(day.sales || {}).length;
+        const salesRowCount = Object.values(day.sales || {}).reduce((n, obj) => n + Object.keys(obj || {}).length, 0);
+        const salesMeta = day.sales?.__meta || {};
+        const salesNote = $("salesNote");
+        if (salesNote) {
+          salesNote.textContent = salesRowCount
+            ? `✓ Trường 3: ${salesEmpCount} NV • ${salesRowCount} ô dữ liệu • ${salesMeta.blocks || 0} ngành hàng`
+            : (day.salesText ? `✕ Trường 3: chưa đọc được NV (đã nhận ${salesMeta.blocks || 0} ngành hàng).` : "Chưa nhập Trường 3.");
+        }
+        day.updatedAt = Date.now();
+      }
+
+      // ── FOCUS SAVE / RESTORE ──────────────────────────────────────
+      function saveFocus() {
+        const el = document.activeElement;
+        if (!el || el.tagName !== "INPUT") return null;
+        // Xác định container chứa input (list-row hoặc data-grid)
+        const listRow = el.closest("[data-type][data-id]");
+        return {
+          dataId:    el.dataset.id    || (listRow && listRow.dataset.id)    || null,
+          dataField: el.dataset.field || null,
+          dataGrid:  el.dataset.grid  || null,
+          dataType:  (listRow && listRow.dataset.type) || null,
+          selStart:  el.selectionStart,
+          selEnd:    el.selectionEnd,
+          value:     el.value,
+        };
+      }
+
+      function restoreFocus(saved) {
+        if (!saved || !saved.dataField) return;
+        let inp = null;
+        if (saved.dataGrid && saved.dataId) {
+          // Grid input: [data-grid][data-field][data-id]
+          inp = document.querySelector(
+            `input[data-grid="${saved.dataGrid}"][data-field="${saved.dataField}"][data-id="${saved.dataId}"]`
+          );
+        } else if (saved.dataType && saved.dataId) {
+          // List-row input
+          const row = document.querySelector(
+            `[data-type="${saved.dataType}"][data-id="${saved.dataId}"]`
+          );
+          if (row) inp = row.querySelector(`input[data-field="${saved.dataField}"]`);
+        }
+        if (!inp) return;
+        // Khôi phục giá trị đang gõ (tránh bị mất data khi re-render)
+        if (typeof saved.value === "string" && inp.value !== saved.value) inp.value = saved.value;
+        inp.focus({ preventScroll: true });
+        try {
+          if (
+            Number.isFinite(saved.selStart) &&
+            Number.isFinite(saved.selEnd) &&
+            typeof inp.setSelectionRange === "function"
+          ) {
+            inp.setSelectionRange(saved.selStart, saved.selEnd);
+          }
+        } catch (_) {}
+      }
+
+      // safeRender: lưu focus → chạy callback render → restore focus
+      function safeRender(fn) {
+        const saved = saveFocus();
+        fn();
+        if (!saved) return;
+        // Đợi browser apply DOM changes xong rồi mới restore selection/caret
+        requestAnimationFrame(() => restoreFocus(saved));
+      }
+      // ─────────────────────────────────────────────────────────────
+
+      function refreshAll() {
+        const store = getActiveStore();
+        const day = getActiveDayData(true);
+        if (!store || !day) return;
+
+        $("pillTargets").textContent = `${(day.targetText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
+        $("pillEmployees").textContent = `${(day.employees || []).length} NV`;
+        $("pillSales").textContent = `${(day.salesText || "").split(/\r?\n/).filter((l) => l.trim()).length} dòng`;
+
+        $("pillStore").textContent = store.name || "Chưa chọn";
+        $("pillStore").title = `Store: ${store.name || ""} • Date: ${state.ui.selectedDate}`;
+        $("summaryHint").textContent = `Store: ${store.name} • Ngày: ${state.ui.selectedDate}`;
+        $("txtReportStore").textContent = store.name || "—";
+        $("txtReportStoreChip").textContent = store.name || "—";
+
+        // Dùng safeRender để re-render mà không làm mất focus/caret
+        safeRender(() => {
+          renderTargetsList(day);
+          renderEmployeesList(day);
+          renderCatsGrid(day);
+          renderEmpsGrid(day);
+          renderGroupsGrid(day);
+          renderGroupFilter(day);
+          renderAnalysis(day);
+          renderSalesDetailTables(day);
+        });
+
+        const monthlyInp = $("inpStoreMonthlyTarget");
+        if (document.activeElement !== monthlyInp) {
+          monthlyInp.value = String(store.monthlyTarget ?? "");
+        }
+      }
+
+      // =========================
+      // Store & Day management
+      // =========================
+      function renderStoreSelect() {
+        const sel = $("selStore");
+        const stores = Object.values(state.stores);
+        sel.innerHTML = stores
+          .map(
+            (s) =>
+              `<option value="${escapeHtml(s.key)}">${escapeHtml(s.name)}</option>`
+          )
+          .join("");
+        if (state.ui.selectedStoreKey && state.stores[state.ui.selectedStoreKey]) {
+          sel.value = state.ui.selectedStoreKey;
+        } else if (stores.length) {
+          state.ui.selectedStoreKey = stores[0].key;
+          sel.value = state.ui.selectedStoreKey;
+        }
+      }
+
+      function setActiveDate(dateIso) {
+        state.ui.selectedDate = dateIso;
+        $("inpDate").value = dateIso;
+        const day = getActiveDayData(true);
+        syncTextareasFromDay(day);
+        rebuildParsed(day);
+        refreshAll();
+        saveToLocalStorage();
+      }
+
+      function setActiveStore(storeKey) {
+        state.ui.selectedStoreKey = storeKey;
+        const store = getActiveStore();
+        if (store) $("inpStoreMonthlyTarget").value = String(store.monthlyTarget ?? "");
+        // Ensure day exists for current date
+        const day = getActiveDayData(true);
+        syncTextareasFromDay(day);
+        rebuildParsed(day);
+        refreshAll();
+        saveToLocalStorage();
+      }
+
+      // =========================
+      // UI Actions
+      // =========================
+      const parseAndRenderDebounced = debounce(() => {
+        const day = getActiveDayData(true);
+        if (!day) return;
+        syncDayFromTextareas(day);
+        rebuildParsed(day);
+        refreshAll();
+      }, 250);
+
+      function attachEvents() {
+        // Clock
+        const tick = () => {
+          const d = new Date();
+          $("clock").textContent = d.toLocaleString("vi-VN", {
+            hour12: false,
+            weekday: "short",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        };
+        tick();
+        window.setInterval(tick, 30_000);
+
+        // Textareas: auto-parse to update grids
+        $("taTargets").addEventListener("input", parseAndRenderDebounced);
+        $("taEmployees").addEventListener("input", parseAndRenderDebounced);
+        $("taSales").addEventListener("input", parseAndRenderDebounced);
+
+        // Trường 2: nhập doanh thu nhân viên bằng copy/dán trực tiếp (công ty không còn
+        // cho xuất file Excel), dùng chung textarea taEmployees + parser hiện có.
+
+        // ── Đồng bộ Target ngành hàng (Trường 1) lên Google Sheet thi đua ──
+        // Mỗi lần bấm "Parse" ở Trường 1: gửi toàn bộ danh sách {tên, target} vừa đọc được
+        // lên Google Apps Script, script sẽ xoá target cũ và ghi target mới vào đúng
+        // ngành hàng tương ứng trong sheet — để trang chủ (đọc sheet này) luôn thấy dữ liệu
+        // mới nhất mà không cần ai nhập tay lại vào sheet.
+        const SHEET_SYNC_URL = "https://script.google.com/macros/s/AKfycbwjRRYBYa-PsNcSJtmG50xBzJ11LvjyN62Fp5Ov8ejMPizELqS0ppMQbE82hDJpbDOLLg/exec";
+
+        function pushTargetsToSheet(categories) {
+          const statusEl = $("targetSyncStatus");
+          if (!categories || !categories.length) {
+            if (statusEl) { statusEl.textContent = "Không có ngành hàng nào để đồng bộ."; statusEl.className = "sync-status"; }
+            return;
+          }
+          if (statusEl) { statusEl.textContent = "⏳ Đang đồng bộ lên Google Sheet…"; statusEl.className = "sync-status wait"; }
+
+          const items = categories.map((c) => ({ name: c.name, target: c.target }));
+
+          fetch(SHEET_SYNC_URL, {
+            method: "POST",
+            // Cố tình dùng text/plain để trình duyệt không gửi preflight OPTIONS
+            // (Google Apps Script Web App không xử lý preflight CORS).
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ items }),
+          })
+            .then((r) => r.json())
+            .then((res) => {
+              if (res && res.ok) {
+                const now = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+                if (statusEl) {
+                  statusEl.textContent = `✓ Đã đồng bộ ${res.updated} ngành hàng lên Google Sheet lúc ${now}`;
+                  statusEl.className = "sync-status ok";
+                }
+              } else {
+                throw new Error((res && res.error) || "Phản hồi không hợp lệ từ Apps Script");
+              }
+            })
+            .catch((err) => {
+              console.error("Đồng bộ Google Sheet thất bại:", err);
+              if (statusEl) {
+                statusEl.textContent = "✗ Không đồng bộ được lên Google Sheet (kiểm tra kết nối / quyền truy cập script).";
+                statusEl.className = "sync-status err";
+              }
+            });
+        }
+
+        // Parse buttons
+        $("btnParseTargets").addEventListener("click", () => {
+          parseAndRenderDebounced();
+          pushTargetsToSheet(parseTargetsText($("taTargets").value));
+        });
+        $("btnParseEmployees").addEventListener("click", () => {
+          parseAndRenderDebounced();
+        });
+        $("btnParseSales").addEventListener("click", () => {
+          parseAndRenderDebounced();
+        });
+
+        // Store select
+        $("selStore").addEventListener("change", (e) => {
+          setActiveStore(e.target.value);
+        });
+
+        // Add/Edit/Delete store
+        $("btnAddStore").addEventListener("click", () => {
+          const name = window.prompt("Tên siêu thị mới?", "New Store");
+          if (!name) return;
+          const key = uid("store");
+          state.stores[key] = { key, name: name.trim(), monthlyTarget: 0, days: {} };
+          renderStoreSelect();
+          setActiveStore(key);
+          saveToLocalStorage();
+        });
+
+        $("btnEditStore").addEventListener("click", () => {
+          const store = getActiveStore();
+          if (!store) return;
+          const name = window.prompt("Sửa tên siêu thị:", store.name);
+          if (!name) return;
+          store.name = name.trim();
+          renderStoreSelect();
+          refreshAll();
+          saveToLocalStorage();
+        });
+
+        $("btnDeleteStore").addEventListener("click", () => {
+          const store = getActiveStore();
+          if (!store) return;
+          if (!window.confirm(`Xóa siêu thị "${store.name}"? (xóa toàn bộ dữ liệu)`)) return;
+          delete state.stores[store.key];
+          renderStoreSelect();
+          const first = Object.values(state.stores)[0];
+          if (first) setActiveStore(first.key);
+          else {
+            ensureSeedStores();
+            renderStoreSelect();
+            setActiveStore(state.ui.selectedStoreKey);
+          }
+          saveToLocalStorage();
+        });
+
+        // Date picker
+        $("inpDate").addEventListener("change", (e) => {
+          const v = e.target.value || todayISO();
+          setActiveDate(v);
+        });
+
+        // Store monthly target
+        $("inpStoreMonthlyTarget").addEventListener(
+          "input",
+          debounce((e) => {
+            const store = getActiveStore();
+            if (!store) return;
+            store.monthlyTarget = Number(e.target.value || 0);
+            refreshAll();
+            saveToLocalStorage();
+          }, 250)
+        );
+
+        // Delete day data
+        $("btnDeleteDay").addEventListener("click", () => {
+          const store = getActiveStore();
+          if (!store) return;
+          const date = state.ui.selectedDate;
+          if (!store.days[date]) {
+            window.alert("Ngày này chưa có dữ liệu để xóa.");
+            return;
+          }
+          if (!window.confirm(`Xóa dữ liệu ngày ${date}?`)) return;
+          delete store.days[date];
+          const day = getActiveDayData(true);
+          syncTextareasFromDay(day);
+          rebuildParsed(day);
+          refreshAll();
+          saveToLocalStorage();
+        });
+
+        // Back
+        $("btnBack").addEventListener("click", () => {
+          try {
+            history.back();
+          } catch {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        });
+
+        // Analyze & save
+        $("btnAnalyzeSave").addEventListener("click", () => {
+          const day = getActiveDayData(true);
+          if (!day) return;
+
+          // Ensure current textarea content is in state before saving
+          syncDayFromTextareas(day);
+          rebuildParsed(day);
+
+          // Save store/monthly target is already bound to input
+          saveToLocalStorage();
+          refreshAll();
+
+          window.scrollTo({ top: $("analysisCard").offsetTop - 90, behavior: "smooth" });
+        });
+
+        async function captureElementPng(el, filename) {
+          try {
+            const canvas = await window.html2canvas(el, {
+              backgroundColor: "#f0f4f8",
+              scale: window.devicePixelRatio || 2,
+              useCORS: true,
+            });
+            const url = canvas.toDataURL("image/png");
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            a.click();
+          } catch (e) {
+            console.error(e);
+            window.alert(
+              "Không lưu được ảnh. Hãy thử lại (hoặc mở file bằng http server)."
+            );
+          }
+        }
+
+        // Export helper — v4: inject override style, clone trực tiếp vào body
+        async function captureElementsForExport(elements, filename, options = {}) {
+          const els = (elements || []).filter(Boolean);
+          if (!els.length) return;
+          const fitWidth = Number(options.fitWidth || 0);
+
+          // --- Style override: dùng <style> tag inject vào clone để phá hết max-width ---
+          const overrideCSS = `
+            .export-root * { box-sizing: border-box !important; }
+            .export-root, .export-root .container,
+            .export-root .card, .export-root .analysis,
+            .export-root section, .export-root article,
+            .export-root .cards-grid, .export-root .input-wrap,
+            .export-root .grids, .export-root .split-tables {
+              max-width: none !important;
+              width: auto !important;
+              display: block !important;
+              grid-template-columns: unset !important;
+              float: none !important;
+              position: relative !important;
+            }
+            .export-root .card-body {
+              max-height: none !important;
+              overflow: visible !important;
+            }
+            .export-root .table-scroll {
+              overflow: visible !important;
+              max-width: none !important;
+              width: max-content !important;
+              display: inline-block !important;
+            }
+            .export-root table {
+              min-width: 0 !important;
+              width: max-content !important;
+              table-layout: auto !important;
+            }
+            .export-root .table {
+              min-width: 0 !important;
+            }
+            .export-root .cell-cat {
+              min-width: 90px !important;
+              max-width: 110px !important;
+            }
+            .export-root .report-header {
+              width: 100% !important;
+              max-width: none !important;
+              box-sizing: border-box !important;
+            }
+          `;
+
+          // --- Tạo wrapper ngoài DOM, dùng position:absolute để html2canvas đọc được ---
+          const wrapper = document.createElement("div");
+          wrapper.className = "export-root";
+          wrapper.style.position = "absolute";
+          wrapper.style.left = "0px";
+          wrapper.style.top = (document.body.scrollHeight + 100) + "px";
+          wrapper.style.width = (fitWidth > 0 ? `${fitWidth}px` : "1400px");
+          wrapper.style.padding = "24px";
+          wrapper.style.background = "#f3f5f7";
+          wrapper.style.zIndex = "0";
+          wrapper.style.display = "inline-block";
+
+          // Inject override style vào wrapper
+          const styleTag = document.createElement("style");
+          styleTag.textContent = overrideCSS;
+          wrapper.appendChild(styleTag);
+
+          // Clone từng element vào wrapper
+          for (const el of els) {
+            const c = el.cloneNode(true);
+            c.style.marginBottom = "16px";
+            wrapper.appendChild(c);
+          }
+
+          document.body.appendChild(wrapper);
+
+          // Đợi reflow đủ lâu
+          await new Promise(r => requestAnimationFrame(r));
+          await new Promise(r => requestAnimationFrame(r));
+          await new Promise(r => setTimeout(r, 80));
+
+          // Nếu bảng rộng hơn fitWidth, mở rộng wrapper để capture đủ cột
+          const baseW = fitWidth > 0 ? fitWidth : 1400;
+          let maxTableW = 0;
+          for (const t of wrapper.querySelectorAll("table")) {
+            maxTableW = Math.max(maxTableW, t.scrollWidth || 0);
+          }
+          const targetW = Math.max(baseW, maxTableW + 2); // +2 tránh rounding
+          if (targetW !== wrapper.offsetWidth) wrapper.style.width = `${targetW}px`;
+
+          // Đợi reflow sau khi đổi width
+          await new Promise(r => requestAnimationFrame(r));
+
+          const W = wrapper.scrollWidth || wrapper.offsetWidth;
+          const H = wrapper.scrollHeight || wrapper.offsetHeight;
+
+          try {
+            // html2canvas/canvas có giới hạn kích thước tối đa theo từng chiều.
+            // Nếu scale quá lớn sẽ bị cắt mất phần cuối (thường xảy ra với báo cáo dài).
+            const MAX_DIM = 16384;
+            // Đảm bảo canvas không vượt giới hạn (nếu vượt sẽ bị cắt mất dòng/cột).
+            // Không đặt min-scale, chấp nhận ảnh nhỏ hơn để không bị crop.
+            const scale = Math.min(
+              2,
+              MAX_DIM / Math.max(1, W),
+              MAX_DIM / Math.max(1, H)
+            );
+
+            const targetCanvasW = Math.ceil(W * scale);
+            const targetCanvasH = Math.ceil(H * scale);
+
+            // Fallback chắc ăn: nếu vẫn có nguy cơ vượt giới hạn/crop → chụp theo lát rồi ghép.
+            const needTiling =
+              targetCanvasW > MAX_DIM ||
+              targetCanvasH > MAX_DIM ||
+              W > MAX_DIM ||
+              H > MAX_DIM;
+
+            if (needTiling) {
+              const tileMaxCssW = Math.max(400, Math.floor(MAX_DIM / Math.max(scale, 0.01)));
+              const tileMaxCssH = Math.max(400, Math.floor(MAX_DIM / Math.max(scale, 0.01)));
+
+              const tilesX = Math.ceil(W / tileMaxCssW);
+              const tilesY = Math.ceil(H / tileMaxCssH);
+
+              const outCanvas = document.createElement("canvas");
+              outCanvas.width = Math.ceil(W * scale);
+              outCanvas.height = Math.ceil(H * scale);
+              const ctx = outCanvas.getContext("2d");
+
+              for (let ty = 0; ty < tilesY; ty++) {
+                for (let tx = 0; tx < tilesX; tx++) {
+                  const x = tx * tileMaxCssW;
+                  const y = ty * tileMaxCssH;
+                  const w = Math.min(tileMaxCssW, W - x);
+                  const h = Math.min(tileMaxCssH, H - y);
+
+                  const tile = await window.html2canvas(wrapper, {
+                    backgroundColor: "#f0f4f8",
+                    scale,
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false,
+                    x,
+                    y,
+                    scrollX: 0,
+                    scrollY: 0,
+                    width: w,
+                    height: h,
+                    windowWidth: W,
+                    windowHeight: H,
+                  });
+                  ctx.drawImage(tile, Math.floor(x * scale), Math.floor(y * scale));
+                }
+              }
+
+              const url = outCanvas.toDataURL("image/png");
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = filename;
+              a.click();
+            } else {
+              const canvas = await window.html2canvas(wrapper, {
+                backgroundColor: "#f0f4f8",
+                scale,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                x: 0,
+                y: 0,
+                scrollX: 0,
+                scrollY: 0,
+                width: W,
+                height: H,
+                windowWidth: W,
+                windowHeight: H,
+              });
+              const url = canvas.toDataURL("image/png");
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = filename;
+              a.click();
+            }
+          } catch (err) {
+            console.error("html2canvas error:", err);
+            window.alert("Không lưu được ảnh. Thử lại nhé!");
+          } finally {
+            wrapper.remove();
+          }
+        }
+
+        // Capture only the report sections (no grids)
+        $("btnCaptureAnalysis").addEventListener("click", async () => {
+          await captureElementsForExport(
+            [$("reportHeader"), $("analysisCard")],
+            `phan-tich-${state.ui.selectedDate}.png`,
+            { fitWidth: 1200 }
+          );
+        });
+
+        $("btnCaptureSales").addEventListener("click", async () => {
+          // Capture full width so the "Nhân viên" column never gets cut off
+          await captureElementsForExport(
+            [$("reportHeader"), $("salesDetailCard")],
+            `chi-tiet-ban-${state.ui.selectedDate}.png`,
+            { fitWidth: 1200 }
+          );
+        });
+
+        // ── Editable list/grid: KHÔNG re-render khi đang gõ ──────────
+        // Cập nhật data ngay, chỉ refresh analysis (debounce).
+        // List re-render khi blur (rời ô) để tránh mất focus.
+
+        // refreshAnalysisDebounced removed — dùng refreshAll + safeRender thay thế
+
+        // INPUT: chỉ cập nhật data + refresh analysis, KHÔNG đụng list DOM
+        document.addEventListener("input", (e) => {
+          const inp = e.target;
+          if (inp.tagName !== "INPUT") return;
+
+          const row = inp.closest(".list-row");
+          if (!row) return;
+
+          const day   = getActiveDayData(true);
+          if (!day) return;
+
+          const type  = row.getAttribute("data-type");
+          const id    = row.getAttribute("data-id");
+          const field = inp.getAttribute("data-field");
+          if (!type || !id || !field) return;
+
+          if (type === "cat") {
+            const c = day.categories.find((x) => x.id === id);
+            if (!c) return;
+            if (field === "name")   c.name   = inp.value;
+            if (field === "target") { const v = parseNumber(inp.value); if (Number.isFinite(v)) c.target = v; }
+          }
+          if (type === "emp") {
+            const emp = day.employees.find((x) => x.id === id);
+            if (!emp) return;
+            if (field === "name")    emp.name    = inp.value;
+            if (field === "empId")   emp.empId   = inp.value.trim();
+            if (field === "revenue") { const v = parseNumber(inp.value); if (Number.isFinite(v)) emp.revenue = v; }
+          }
+
+          // Dùng safeRender để refreshAll không làm mất focus
+          refreshAll();
+          saveToLocalStorage();
+        });
+
+                document.addEventListener("click", (e) => {
+          const btn = e.target.closest("button");
+          if (!btn) return;
+          const day = getActiveDayData(true);
+          if (!day) return;
+
+          // list actions
+          const row = btn.closest(".list-row");
+          if (row && row.dataset.type) {
+            const type = row.dataset.type;
+            const id = row.dataset.id;
+            const act = btn.dataset.act;
+            if (!act) return;
+
+          if (type === "cat") {
+              const idx = day.categories.findIndex((c) => c.id === id);
+              if (idx < 0) return;
+              if (act === "del") day.categories.splice(idx, 1);
+              if (act === "up" && idx > 0) {
+                const [x] = day.categories.splice(idx, 1);
+                day.categories.splice(idx - 1, 0, x);
+              }
+              if (act === "down" && idx < day.categories.length - 1) {
+                const [x] = day.categories.splice(idx, 1);
+                day.categories.splice(idx + 1, 0, x);
+              }
+            }
+
+            if (type === "emp") {
+              const idx = day.employees.findIndex((x) => x.id === id);
+              if (idx < 0) return;
+              if (act === "del") day.employees.splice(idx, 1);
+            }
+
+            // Keep hiddenGroups consistent
+            day.hiddenGroups = (day.hiddenGroups || []).filter((g) =>
+              deriveGroups(day.employees, []).includes(g)
+            );
+            refreshAll();
+            return;
+          }
+
+          // grid actions
+          const gridAct = btn.dataset.gridAct;
+          if (gridAct) {
+            if (gridAct === "delcat" || gridAct === "up" || gridAct === "down") {
+              const id = btn.dataset.id;
+              const idx = day.categories.findIndex((c) => c.id === id);
+              if (idx < 0) return;
+              if (gridAct === "delcat") day.categories.splice(idx, 1);
+              if (gridAct === "up" && idx > 0) {
+                const [x] = day.categories.splice(idx, 1);
+                day.categories.splice(idx - 1, 0, x);
+              }
+              if (gridAct === "down" && idx < day.categories.length - 1) {
+                const [x] = day.categories.splice(idx, 1);
+                day.categories.splice(idx + 1, 0, x);
+              }
+              refreshAll();
+              return;
+            }
+
+            if (gridAct === "delemp") {
+              const id = btn.dataset.id;
+              const idx = day.employees.findIndex((x) => x.id === id);
+              if (idx < 0) return;
+              day.employees.splice(idx, 1);
+              day.hiddenGroups = (day.hiddenGroups || []).filter((g) =>
+                deriveGroups(day.employees, []).includes(g)
+              );
+              refreshAll();
+              return;
+            }
+
+            if (gridAct === "delgroup") {
+              const g = btn.dataset.group;
+              if (!g) return;
+              if (!Array.isArray(day.hiddenGroups)) day.hiddenGroups = [];
+              if (!day.hiddenGroups.includes(g)) day.hiddenGroups.push(g);
+              // If currently filtered by that group -> back to all
+              if (state.ui.groupFilter === g) state.ui.groupFilter = "__ALL__";
+              refreshAll();
+              return;
+            }
+          }
+        });
+
+        // Grid inline edits — KHÔNG gọi refreshAll (gây re-render mất focus)
+        // Chỉ cập nhật data, refresh analysis debounced
+        document.addEventListener("input", (e) => {
+            const inp = e.target.closest("input[data-grid]");
+            if (!inp) return;
+            const day = getActiveDayData(true);
+            if (!day) return;
+            const grid  = inp.dataset.grid;
+            const field = inp.dataset.field;
+            const id    = inp.dataset.id;
+
+            if (grid === "cat") {
+              const c = day.categories.find((x) => x.id === id);
+              if (!c) return;
+              if (field === "name") c.name = inp.value;
+              if (field === "target") {
+                const v = parseNumber(inp.value);
+                if (Number.isFinite(v)) c.target = v;
+              }
+              if (field === "boostPct") {
+                const v = parseNumber(inp.value);
+                if (Number.isFinite(v)) c.boostPct = v;
+              }
+            }
+            if (grid === "emp") {
+              const emp = day.employees.find((x) => x.id === id);
+              if (!emp) return;
+              if (field === "revenue") {
+                const v = parseNumber(inp.value);
+                if (Number.isFinite(v)) emp.revenue = v;
+              }
+            }
+            // Dùng safeRender thông qua refreshAll
+            refreshAll();
+            saveToLocalStorage();
+          }, true);
+
+        // Group filter controls
+        $("selGroupFilter").addEventListener("change", (e) => {
+          state.ui.groupFilter = e.target.value;
+          refreshAll();
+          saveToLocalStorage();
+        });
+        $("chkExcludeZero").addEventListener("change", (e) => {
+          state.ui.excludeZero = !!e.target.checked;
+          refreshAll();
+          saveToLocalStorage();
+        });
+
+        // Category drag & drop reorder (simple)
+        let dragId = null;
+        $("tbodyCats").addEventListener("dragstart", (e) => {
+          const tr = e.target.closest('tr[data-rowtype="cat"]');
+          if (!tr) return;
+          dragId = tr.dataset.id;
+          e.dataTransfer.effectAllowed = "move";
+        });
+        $("tbodyCats").addEventListener("dragover", (e) => {
+          const tr = e.target.closest('tr[data-rowtype="cat"]');
+          if (!tr) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+        });
+        $("tbodyCats").addEventListener("drop", (e) => {
+          const tr = e.target.closest('tr[data-rowtype="cat"]');
+          if (!tr) return;
+          e.preventDefault();
+          const dropId = tr.dataset.id;
+          if (!dragId || !dropId || dragId === dropId) return;
+          const day = getActiveDayData(true);
+          if (!day) return;
+          const from = day.categories.findIndex((c) => c.id === dragId);
+          const to = day.categories.findIndex((c) => c.id === dropId);
+          if (from < 0 || to < 0) return;
+          const [x] = day.categories.splice(from, 1);
+          day.categories.splice(to, 0, x);
+          dragId = null;
+          refreshAll();
+        });
+      }
+
+      // =========================
+      // Boot
+      // =========================
+      function boot() {
+        loadFromLocalStorage();
+        ensureSeedStores();
+        renderStoreSelect();
+
+        // Set initial date
+        const initDate = state.ui.selectedDate || todayISO();
+        $("inpDate").value = initDate;
+        state.ui.selectedDate = initDate;
+
+        // Set exclude checkbox
+        $("chkExcludeZero").checked = !!state.ui.excludeZero;
+
+        // Load active store/day
+        const storeKey = $("selStore").value || state.ui.selectedStoreKey;
+        setActiveStore(storeKey);
+        setActiveDate(initDate);
+
+        attachEvents();
+      }
+
+      boot();
+
+    </script>
+  </body>
+</html>
