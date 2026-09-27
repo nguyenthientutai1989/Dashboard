@@ -394,99 +394,197 @@ function parseVNNumber(s){
   return isNaN(n) ? NaN : n;
 }
 
-// ── VÙNG 1: DOANH THU HỢP NHẤT NGÀNH HÀNG (DÁN TRỰC TIẾP) ──
-// Mỗi ngành hàng là 1 khối 2 dòng dạng:
-//   "344 - Thẻ cào điện tử"   (dòng tên, không chứa tab)
-//   SL <tab> DT QĐ <tab> % Tỉ Trọng <tab> DT <tab> Target <tab> % HT Target <tab> TB3T <tab> %TT <tab> DT Trả Góp <tab> % Trả Góp
-// Dòng "Tổng (N dòng)" thường gộp tên + đủ 10 giá trị trên CÙNG 1 dòng (vì đó là dòng tổng
-// hợp có Target thật) — được nhận diện riêng để lấy Target/DT tổng chính xác.
-// Các dòng tiêu đề cột (mỗi tiêu đề 1 dòng) tự động bị bỏ qua vì không khớp mẫu 2 dòng/ngành hàng.
+// ── VÙNG 1: DOANH THU HỢP NHẤT NGÀNH HÀNG BI / NHÓM HÀNG BI (DÁN TRỰC TIẾP) ──
+// Cấu trúc mới CHỈ còn 4 cột: SL, DOANH THU QĐ, % TỈ TRỌNG, DOANH THU — không còn
+// Target/TB3T/%TT/DT dự kiến/Trả góp ở cấp ngành hàng nữa.
+// Đồng thời dữ liệu có 2 CẤP: Ngành hàng BI (cha) và Nhóm hàng BI (con) lồng vào nhau,
+// không có cột đánh dấu cấp — phải tự suy luận.
+
+// Danh mục "Ngành hàng BI" cố định của hệ thống (xác nhận qua nhiều lần dữ liệu mẫu thực tế).
+// Dùng làm tín hiệu CHÍNH để nhận diện dòng cha — đáng tin hơn nhiều so với so % tỉ trọng,
+// vì với số liệu nhỏ ( giờ đầu ngày, ít đơn) % bị làm tròn lệch khá nhiều so với tỉ lệ suy ra
+// từ số nguyên đã làm tròn.
+const KNOWN_PARENT_NAMES = new Set([
+  '1 - Viễn thông di động', '10 - Avapos', '4 - Phụ kiện - Đồng hồ',
+  '11 - NH Tận Tâm', '9 - Gia dụng', '6 - Tủ lạnh, đông, mát',
+  '3 - Apple', '2 - Laptop', '-1 - CHƯA PHÂN LOẠI',
+]);
+
+// Chuẩn hoá tên tiêu đề cột: bỏ dấu, viết hoa, gộp khoảng trắng — để so khớp không phụ
+// thuộc chính xác dấu câu/khoảng trắng của từng lần export.
+function normHeaderV1(s){
+  return String(s||'')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/đ/gi, m => m==='đ'?'d':'D')
+    .toUpperCase().replace(/\s+/g,' ').trim();
+}
+// Nhận diện Ý NGHĨA của một dòng tiêu đề cột (không phụ thuộc thứ tự/số lượng cột,
+// vì báo cáo đã đổi bộ cột nhiều lần giữa các lần export khác nhau).
+// Trả về: tên field nếu nhận diện được, null nếu là cột biết nhưng cố tình bỏ qua
+// (VD Target — không dùng ở cấp ngành hàng), undefined nếu dòng KHÔNG PHẢI tiêu đề cột
+// (tức là đã hết phần tiêu đề, bắt đầu dữ liệu).
+function classifyHeaderV1(raw){
+  const h = normHeaderV1(raw);
+  if(h === 'SO LUONG') return 'sl';
+  if(h.includes('DOANH THU') && h.includes('QD')) return 'dt';
+  if(h.includes('TI TRONG')) return 'tiTrong';
+  if(h === 'DOANH THU') return 'dtPlain';
+  if(h.includes('HT TARGET')) return null;
+  if(h === 'TARGET') return null;
+  if(h.includes('TB 3 THANG') || h.includes('TB3T')) return 'avg3m';
+  if(h === '% TT' || h === 'TT') return 'growthPct';
+  if(h.includes('DU KIEN')) return 'projected';
+  if(h.includes('TRA GOP') && h.startsWith('%')) return 'installPct';
+  if(h.includes('TRA GOP')) return 'installRev';
+  return undefined;
+}
+
 function parseV1(raw){
   const rows = [];
   let tongRow = null;
   if(!raw || !raw.trim()) return {rows, tongRow};
 
+  const rawLines = raw.replace(/\r/g,'').split('\n');
+
+  // Bước 1: đọc phần tiêu đề để suy ra ĐÚNG thứ tự cột hiện có (số cột và ý nghĩa từng
+  // cột có thể đổi giữa các lần export — không còn giả định cứng số cột nữa).
+  let firstDataLineIdx = -1;
+  const columnOrder = [];
+  let sawTitle = false;
+  for(let i=0;i<rawLines.length;i++){
+    const t = rawLines[i].trim();
+    if(t === '') continue;
+    if(!sawTitle){
+      sawTitle = true;
+      if(/NGÀNH HÀNG BI/i.test(t) && /NHÓM HÀNG BI/i.test(t)) continue; // dòng tiêu đề bảng, bỏ qua
+    }
+    const key = classifyHeaderV1(t);
+    if(key === undefined){ firstDataLineIdx = i; break; }
+    columnOrder.push(key);
+  }
+  if(firstDataLineIdx === -1) firstDataLineIdx = rawLines.length;
+  // Nếu vì lý do gì đó không đọc được tiêu đề (người dùng dán thiếu), vẫn cố lấy tối thiểu
+  // SL/DTQĐ/%Tỉ trọng/Doanh thu theo đúng thứ tự luôn xuất hiện đầu tiên ở mọi định dạng.
+  const cols = columnOrder.length ? columnOrder : ['sl','dt','tiTrong','dtPlain'];
+
   const numOrZero = (s)=>{ const n=parseVNNumber(s); return isNaN(n)?0:n; };
   const numOrNull = (s)=>{ const n=parseVNNumber(s); return isNaN(n)?null:n; };
-  const buildRow = (name, v)=>({
-    name, nameLow: name.toLowerCase(), level:'',
-    sl:        numOrZero(v[0]),
-    dt:        numOrZero(v[1]),   // DOANH THU QĐ
-    tiTrong:   numOrNull(v[2]),
-    dtPlain:   numOrZero(v[3]),   // DOANH THU (không quy đổi)
-    tgt:       numOrZero(v[4]),   // TARGET (thường trống ở dòng ngành hàng, có ở dòng Tổng)
-    pctHT:     numOrNull(v[5]),
-    tb3:       numOrZero(v[6]),
-    pctTT:     numOrNull(v[7]),
-    tragop:    numOrZero(v[8]),   // DT TRẢ GÓP
-    pctTraGop: numOrNull(v[9]),
-  });
+  function buildRow(name, vals){
+    const row = { name, nameLow: name.toLowerCase(), level:'', parentName:null,
+      sl:0, dt:0, tiTrong:null, dtPlain:0, avg3m:0, growthPct:null, projected:0, installRev:0, installPct:null };
+    cols.forEach((key, idx) => {
+      if(!key) return; // cột bị bỏ qua có chủ đích (Target, % HT Target)
+      const rawVal = vals[idx];
+      if(rawVal === undefined) return;
+      row[key] = (key==='tiTrong'||key==='growthPct'||key==='installPct') ? numOrNull(rawVal) : numOrZero(rawVal);
+    });
+    return row;
+  }
 
-  const lines = raw.replace(/\r/g,'').split('\n');
   let pendingName = null;
-  for(let i=0;i<lines.length;i++){
-    const rawLine = lines[i];
+  for(let i=firstDataLineIdx; i<rawLines.length; i++){
+    const rawLine = rawLines[i];
     const line = rawLine.trim();
-    if(!line){ continue; }
+    if(!line) continue;
     if(/^Đơn vị/i.test(line)){ pendingName = null; continue; }
 
     const parts = rawLine.split('\t').map(s=>s.trim());
     if(parts.length === 1){
-      // Dòng chỉ có tên ngành hàng (hoặc dòng tiêu đề cột — sẽ tự bị bỏ qua nếu
-      // không có dòng 10-giá-trị theo sau khớp mẫu).
       pendingName = parts[0];
       continue;
     }
-    if(parts.length >= 11){
-      // Tên + đủ giá trị trên cùng 1 dòng (thường là dòng "Tổng").
+    if(parts.length >= cols.length + 1){
       const name = parts[0];
       const item = buildRow(name, parts.slice(1));
       if(/^t[ổo]ng/i.test(name)) tongRow = item; else rows.push(item);
       pendingName = null;
       continue;
     }
-    if(parts.length === 10 && pendingName){
+    if(parts.length === cols.length && pendingName){
       rows.push(buildRow(pendingName, parts));
       pendingName = null;
       continue;
     }
     pendingName = null;
   }
+
+  detectHierarchyV1(rows, tongRow ? tongRow.dt : null);
+
   return {rows, tongRow};
 }
 
-// Gộp danh sách ngành hàng (đã parse) thành số liệu tổng hợp cho dashboard,
-// tái sử dụng cùng công thức ICT_MAP/BK_MAP như trước (danh sách phẳng, không phân cấp).
+// Nhận diện Ngành hàng BI (cha) / Nhóm hàng BI (con):
+//  1) Tên khớp đúng trong danh mục cố định KNOWN_PARENT_NAMES -> luôn là cha.
+//  2) Dòng đầu tiên của cả danh sách -> luôn là cha (mở nhóm đầu tiên).
+//  3) Dự phòng cho ngành hàng mới chưa có trong danh mục: so % tỉ trọng của dòng với
+//     % suy ra từ (DTQĐ dòng đó / tổng toàn store) — sai số cho phép co giãn theo độ lớn
+//     số liệu, vì số liệu càng nhỏ thì làm tròn càng lệch nhiều.
+function detectHierarchyV1(rows, grandTotalQD){
+  let currentParent = null;
+  const tolerance = grandTotalQD ? Math.max(0.15, 300/Math.max(Math.abs(grandTotalQD),1)) : 0.15;
+  rows.forEach((r, idx) => {
+    let isParent;
+    if(idx === 0){
+      isParent = true;
+    } else if(KNOWN_PARENT_NAMES.has(r.name.trim())){
+      isParent = true;
+    } else if(r.dt && r.dt !== 0 && r.tiTrong !== null && grandTotalQD){
+      const implied = r.dt/grandTotalQD*100;
+      isParent = Math.abs(implied - r.tiTrong) < tolerance;
+    } else {
+      isParent = false;
+    }
+    if(isParent){
+      r.level = 'parent';
+      r.parentName = null;
+      currentParent = r.name;
+    } else {
+      r.level = 'child';
+      r.parentName = currentParent;
+    }
+  });
+}
+
+// Gộp danh sách ngành hàng (đã phân cấp) thành số liệu tổng hợp cho dashboard.
+// ICT_MAP/BK_MAP quét ở cấp LÁ (nhóm hàng con nếu có, hoặc chính ngành hàng cha nếu nó
+// không có nhóm con nào) để tránh đếm trùng — vì cha là tổng của các con, quét cả 2 cấp
+// cùng lúc sẽ cộng đôi (VD từ khoá "laptop" khớp cả "2 - Laptop" (cha) và "5 - Laptop" (con)).
 function summarizeV1(parsed){
   const {rows, tongRow} = parsed;
-  if(!rows.length && !tongRow) return {totalDT:0,totalTgt:0,totalPct:0,tgPct:0,ictRows:[],bkRows:[],totICT:0};
+  if(!rows.length && !tongRow) return {totalDT:0,totalDTPlain:0,ictRows:[],bkRows:[],totICT:0};
 
-  let totalDT=0,totalDTPlain=0,totalTgt=0,totalTraGop=0;
+  const parents = rows.filter(r => r.level === 'parent');
+  let totalDT=0, totalDTPlain=0;
   if(tongRow){
-    totalDT=tongRow.dt; totalDTPlain=tongRow.dtPlain; totalTgt=tongRow.tgt; totalTraGop=tongRow.tragop;
+    totalDT = tongRow.dt; totalDTPlain = tongRow.dtPlain;
   } else {
-    for(const d of rows){ totalDT+=d.dt; totalDTPlain+=d.dtPlain; totalTgt+=d.tgt; totalTraGop+=d.tragop; }
+    for(const p of parents){ totalDT += p.dt; totalDTPlain += p.dtPlain; }
   }
-  const totalPct = totalTgt>0 ? Math.round(totalDT/totalTgt*100) : 0;
-  const tgPct = totalDTPlain>0 ? (totalTraGop/totalDTPlain*100) : 0;
+
+  // Xây danh sách "lá": con của từng cha nếu có, ngược lại lấy chính dòng cha đó.
+  const leafRows = [];
+  parents.forEach(p => {
+    const children = rows.filter(r => r.level === 'child' && r.parentName === p.name);
+    if(children.length) leafRows.push(...children);
+    else leafRows.push(p);
+  });
 
   const ictRows = ICT_MAP.map(cat=>{
-    let sl=0,dt=0,tgt=0;
-    for(const d of rows){ if(cat.keys.some(k=>d.nameLow.includes(k))){ sl+=d.sl; dt+=d.dt; tgt+=d.tgt; } }
-    const pct = tgt>0 ? Math.round(dt/tgt*100) : 0;
-    return {label:cat.label, sl, dt, tgt, pct};
-  }).filter(r=>r.sl>0||r.tgt>0);
+    let sl=0,dt=0;
+    for(const d of leafRows){ if(cat.keys.some(k=>d.nameLow.includes(k))){ sl+=d.sl; dt+=d.dt; } }
+    return {label:cat.label, sl, dt};
+  }).filter(r=>r.sl>0||r.dt>0);
   const ICT_BASE=['Điện Thoại','Tablet','Laptop'];
   const totICT = ictRows.filter(r=>ICT_BASE.includes(r.label)).reduce((s,r)=>s+r.sl,0);
 
   const bkRows = BK_MAP.map(cat=>{
     let sl=0;
-    for(const d of rows){ if(cat.keys.some(k=>d.nameLow.includes(k))) sl+=d.sl; }
+    for(const d of leafRows){ if(cat.keys.some(k=>d.nameLow.includes(k))) sl+=d.sl; }
     const pct = totICT>0 ? Math.round(sl/totICT*100) : null;
     return {label:cat.label, sl, pct};
   }).filter(r=>r.sl>0);
 
-  return {totalDT,totalTgt,totalPct,tgPct,ictRows,bkRows,totICT};
+  return {totalDT, totalDTPlain, ictRows, bkRows, totICT, parents};
 }
 
 // ── VÙNG 2: DỮ LIỆU THI ĐUA (DÁN TRỰC TIẾP) ──
@@ -699,7 +797,7 @@ function makeRow(g){
 
 const ICT_MAP = [
   { label:'Điện Thoại', keys:['smartphone','điện thoại di động','điện thoai','nnh điện thoại mới','điện thoại mới','điện thoại'] },
-  { label:'Tablet',     keys:['tablet','nnh tablet'] },
+  { label:'Tablet',     keys:['tablet','máy tính bảng','nnh tablet'] },
   { label:'Laptop',     keys:['laptop','nnh laptop'] },
   { label:'Máy Cũ',     keys:['máy cũ','nnh máy cũ'] },
   { label:'Đồng Hồ',   keys:['đồng hồ','nnh đồng hồ'] },
@@ -707,11 +805,13 @@ const ICT_MAP = [
 ];
 
 const BK_MAP = [
-  { label:'Pin sạc DP',  keys:['pin sạc dự phòng'] },
-  { label:'Cáp, Sạc',   keys:['cáp','sạc/ adapter','bộ sạc'] },
-  { label:'Tai Nghe',    keys:['tai nghe bluetooth','tai nghe dây','tai nghe'] },
-  { label:'Camera',      keys:['camera ip','camera'] },
-  { label:'Sim',         keys:['nnh sim','sim số'] },
+  { label:'Pin sạc DP',  keys:['pin sạc dự phòng','sạc dự phòng'] },
+  { label:'Cáp, Sạc',   keys:['cáp','sạc/ adapter','sạc adapter','bộ sạc'] },
+  { label:'Tai Nghe',    keys:['tai nghe'] },
+  { label:'Camera',      keys:['camera'] },
+  { label:'Sim',         keys:['sim data','sim vật lý','sim online','sim trắng','sim mobifone','sim vinaphone','sim dmx','sim tổng'] },
+  { label:'Thẻ nhớ',     keys:['thẻ nhớ'] },
+  { label:'Loa',         keys:['loa vi tính','loa di động','loa'] },
 ];
 
 function pctColor(p){
@@ -785,7 +885,7 @@ function build(){
   if(f1Status){
     if(!raw1){ f1Status.className='paste-status wait'; f1Status.textContent='Chưa có dữ liệu'; }
     else if(!parsed1.rows.length && !parsed1.tongRow){ f1Status.className='paste-status err'; f1Status.textContent='✗ Không nhận diện được dữ liệu, kiểm tra lại định dạng dán'; }
-    else{ f1Status.className='paste-status ok'; f1Status.textContent=`✓ Đã đọc ${parsed1.rows.length} ngành hàng — DT ${h.totalDT.toFixed(0)}tr`; }
+    else{ f1Status.className='paste-status ok'; f1Status.textContent=`✓ Đã đọc ${(h.parents||[]).length} ngành hàng BI (${parsed1.rows.length - (h.parents||[]).length} nhóm hàng con) — DT ${h.totalDT.toFixed(0)}tr`; }
   }
   const hasData1 = !!raw1 && (parsed1.rows.length>0 || !!parsed1.tongRow);
 
@@ -810,12 +910,11 @@ function build(){
   }
   const empHtml = buildEmpSection(empItems);
 
-  // Target doanh thu tổng: ưu tiên số người dùng tự nhập (vì file thường không có sẵn target)
+  // Target doanh thu tổng: dữ liệu dán không còn có cột Target ở ngành hàng lẫn dòng Tổng,
+  // nên LUÔN lấy từ số người dùng tự nhập ở ô "Target doanh thu tổng".
   const manualTargetEl = document.getElementById('manualTarget');
   const manualTarget = manualTargetEl ? parseFloat(manualTargetEl.value) : NaN;
-  if(!isNaN(manualTarget) && manualTarget>0){
-    h.totalTgt = manualTarget;
-  }
+  h.totalTgt = (!isNaN(manualTarget) && manualTarget>0) ? manualTarget : 0;
   h.totalPct = h.totalTgt>0 ? Math.round(h.totalDT/h.totalTgt*100) : 0;
 
   const con=Math.max(0,h.totalTgt-h.totalDT);
@@ -852,8 +951,9 @@ function build(){
         <div class="tc-val">${fmtPct(h.totalPct)}</div>
       </div>
       <div class="tc">
-        <div class="tc-label">Trả góp (MT 60%)</div>
-        <div class="tc-val red">${h.tgPct.toFixed(1)}%</div>
+        <div class="tc-label">Doanh thu thực</div>
+        <div class="tc-val">${h.totalDTPlain.toFixed(0)}tr</div>
+        <div class="tc-sub">Chưa quy đổi</div>
       </div>
       <div class="tc">
         <div class="tc-label">Nhóm hàng đạt</div>
@@ -867,7 +967,7 @@ function build(){
           <div class="gcol">${leftItems.map(makeRow).join('')}</div>
           <div class="gcol">${rightItems.map(makeRow).join('')}</div>
         </div>`
-      :'<div class="empty">Chưa có dữ liệu thi đua — upload file báo cáo thi đua ở trên</div>'
+      :'<div class="empty">Chưa có dữ liệu thi đua — dán dữ liệu thi đua ở trên</div>'
     }
     <div class="footer">Dashboard Siêu Thị — Cập nhật lúc: <b>${timeStr} - ${dateStr}</b></div>`;
 
