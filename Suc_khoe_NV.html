@@ -1711,29 +1711,36 @@
         let revenueCol = -1;
         let dataStart = 0;
 
+        const KNOWN_HEADERS = ['NHAN VIEN','SO LUONG','DOANH THU','% TI TRONG','TARGET','% HT TARGET','TB 3 THANG','% TT','DT OFFLINE','DT ONLINE','% ONL','DT TRA GOP','% TRA GOP','DT TRA THANG','DT NHAP TRA'];
+        const isQD = h => h === 'DOANH THU QD' || h.includes('DOANH THU QD');
+
         const employeeHeaderLine = lines.findIndex(isEmployeeLabel);
         if (employeeHeaderLine >= 0) {
+          // Header có thể nằm trên nhiều dòng riêng và/hoặc có dòng chứa nhiều cột
+          // ngăn cách bằng TAB (vd "TB 3 THÁNG\t% TT\tDT TRẢ THẲNG"). Gom tất cả theo thứ tự.
           const headerOrder = [];
-          for (let i = employeeHeaderLine; i < Math.min(lines.length, employeeHeaderLine + 20); i++) {
-            const cells = splitPastedRow(lines[i]);
-            if (cells.length > 1) {
-              const hs = cells.map(normHeader);
-              const q = hs.findIndex(x => x === 'DOANH THU QD' || x.includes('DOANH THU QD'));
-              if (q >= 0) { revenueCol = q; dataStart = i + 1; break; }
-            } else {
-              const h = normHeader(lines[i]);
-              if (h === 'DOANH THU QD' || h.includes('DOANH THU QD')) {
-                revenueCol = headerOrder.length;
-                dataStart = i + 1;
-                break;
-              }
-              // Chỉ gom các header hợp lệ; không gom vô hạn sang vùng dữ liệu.
-              if (['NHAN VIEN','SO LUONG','DOANH THU','% TI TRONG','TARGET','% HT TARGET','TB 3 THANG','% TT','DT OFFLINE','DT ONLINE','% ONL','DT TRA GOP','% TRA GOP'].includes(h)) {
-                headerOrder.push(h);
-              } else if (headerOrder.length) {
-                break;
-              }
+          let doanhThuIdx = -1;
+          let endLine = -1;
+          for (let i = employeeHeaderLine; i < Math.min(lines.length, employeeHeaderLine + 30); i++) {
+            const cells = splitPastedRow(lines[i]).map(normHeader).filter(Boolean);
+            if (!cells.length) continue;
+            // Gặp dòng dữ liệu (mã - tên) thì dừng.
+            if (isEmployeeRow(lines[i]) && !isEmployeeLabel(lines[i])) { endLine = i; break; }
+            if (!cells.every(h => KNOWN_HEADERS.includes(h) || isQD(h))) {
+              if (headerOrder.length) { endLine = i; break; }
+              continue;
             }
+            for (const h of cells) {
+              if (isQD(h)) { revenueCol = headerOrder.length; dataStart = i + 1; }
+              if (h === 'DOANH THU' && doanhThuIdx < 0) doanhThuIdx = headerOrder.length;
+              headerOrder.push(h);
+            }
+            if (revenueCol >= 0) break;
+          }
+          // Format không có cột DOANH THU QĐ -> dùng cột DOANH THU.
+          if (revenueCol < 0 && doanhThuIdx >= 0) {
+            revenueCol = doanhThuIdx;
+            dataStart = endLine >= 0 ? endLine : employeeHeaderLine + 1;
           }
         }
 
