@@ -137,16 +137,16 @@
   .hero-meta{ margin: 10px 0 0; font-size: 12.5px; color: var(--text-faint); display:flex; gap:18px; flex-wrap:wrap; }
   .hero-meta b{ color: var(--text-dim); font-weight:700; }
 
-  .stat-strip{ display:grid; grid-template-columns: repeat(4,1fr); gap:12px; margin-bottom: 22px; }
+  .stat-strip{ display:grid; grid-template-columns: repeat(5,1fr); gap:12px; margin-bottom: 22px; }
   .stat-chip{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; box-shadow: var(--shadow-sm); }
   .stat-chip strong{ display:block; font-size: 19px; font-weight:800; font-variant-numeric: tabular-nums; }
   .stat-chip span{ font-size: 11.5px; color: var(--text-faint); font-weight:600; }
 
   /* ── KPI GRID ── */
-  .kpi-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; }
+  .kpi-grid{ display:grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 22px; }
   .kpi-card{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; border-left: 3px solid var(--border-strong); position:relative; box-shadow: var(--shadow-sm); }
   .kpi-label{ font-size: 12.5px; font-weight:600; color: var(--text-dim); margin: 0 0 10px; }
-  .kpi-value{ font-size: 27px; font-weight:800; margin:0 0 8px; font-variant-numeric: tabular-nums; letter-spacing:-0.01em; color: var(--text); }
+  .kpi-value{ font-size: 25px; font-weight:800; margin:0 0 8px; font-variant-numeric: tabular-nums; letter-spacing:-0.01em; color: var(--text); }
   .kpi-value .unit{ font-size:13px; font-weight:600; color: var(--text-faint); margin-left:4px; }
   .kpi-value.v-good{ color: var(--good); }
   .kpi-value.v-bad{ color: var(--bad); }
@@ -162,7 +162,7 @@
   /* ── CHARTS ── */
   .chart-grid{ display:grid; grid-template-columns: 1.35fr 1fr; gap: 18px; margin-bottom: 22px; align-items: stretch; }
   .bar-list{ display:flex; flex-direction:column; gap: 9px; }
-  .bar-row{ display:grid; grid-template-columns: 150px 1fr 62px; align-items:center; gap:10px; }
+  .bar-row{ display:grid; grid-template-columns: 210px 1fr 62px; align-items:center; gap:10px; }
   .bar-row .bar-name{ font-size:12.5px; color: var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .bar-track{ position:relative; height: 18px; background: var(--panel-alt); border-radius:5px; overflow:hidden; }
   .bar-fill{ position:absolute; top:0; bottom:0; left:0; border-radius:5px; }
@@ -222,7 +222,42 @@
   .name-cell .name-wrap{ display:flex; align-items:center; }
   .child-row .name-cell .name-wrap{ padding-left: 24px; }
 
+
+  /* ── CHART PICKER (chọn ngành cha / nhóm con cho biểu đồ biến động) ── */
+  .chart-picker{ margin: -4px 0 14px; }
+  .picker-toggle{ background: var(--panel-alt); color: var(--text-dim); border:1px solid var(--border-strong); border-radius: 8px; padding: 7px 12px; font-size:12px; font-weight:700; }
+  .picker-toggle:hover{ background: var(--gold-soft); color: var(--text); }
+  .picker-toggle .pk-count{ font-weight:600; color: var(--text-faint); margin-left:6px; }
+  .picker-body{ margin-top:10px; border:1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--panel-soft); }
+  .picker-body[hidden]{ display:none; }
+  .picker-actions{ display:flex; flex-wrap:wrap; gap:6px; padding:10px 10px 8px; border-bottom:1px dashed var(--border-strong); }
+  .picker-actions button{ background: var(--panel); border:1px solid var(--border-strong); color: var(--text-dim); font-size:11px; font-weight:700; padding:5px 10px; border-radius:20px; }
+  .picker-actions button:hover{ background: var(--gold-soft); color: var(--text); }
+  .picker-list{ max-height: 300px; overflow-y:auto; padding:6px 10px 10px; }
+  .pk-row{ display:flex; align-items:center; gap:8px; padding:5px 4px; border-radius:6px; font-size:12.5px; color: var(--text-dim); }
+  .pk-row:hover{ background: var(--panel-alt); }
+  .pk-row label{ display:flex; align-items:center; gap:7px; flex:1; min-width:0; cursor:pointer; }
+  .pk-row label span.pk-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pk-row input{ accent-color: #d4a600; cursor:pointer; flex:none; }
+  .pk-parent{ color: var(--text); font-weight:700; margin-top:2px; }
+  .pk-child{ padding-left: 30px; font-weight:500; }
+  .pk-tog{ width:18px; height:18px; border-radius:5px; border:1px solid var(--border-strong); background: var(--panel); color: var(--text-dim); font-size:9px; display:flex; align-items:center; justify-content:center; flex:none; }
+  .pk-tog.leaf{ visibility:hidden; }
+  .pk-meta{ font-size:11px; font-weight:700; font-variant-numeric: tabular-nums; flex:none; }
+  .pk-meta.pos{ color: var(--good); } .pk-meta.neg{ color: var(--bad); }
+  .pk-all{ background: var(--panel); border:1px solid var(--border-strong); color: var(--text-faint); font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px; flex:none; }
+  .pk-all:hover{ background: var(--gold-soft); color: var(--text); }
+  .bar-row.child .bar-name{ padding-left: 0; }
+  .bar-name .bar-parent{ font-size:10.5px; color: var(--text-faint); margin-left:5px; }
+  .bar-row.parent .bar-name{ color: var(--text); font-weight:700; }
+  .bar-row .bar-tag{ display:inline-block; font-size:9px; font-weight:800; letter-spacing:.04em; padding:1px 5px; border-radius:4px; margin-right:6px; vertical-align:middle; }
+  .bar-row.parent .bar-tag{ background: var(--gold-soft); color: var(--gold-deep); }
+  .bar-row.child .bar-tag{ background: var(--info-soft); color: var(--info); }
+
   /* ── RESPONSIVE ── */
+  @media (max-width: 1180px){
+    .kpi-grid{ grid-template-columns: repeat(3,1fr); }
+  }
   @media (max-width: 980px){
     .kpi-grid{ grid-template-columns: repeat(2,1fr); }
     .chart-grid{ grid-template-columns: 1fr; }
@@ -232,7 +267,7 @@
   }
   @media (max-width: 560px){
     .kpi-grid{ grid-template-columns: 1fr; }
-    .bar-row{ grid-template-columns: 96px 1fr 48px; }
+    .bar-row{ grid-template-columns: 120px 1fr 48px; }
   }
 </style>
 </head>
@@ -314,6 +349,20 @@
             <h2>Biến động theo ngành hàng BI</h2>
           </div>
           <span class="panel-tag">Cùng cửa sổ thời gian</span>
+        </div>
+        <div class="chart-picker no-capture">
+          <button type="button" class="picker-toggle" id="chart-picker-toggle">☰ Chọn ngành hàng / nhóm hàng hiển thị<span class="pk-count" id="chart-picker-count"></span></button>
+          <div class="picker-body" id="chart-picker" hidden>
+            <div class="picker-actions">
+              <button type="button" data-pk-act="parents">Chỉ ngành hàng lớn</button>
+              <button type="button" data-pk-act="children">Chỉ nhóm hàng con</button>
+              <button type="button" data-pk-act="all">Chọn tất cả</button>
+              <button type="button" data-pk-act="none">Bỏ chọn hết</button>
+              <button type="button" data-pk-act="expand">Mở rộng hết ▾</button>
+              <button type="button" data-pk-act="collapse">Thu gọn hết ▸</button>
+            </div>
+            <div class="picker-list" id="chart-picker-list"></div>
+          </div>
         </div>
         <div class="bar-list" id="bar-chart"></div>
       </article>
@@ -403,36 +452,37 @@
 <script>
 /* ============================= SAMPLE DATA ============================= */
 const SAMPLE_RAW = `DT quy đổi
-14,238
-triệu đồng · lũy kế tới hết ngày 20/09
+11,582
+triệu đồng · lũy kế tới hết ngày 16/10
 % HT target
-103.6%
-Target trọn kỳ 13,738 · tiến độ 66.7%
+68.7%
+Target trọn kỳ 16,869 · tiến độ 51.6%
 TT vs TB 3 tháng
-+50.8%
-TB3T cùng cửa sổ: 9,443
++40.2%
+TB3T cùng cửa sổ: 8,262
 DT dự kiến
 ?
-21,357
-nhịp 20 ngày → 30 ngày
+22,169
+nhịp 16 ngày → 31 ngày
 TLPVTC lũy kế
-15.7%
-2,047 bill / 13,005 khách · 1/1 ST có máy đếm
-Tỉ trọng trả góp
-48.4%
-DT trả góp 4,885 / 10,093
+17.3%
+1,276 bill / 7,383 khách · 1/1 ST có máy đếm
+Tỷ trọng trả chậm
+36.7%
+DT trả góp QĐ 4,256 / 11,582
 DT quy đổi khoản vay
 ?
-16
-triệu đồng · giải ngân 106 tới 20/09
+5
+triệu đồng · giải ngân 32 tới 16/10
 Chi phí
 ?
-68
+60
 triệu đồng · 0.7% DT lũy kế
-Doanh thu theo cấp
+Doanh thu
 Tổng hợp
 Ngành hàng BI
 Nhân viên
+Chi phí
 Thi đua
 ✓
 Tỉ trọng
@@ -440,102 +490,91 @@ Tỉ trọng
 Tăng trưởng
 ✓
 Dự kiến
-Off / Onl
-✓
-Trả góp
+Chi tiết doanh thu
 Dòng "Chưa phân loại" là doanh thu của sản phẩm chưa được khai vào danh mục ngành hàng BI — vẫn tính vào tổng. Bung dòng đó ra để xem đang là những nhóm hàng nào.
 NGÀNH HÀNG BI / NHÓM HÀNG BI
 SỐ LƯỢNG
 DOANH THU QĐ
 % TỈ TRỌNG
-DOANH THU
 TB 3 THÁNG
 % TT
 DT DỰ KIẾN
-DT TRẢ GÓP
-% TRẢ GÓP
-11 - NH Tận Tâm
-1	0	0.0%	0	0	-100.0%	0	0	—
-46 - Dịch vụ
-0	0	—	0	0	-100.0%	0	0	—
-49 - Dịch vụ MWG cung cấp
-1	0	—	0	0	—	0	0	—
+DT TRẢ THẲNG QĐ
+DT TRẢ GÓP QĐ
+DT NHẬP TRẢ QĐ
 10 - Avapos
-836	559	3.9%	163	547	+2.2%	838	0	0.0%
+596	579	5.0%	500	+15.9%	1,108	583	0	4
 41 - Sim DATA
-124	460	82.3%	84	476	-3.5%	689	0	0.0%
+68	317	54.8%	376	-15.7%	608	317	0	0
 43 - Thẻ cào điện tử
-416	58	10.4%	58	37	+59.0%	87	0	0.0%
+333	47	8.0%	30	+55.2%	89	47	0	0
 44 - VAS
-98	48	8.6%	15	30	+58.8%	72	0	0.0%
+110	121	20.9%	54	+125.2%	232	123	0	2
 45 - Giao dịch AirTime
-68	-7	-1.3%	6	3	-326.0%	-11	0	0.0%
+84	94	16.2%	39	+138.1%	180	96	0	2
 40 - Dịch vụ sim
-3	0	0.0%	0	0	-49.5%	0	0	0.0%
-42 - Sim vật lý
-127	0	0.0%	0	0	—	0	0	—
+1	0	0.0%	0	-82.1%	0	0	0	0
 9 - Gia dụng
-22	17	0.1%	9	14	+16.5%	25	0	4.2%
+11	26	0.2%	15	+81.9%	51	26	24	24
 35 - Điện gia dụng
-22	17	100.0%	9	9	+77.6%	25	0	4.2%
-6 - Tủ lạnh, đông, mát
-1	38	0.3%	29	9	+318.5%	57	29	100.0%
-26 - Tủ lạnh
-1	38	100.0%	29	9	+318.5%	57	29	100.0%
+10	19	71.5%	11	+75.8%	36	19	24	24
+38 - Máy lọc nước
+1	8	28.5%	2	+336.8%	14	8	0	0
 4 - Phụ kiện - Đồng hồ
-1,475	2,370	16.6%	728	1,718	+37.9%	3,555	47	6.5%
+866	1,604	13.9%	1,450	+10.7%	3,071	1,631	66	93
 15 - Phụ kiện tiện ích khác
-460	773	32.6%	230	588	+31.5%	1,160	10	4.2%
-19 - Đồng hồ thời trang
-171	446	18.8%	146	209	+113.1%	669	32	22.0%
-18 - Wearable
-35	275	11.6%	94	296	-7.1%	413	0	0.0%
+278	570	35.5%	500	+13.8%	1,090	600	43	73
 16 - Phụ kiện trang trí
-475	277	11.7%	82	221	+25.2%	416	0	0.0%
+330	343	21.4%	194	+77.0%	656	346	0	3
+19 - Đồng hồ thời trang
+70	201	12.5%	190	+5.9%	384	198	3	0
+18 - Wearable
+21	154	9.6%	218	-29.5%	295	148	17	11
 12 - Pin sạc dự phòng
-143	276	11.6%	82	171	+61.1%	413	0	0.0%
+65	148	9.3%	150	-1.3%	284	152	0	3
 13 - Tai nghe
-136	243	10.2%	72	163	+49.0%	364	5	7.6%
+64	129	8.0%	141	-8.3%	247	129	3	3
 14 - Camera
-55	79	3.3%	24	68	+16.9%	119	0	0.0%
+36	57	3.5%	56	+1.9%	109	57	0	0
 17 - Loa vi tính
-0	0	0.0%	0	1	-100.0%	0	0	—
+2	3	0.2%	1	+167.3%	6	3	0	0
 3 - Apple
-175	6,000	42.1%	4,892	3,197	+87.7%	9,000	2,849	58.2%
+211	6,888	59.5%	3,077	+123.8%	13,184	4,246	2,761	120
 7 - iPhone
-124	5,223	87.0%	4,405	2,471	+111.4%	7,834	2,727	61.9%
+139	5,973	86.7%	2,500	+138.9%	11,434	3,448	2,570	45
 9 - Macbook / iMac
-6	301	5.0%	235	168	+79.0%	452	65	27.7%
+10	336	4.9%	182	+85.1%	644	311	100	75
 8 - iPad
-8	227	3.8%	175	196	+15.9%	341	57	32.4%
+8	182	2.6%	136	+33.9%	349	120	62	0
 11 - Phụ kiện Apple
-33	164	2.7%	49	235	-30.1%	247	0	0.0%
+49	272	4.0%	183	+48.9%	521	264	8	0
 10 - Apple Watch
-4	84	1.4%	28	127	-33.5%	127	0	0.0%
+5	123	1.8%	76	+61.6%	236	103	21	0
 2 - Laptop
-72	2,238	15.7%	1,687	1,057	+111.7%	3,357	690	40.9%
+26	745	6.4%	1,130	-34.1%	1,425	312	531	99
 5 - Laptop
-68	2,202	98.4%	1,670	1,033	+113.2%	3,303	680	40.7%
+23	729	97.9%	1,111	-34.4%	1,395	296	531	99
 6 - IT
-4	36	1.6%	16	24	+47.8%	54	11	64.7%
+3	16	2.1%	19	-17.4%	30	16	0	0
 1 - Viễn thông di động
-256	2,876	20.2%	2,490	2,417	+19.0%	4,314	1,270	51.0%
+146	1,670	14.4%	1,942	-14.0%	3,198	881	874	85
 1 - Smartphone
-227	2,679	93.2%	2,338	2,237	+19.8%	4,019	1,216	52.0%
+130	1,566	93.8%	1,808	-13.4%	2,998	802	848	84
 3 - Máy tính bảng
-18	189	6.6%	144	169	+11.9%	284	54	37.4%
+8	95	5.7%	126	-24.4%	182	69	26	0
 2 - Điện Thoại Di Động
-11	8	0.3%	8	11	-29.3%	11	0	0.0%
+7	5	0.3%	8	-40.0%	9	6	0	1
+4 - Máy đọc sách
+1	4	0.3%	0	—	9	4	0	0
 -1 - CHƯA PHÂN LOẠI
-61	141	1.0%	95	68	+109.3%	212	0	0.0%
+28	69	0.6%	71	-3.0%	133	69	0	0
 1951 - Software (số Lượng)
-39	84	59.5%	84	41	+106.6%	126	0	0.0%
+16	38	54.7%	44	-14.6%	73	38	0	0
 7161 - Dịch vụ bảo hành 1 đổi 1 bởi Điện Máy Xanh
-12	46	32.7%	8	17	+166.4%	69	0	0.0%
+8	27	39.5%	19	+41.1%	52	27	0	0
 7339 - Quạt cầm tay
-10	11	7.8%	3	8	+35.7%	16	0	0.0%
-Tổng (9 dòng)	2,899	14,238	100.0%	10,093	9,443	+50.8%	21,357	4,885	48.4%
-Đơn vị: triệu đồng`;
+4	4	5.8%	7	-41.4%	8	4	0	0
+Tổng (7 dòng)	1,884	11,582	100.0%	8,262	+40.2%	22,169	7,750	4,256	424`;
 
 /* ============================= STATE ============================= */
 let state = {
@@ -548,7 +587,10 @@ let state = {
   sort: { key: null, dir: 1 },
   fullHiddenCols: new Set(),
   goodHiddenCols: new Set(),
-  kpiPalette: null
+  kpiPalette: null,
+  chartSel: null,        // Set key các mục hiển thị ở biểu đồ biến động (cha: tên; con: cha||con)
+  chartExp: new Set(),   // cha đang mở trong bộ chọn
+  chartPickerOpen: false
 };
 
 const FULL_TABLE_COLUMNS = [
@@ -557,12 +599,13 @@ const FULL_TABLE_COLUMNS = [
   { key: 'qty', label: 'SL', sortable: true },
   { key: 'revenueQD', label: 'DT QĐ', sortable: true },
   { key: 'sharePct', label: '% Tỉ trọng', sortable: true },
-  { key: 'revenue', label: 'Doanh thu', sortable: true },
   { key: 'avg3m', label: 'TB 3 tháng', sortable: true },
   { key: 'growthPct', label: '% TT', sortable: true },
   { key: 'projected', label: 'DT dự kiến', sortable: true },
-  { key: 'installRev', label: 'DT trả góp', sortable: true },
-  { key: 'installPct', label: '% trả góp', sortable: true }
+  { key: 'directRev', label: 'DT trả thẳng QĐ', sortable: true },
+  { key: 'installRev', label: 'DT trả góp QĐ', sortable: true },
+  { key: 'returnRev', label: 'DT nhập trả QĐ', sortable: true },
+  { key: 'installPct', label: '% trả góp / DT bán', sortable: true }
 ];
 
 const GOOD_TABLE_COLUMNS = [
@@ -642,12 +685,14 @@ function fmt(v, digits){
   if(v === null || v === undefined || isNaN(v)) return '—';
   return v.toLocaleString('en-US', { minimumFractionDigits: digits||0, maximumFractionDigits: digits||0 });
 }
-function fmtPct(v, digits){
+function fmtPct(v, digits, signed){
   if(v === null || v === undefined || isNaN(v)) return '—';
   const d = digits === undefined ? 1 : digits;
-  const sign = v > 0 ? '+' : '';
+  const sign = (signed !== false && v > 0) ? '+' : '';
   return sign + v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}) + '%';
 }
+/* % thuần (tỉ trọng, mức đạt…) — không gắn dấu + */
+function fmtPctPlain(v, digits){ return fmtPct(v, digits, false); }
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -673,6 +718,46 @@ function matchNum(str, regex){
 }
 
 /* ============================= PARSER ============================= */
+function normLabel(s){
+  return String(s).replace(/đ/g,'d').replace(/Đ/g,'D').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
+}
+/* Đọc tiêu đề bảng để biết cột nào là gì → đổi/ thêm/ bớt cột không làm vỡ parser */
+const HEADER_KEY_MAP = {
+  'SO LUONG':'qty', 'DOANH THU QD':'revenueQD', '% TI TRONG':'sharePct', 'DOANH THU':'revenue',
+  'TB 3 THANG':'avg3m', '% TT':'growthPct', 'DT DU KIEN':'projected',
+  'DT TRA THANG QD':'directRev', 'DT TRA THANG':'directRev',
+  'DT TRA GOP QD':'installRev', 'DT TRA GOP':'installRev',
+  'DT NHAP TRA QD':'returnRev', 'DT NHAP TRA':'returnRev',
+  '% TRA GOP':'installPct'
+};
+const DEFAULT_COLS = ['qty','revenueQD','sharePct','avg3m','growthPct','projected','directRev','installRev','returnRev'];
+
+function parseHeader(lines){
+  const startIdx = lines.findIndex(l => { const n = normLabel(l); return n.startsWith('NGANH HANG BI') && n.includes('NHOM HANG BI'); });
+  if(startIdx === -1) return { cols: DEFAULT_COLS, dataStart: -1, unknown: [] };
+  const labels = [];
+  lines[startIdx].split('\t').map(x=>x.trim()).filter(Boolean).slice(1).forEach(x => labels.push(x));
+  let i = startIdx + 1;
+  for(; i < lines.length; i++){
+    const line = lines[i].trim();
+    if(line === '') continue;
+    if(/^-?\d/.test(line) || /^t[ổo]ng\b/i.test(line)) break;
+    line.split('\t').map(x=>x.trim()).filter(Boolean).forEach(x => labels.push(x));
+  }
+  const cols = labels.map(l => HEADER_KEY_MAP[normLabel(l)] || null);
+  const unknown = labels.filter((l,k) => !cols[k]);
+  if(cols.filter(Boolean).length < 3) return { cols: DEFAULT_COLS, dataStart: i, unknown: [] };
+  return { cols, dataStart: i, unknown };
+}
+
+function pickTop(lines, labels, count){
+  for(const lb of labels){
+    const r = extractAfterLabel(lines, lb, count);
+    if(r.length) return r;
+  }
+  return [];
+}
+
 function parseRaw(raw){
   const lines = raw.split('\n');
 
@@ -693,6 +778,7 @@ function parseRaw(raw){
   const dk = extractAfterLabel(lines, 'DT dự kiến', 2);
   top.projected = num(dk[0]);
   top.nhipNgay = matchNum(dk[1], /nhịp\s*(\d+)\s*ngày/);
+  top.tongNgay = matchNum(dk[1], /→\s*(\d+)\s*ngày/);
 
   const tl = extractAfterLabel(lines, 'TLPVTC lũy kế', 2);
   top.tlpvtcPct = num(tl[0]);
@@ -703,30 +789,31 @@ function parseRaw(raw){
   top.stCoMayDem = stMatch ? stMatch[1] : null;
   top.stTong = stMatch ? stMatch[2] : null;
 
-  const tg = extractAfterLabel(lines, 'Tỉ trọng trả góp', 2);
+  // Nhãn đã đổi "Tỉ trọng trả góp" → "Tỷ trọng trả chậm"; nhận cả 4 cách viết
+  const tg = pickTop(lines, ['Tỷ trọng trả chậm','Tỉ trọng trả chậm','Tỷ trọng trả góp','Tỉ trọng trả góp'], 2);
   top.installPct = num(tg[0]);
   const tgMatch = (tg[1]||'').match(/([\d.,]+)\s*\/\s*([\d.,]+)/);
   top.installRevTotal = tgMatch ? num(tgMatch[1]) : null;
-  top.revenueTotal = tgMatch ? num(tgMatch[2]) : null;
+  top.installBase = tgMatch ? num(tgMatch[2]) : null;
 
   const loan = extractAfterLabel(lines, 'DT quy đổi khoản vay', 2);
   top.loanQD = num(loan[0]);
-  top.loanCount = matchNum(loan[1], /giải ngân\s*([\d.,]+)/);
+  top.loanDisb = matchNum(loan[1], /giải ngân\s*([\d.,]+)/);
   top.loanDate = loan[1] ? (loan[1].match(/tới\s*([\d\/]+)/) || [])[1] : null;
 
   const cp = extractAfterLabel(lines, 'Chi phí', 2);
   top.chiPhi = num(cp[0]);
   top.chiPhiPct = matchNum(cp[1], /([\d.,]+)\s*%\s*DT/);
 
-  // table
-  let headerEndIdx = lines.findIndex(l => l.trim() === '% TRẢ GÓP');
-  let startIdx = headerEndIdx !== -1 ? headerEndIdx + 1 : -1;
+  // ---- bảng ----
+  const hdr = parseHeader(lines);
+  const cols = hdr.cols, N = cols.length;
   const categories = [];
-  let total = null;
+  let total = null, skipped = 0;
 
-  if(startIdx !== -1){
+  if(hdr.dataStart !== -1){
     let pendingName = null;
-    for(let i = startIdx; i < lines.length; i++){
+    for(let i = hdr.dataStart; i < lines.length; i++){
       const rawLine = lines[i];
       if(rawLine === undefined) continue;
       const line = rawLine.trim();
@@ -738,55 +825,97 @@ function parseRaw(raw){
         parts = line.split(/\s{2,}/).map(s=>s.trim()).filter(s=>s!=='');
       }
 
-      if(parts.length === 10){
+      if(parts.length === N + 1){
         const name = parts[0];
-        const row = buildRow(name, parts.slice(1));
+        const row = buildRow(name, parts.slice(1), cols);
         if(/^t[ổo]ng/i.test(name)) total = row; else categories.push(row);
         pendingName = null;
-      } else if(parts.length === 9 && pendingName){
-        categories.push(buildRow(pendingName, parts));
+      } else if(parts.length === N && pendingName){
+        const row = buildRow(pendingName, parts, cols);
+        if(/^t[ổo]ng/i.test(pendingName)) total = row; else categories.push(row);
         pendingName = null;
       } else if(parts.length === 1){
         pendingName = parts[0];
+      } else {
+        skipped++;
       }
     }
   }
 
   detectHierarchy(categories, total ? total.revenueQD : null);
-
-  return { top, categories, total };
+  const parsed = { top, categories, total, unknownCols: hdr.unknown, skipped };
+  parsed.warnings = validateParsed(parsed);
+  return parsed;
 }
 
-function buildRow(name, values){
-  return {
-    name: name,
-    qty: num(values[0]),
-    revenueQD: num(values[1]),
-    sharePct: num(values[2]),
-    revenue: num(values[3]),
-    avg3m: num(values[4]),
-    growthPct: num(values[5]),
-    projected: num(values[6]),
-    installRev: num(values[7]),
-    installPct: num(values[8])
-  };
+function buildRow(name, values, cols){
+  const row = { name, qty:null, revenueQD:null, sharePct:null, revenue:null, avg3m:null, growthPct:null,
+                projected:null, directRev:null, installRev:null, returnRev:null, installPct:null };
+  cols.forEach((k,i) => { if(k) row[k] = num(values[i]); });
+  // Báo cáo mới không còn cột "% trả góp" → tự tính trên DT bán (trả thẳng + trả góp), luôn ≤ 100%
+  if(row.installPct === null && row.installRev !== null){
+    const gross = (row.directRev||0) + (row.installRev||0);
+    row.installPct = gross > 0 ? row.installRev/gross*100 : null;
+  }
+  return row;
+}
+
+/* Kiểm tra chéo dữ liệu nhập — trả về danh sách cảnh báo (rỗng = ổn) */
+function validateParsed(p){
+  const w = [];
+  const t = p.top, tot = p.total;
+  const parents = p.categories.filter(c => c.level === 'parent');
+  const need = [
+    ['dtQuyDoi','DT quy đổi'], ['htTargetPct','% HT target'], ['targetTronKy','Target trọn kỳ'], ['tienDoPct','Tiến độ'],
+    ['growthVsAvgPct','TT vs TB 3 tháng'], ['avg3mWindow','TB3T cùng cửa sổ'], ['projected','DT dự kiến'],
+    ['nhipNgay','Nhịp ngày'], ['tongNgay','Tổng ngày kỳ'], ['tlpvtcPct','TLPVTC'], ['installPct','Tỷ trọng trả chậm'],
+    ['loanQD','DT QĐ khoản vay'], ['chiPhi','Chi phí']
+  ].filter(([k]) => t[k] === null || t[k] === undefined).map(x => x[1]);
+  if(need.length) w.push('Thiếu số liệu đầu trang: ' + need.join(', '));
+  if(p.unknownCols && p.unknownCols.length) w.push('Cột chưa hỗ trợ (bị bỏ qua): ' + p.unknownCols.join(', '));
+  if(p.skipped) w.push('Bỏ qua ' + p.skipped + ' dòng không đọc được');
+  if(!tot){ w.push('Không thấy dòng Tổng'); return w; }
+  const sumQD = parents.reduce((a,c) => a + (c.revenueQD||0), 0);
+  if(Math.abs(sumQD - tot.revenueQD) > 3) w.push(`Tổng DT QĐ các ngành (${fmt(sumQD)}) lệch dòng Tổng (${fmt(tot.revenueQD)})`);
+  const m = String(tot.name).match(/\((\d+)\s*dòng\)/i);
+  if(m && +m[1] !== parents.length) w.push(`Dòng Tổng ghi ${m[1]} dòng nhưng đọc được ${parents.length} ngành hàng — kiểm tra phân cấp`);
+  if(t.dtQuyDoi !== null && Math.abs(t.dtQuyDoi - tot.revenueQD) > 1) w.push(`DT quy đổi đầu trang (${fmt(t.dtQuyDoi)}) ≠ dòng Tổng (${fmt(tot.revenueQD)})`);
+  if(tot.directRev !== null && tot.installRev !== null && tot.returnRev !== null){
+    const calc = tot.directRev + tot.installRev - tot.returnRev;
+    if(Math.abs(calc - tot.revenueQD) > 2) w.push(`Trả thẳng + trả góp − nhập trả = ${fmt(calc)} ≠ DT QĐ ${fmt(tot.revenueQD)}`);
+  }
+  if(t.installRevTotal !== null && tot.installRev !== null && Math.abs(t.installRevTotal - tot.installRev) > 1) w.push(`DT trả góp QĐ đầu trang (${fmt(t.installRevTotal)}) ≠ dòng Tổng (${fmt(tot.installRev)})`);
+  return w;
 }
 
 /* Phát hiện phân cấp Ngành hàng BI (cha) / Nhóm hàng BI (con):
-   - Dòng đầu tiên luôn là cha (mở nhóm đầu tiên).
-   - Một dòng là CHA nếu DTQĐ khác 0 và (DTQĐ/tổng toàn bộ*100) khớp với % tỉ trọng hiển thị
-     (vì % tỉ trọng của cha được tính trên tổng toàn store, còn của con tính trên tổng của cha).
-   - Dòng có DTQĐ = 0 không bao giờ tự nhận là cha mới (vì 0/x luôn = 0%, dễ nhận nhầm) —
-     luôn được gán làm con của cha gần nhất phía trên. */
+   - Dòng đầu tiên luôn là cha.
+   - Cha: DTQĐ ≠ 0 và (DTQĐ/tổng*100) khớp % tỉ trọng (của cha tính trên tổng toàn ST, của con tính trên cha).
+   - Sau khi xác định 1 cha, các dòng liền sau có tổng DTQĐ ≈ DTQĐ cha và tổng % ≈ 100 được "khoá" làm con
+     (tránh nhận nhầm nhóm con có tỉ trọng quá nhỏ thành ngành hàng cha).
+   - Dòng DTQĐ = 0 luôn là con của cha gần nhất phía trên. */
+function findChildRange(rows, i){
+  const P = rows[i].revenueQD;
+  if(!P) return i;
+  const tol = Math.max(3, Math.abs(P)*0.01);
+  let sumQD = 0, sumShare = 0;
+  for(let j = i+1; j < rows.length; j++){
+    sumQD += rows[j].revenueQD || 0;
+    sumShare += rows[j].sharePct || 0;
+    if(Math.abs(sumQD - P) <= tol && Math.abs(sumShare - 100) <= 1.5) return j;
+  }
+  return i;
+}
 function detectHierarchy(rows, grandTotalQD){
-  let currentParent = null;
+  let currentParent = null, claimedUntil = -1;
   rows.forEach((r, idx) => {
     let isParent;
-    if(idx === 0){
+    if(idx <= claimedUntil){
+      isParent = false;
+    } else if(idx === 0){
       isParent = true;
     } else if(r.revenueQD && r.revenueQD !== 0 && r.sharePct !== null && grandTotalQD){
-      const implied = r.revenueQD/grandTotalQD*100;
-      isParent = Math.abs(implied - r.sharePct) < 0.15;
+      isParent = Math.abs(r.revenueQD/grandTotalQD*100 - r.sharePct) < 0.15;
     } else {
       isParent = false;
     }
@@ -794,6 +923,7 @@ function detectHierarchy(rows, grandTotalQD){
       r.level = 'parent';
       r.parentName = null;
       currentParent = r.name;
+      claimedUntil = findChildRange(rows, idx);
     } else {
       r.level = 'child';
       r.parentName = currentParent;
@@ -812,28 +942,26 @@ function getChildrenOf(parentName){
   return state.categories.filter(c => c.level === 'child' && c.parentName === parentName);
 }
 function computeEffectiveTotal(parents){
-  // Khi không ẩn ngành hàng nào, dùng đúng số liệu dòng "Tổng" gốc từ báo cáo (một số cột
-  // như TB 3 tháng không phải phép cộng đơn giản qua các ngành hàng cha, nên cộng lại có
-  // thể lệch nhẹ so với số liệu chính thức). Chỉ khi có ẩn bớt mới cộng lại từ phần hiển thị.
+  // Khi không ẩn ngành hàng nào, dùng đúng dòng "Tổng" gốc từ báo cáo (một số cột như TB 3 tháng
+  // không phải phép cộng đơn giản). Chỉ khi có ẩn bớt mới cộng lại từ phần hiển thị.
   if(state.hidden.size === 0 && state.total){
     return { ...state.total, name: 'Tổng (' + parents.length + ' ngành)' };
   }
   const sum = (key) => parents.reduce((a,c) => a + (c[key]||0), 0);
   const revenueQD = sum('revenueQD');
-  const revenue = sum('revenue');
   const avg3m = sum('avg3m');
-  const qty = sum('qty');
-  const projected = sum('projected');
+  const directRev = sum('directRev');
   const installRev = sum('installRev');
+  const gross = directRev + installRev;
   return {
     name: 'Tổng (' + parents.length + ' ngành, đã lọc)',
-    qty, revenueQD, revenue,
+    qty: sum('qty'), revenueQD,
     sharePct: 100,
     avg3m,
     growthPct: avg3m > 0 ? ((revenueQD-avg3m)/avg3m*100) : null,
-    projected,
-    installRev,
-    installPct: revenue > 0 ? (installRev/revenue*100) : null
+    projected: sum('projected'),
+    directRev, installRev, returnRev: sum('returnRev'),
+    installPct: gross > 0 ? (installRev/gross*100) : null
   };
 }
 
@@ -844,6 +972,7 @@ function renderHero(){
   document.getElementById('hero-store-name').textContent = 'Siêu thị: ' + store;
   const bits = [];
   if(state.top.dtQuyDoiDate) bits.push('<b>Lũy kế tới ngày</b> ' + state.top.dtQuyDoiDate);
+  if(state.top.nhipNgay && state.top.tongNgay) bits.push('<b>Nhịp</b> ' + state.top.nhipNgay + '/' + state.top.tongNgay + ' ngày');
   if(date) bits.push('<b>Ngày nhập</b> ' + date);
   const visibleCount = getVisibleParents().length;
   bits.push('<b>' + visibleCount + '</b> ngành hàng BI hiển thị' + (state.hidden.size ? ' · <b>' + state.hidden.size + '</b> đang ẩn' : ''));
@@ -852,12 +981,12 @@ function renderHero(){
 
 function renderStatStrip(){
   const t = state.total || {};
-  const top = state.top;
   const chips = [
     { label: 'Số ngành hàng BI (gốc)', value: fmt(getParents().length) },
     { label: 'Tổng số lượng', value: fmt(t.qty) },
-    { label: 'Doanh thu thực (tr.đ)', value: fmt(t.revenue) },
-    { label: 'DT quy đổi (tr.đ)', value: fmt(t.revenueQD ?? top.dtQuyDoi) }
+    { label: 'DT trả thẳng QĐ (tr.đ)', value: fmt(t.directRev) },
+    { label: 'DT trả góp QĐ (tr.đ)', value: fmt(t.installRev) },
+    { label: 'DT nhập trả QĐ (tr.đ)', value: t.returnRev ? '−' + fmt(t.returnRev) : fmt(t.returnRev) }
   ];
   document.getElementById('stat-strip').innerHTML = chips.map(c =>
     `<div class="stat-chip"><strong>${c.value}</strong><span>${c.label}</span></div>`
@@ -868,9 +997,21 @@ function renderKPI(){
   const top = state.top;
   const t = state.total || {};
   const grandRevenueQD = t.revenueQD ?? top.dtQuyDoi;
-  const liveHtTargetPct = state.totalTarget > 0 ? (grandRevenueQD/state.totalTarget*100) : top.htTargetPct;
+  const target = state.totalTarget || top.targetTronKy || 0;
+  const liveHtTargetPct = target > 0 ? (grandRevenueQD/target*100) : top.htTargetPct;
   const aheadOfPace = (liveHtTargetPct !== null && top.tienDoPct !== null) ? (liveHtTargetPct - top.tienDoPct) : null;
-  const projectedVsTarget = (top.projected && state.totalTarget > 0) ? (top.projected / state.totalTarget * 100) : null;
+  const projectedVsTarget = (top.projected && target > 0) ? (top.projected / target * 100) : null;
+
+  // Số liệu suy ra: còn thiếu bao nhiêu để đạt target & cần chạy bao nhiêu mỗi ngày
+  const daysLeft = (top.tongNgay && top.nhipNgay) ? top.tongNgay - top.nhipNgay : null;
+  const runRate = (top.nhipNgay > 0) ? grandRevenueQD / top.nhipNgay : null;
+  const gap = target > 0 ? target - grandRevenueQD : null;
+  const needPerDay = (gap !== null && gap > 0 && daysLeft > 0) ? gap / daysLeft : null;
+
+  const direct = t.directRev, install = t.installRev ?? top.installRevTotal, ret = t.returnRev;
+  const gross = (direct != null && install != null) ? direct + install : null;
+  const returnPct = (gross > 0 && ret != null) ? ret / gross * 100 : null;
+  const loanRatio = (top.loanDisb > 0 && top.loanQD != null) ? top.loanQD / top.loanDisb * 100 : null;
 
   const cards = [];
 
@@ -880,8 +1021,8 @@ function renderKPI(){
   });
 
   cards.push({
-    label: '% HT target', value: fmtPct(liveHtTargetPct),
-    sub: `Target tổng ${fmt(state.totalTarget || top.targetTronKy,1)} tr.đ · tiến độ thời gian ${fmtPct(top.tienDoPct)}`,
+    label: '% HT target', value: fmtPctPlain(liveHtTargetPct),
+    sub: `Target trọn kỳ ${fmt(target)} tr.đ · tiến độ thời gian ${fmtPctPlain(top.tienDoPct)}`,
     progress: [
       { pct: Math.min(liveHtTargetPct||0,100) },
       { pct: Math.min(top.tienDoPct||0,100) }
@@ -895,29 +1036,55 @@ function renderKPI(){
   });
 
   cards.push({
-    label: 'DT dự kiến (30 ngày)', value: fmt(top.projected) + '<span class="unit">tr.đ</span>',
-    sub: 'Ngoại suy từ nhịp ' + (top.nhipNgay||'—') + ' ngày đầu kỳ',
+    label: 'DT dự kiến' + (top.tongNgay ? ` (${top.tongNgay} ngày)` : ''), value: fmt(top.projected) + '<span class="unit">tr.đ</span>',
+    sub: 'Ngoại suy từ nhịp ' + (top.nhipNgay||'—') + ' ngày' + (top.tongNgay ? ' → ' + top.tongNgay + ' ngày' : ''),
     badge: projectedVsTarget !== null ? { text: 'Dự kiến đạt ' + fmt(projectedVsTarget,0) + '% target', good: projectedVsTarget>=100 } : null
   });
 
+  if(gap !== null){
+    const done = gap <= 0;
+    cards.push({
+      label: done ? 'Đã vượt target' : 'Còn thiếu để đạt target',
+      value: fmt(Math.abs(gap)) + '<span class="unit">tr.đ</span>',
+      valueClass: done ? 'v-good' : '',
+      sub: done
+        ? 'Vượt target trọn kỳ ' + fmt(target) + ' tr.đ'
+        : (daysLeft > 0
+            ? `Cần ${fmt(needPerDay)} tr.đ/ngày × ${daysLeft} ngày còn lại · hiện đạt ${fmt(runRate)} tr.đ/ngày`
+            : 'Đã hết kỳ'),
+      badge: (!done && needPerDay !== null && runRate !== null)
+        ? { text: needPerDay <= runRate ? 'Giữ nhịp hiện tại là đủ' : 'Cần tăng nhịp ×' + fmt(needPerDay/runRate,1), good: needPerDay <= runRate }
+        : null
+    });
+  }
+
   cards.push({
-    label: 'TLPVTC lũy kế', value: fmtPct(top.tlpvtcPct),
+    label: 'TLPVTC lũy kế', value: fmtPctPlain(top.tlpvtcPct),
     sub: `${fmt(top.bill)} bill / ${fmt(top.khach)} khách · ${top.stCoMayDem||'—'}/${top.stTong||'—'} ST có máy đếm`
   });
 
   cards.push({
-    label: 'Tỉ trọng trả góp', value: fmtPct(top.installPct),
-    sub: `DT trả góp ${fmt(top.installRevTotal)} / ${fmt(top.revenueTotal)} tr.đ (trên doanh thu thực)`
+    label: 'Tỷ trọng trả chậm', value: fmtPctPlain(top.installPct),
+    sub: `DT trả góp QĐ ${fmt(top.installRevTotal)} / ${fmt(top.installBase ?? grandRevenueQD)} tr.đ` + (direct != null ? ` · trả thẳng QĐ ${fmt(direct)}` : '')
   });
+
+  if(ret != null){
+    cards.push({
+      label: 'DT nhập trả QĐ', value: fmt(ret) + '<span class="unit">tr.đ</span>',
+      sub: returnPct !== null
+        ? `${fmtPctPlain(returnPct)} trên DT bán QĐ ${fmt(gross)} (trả thẳng + trả góp) · đã trừ vào DT quy đổi`
+        : 'Đã trừ vào DT quy đổi'
+    });
+  }
 
   cards.push({
     label: 'DT quy đổi khoản vay', value: fmt(top.loanQD) + '<span class="unit">tr.đ</span>',
-    sub: 'Giải ngân ' + fmt(top.loanCount) + ' khoản, tới ' + (top.loanDate || '—')
+    sub: 'Giải ngân ' + fmt(top.loanDisb) + ' tr.đ' + (loanRatio !== null ? ' (QĐ = ' + fmtPctPlain(loanRatio) + ')' : '') + ' · tới ' + (top.loanDate || '—')
   });
 
   cards.push({
     label: 'Chi phí', value: fmt(top.chiPhi) + '<span class="unit">tr.đ</span>',
-    sub: fmtPct(top.chiPhiPct) + ' trên DT lũy kế'
+    sub: fmtPctPlain(top.chiPhiPct) + ' trên DT lũy kế'
   });
 
   document.getElementById('kpi-grid').innerHTML = cards.map((c,i) => {
@@ -939,15 +1106,70 @@ function renderKPI(){
   }).join('');
 }
 
+/* Bộ chọn hiển thị cho biểu đồ "Biến động theo ngành hàng BI": chọn được cả ngành lớn lẫn nhóm con */
+function childKey(parentName, childName){ return parentName + '||' + childName; }
+function getChartItems(){
+  const items = [];
+  getVisibleParents().forEach(p => {
+    items.push({ key: p.name, row: p, isChild: false, label: displayName(p.name), parentLabel: null });
+    getChildrenOf(p.name).forEach(ch => items.push({
+      key: childKey(p.name, ch.name), row: ch, isChild: true, label: displayName(ch.name), parentLabel: displayName(p.name)
+    }));
+  });
+  return items;
+}
+function renderChartPicker(){
+  const body = document.getElementById('chart-picker');
+  body.hidden = !state.chartPickerOpen;
+  const sel = state.chartSel || new Set();
+  const all = getChartItems();
+  const n = all.filter(i => sel.has(i.key)).length;
+  document.getElementById('chart-picker-count').textContent = `(đang hiện ${n}/${all.length})`;
+  if(!state.chartPickerOpen) return;
+
+  const gCls = (g) => g === null || g === undefined ? '' : (g >= 0 ? 'pos' : 'neg');
+  const list = document.getElementById('chart-picker-list');
+  const scroll = list.scrollTop;
+  list.innerHTML = getVisibleParents().map(p => {
+    const kids = getChildrenOf(p.name);
+    const open = state.chartExp.has(p.name);
+    const allKidsOn = kids.length > 0 && kids.every(k => sel.has(childKey(p.name, k.name)));
+    const parentRow = `
+      <div class="pk-row pk-parent">
+        ${kids.length ? `<button type="button" class="pk-tog" data-pk-exp="${escapeHtml(p.name)}">${open?'▾':'▸'}</button>` : `<span class="pk-tog leaf">•</span>`}
+        <label><input type="checkbox" data-pk="${escapeHtml(p.name)}" ${sel.has(p.name)?'checked':''}><span class="pk-name" title="${escapeHtml(p.name)}">${escapeHtml(displayName(p.name))}</span></label>
+        <span class="pk-meta ${gCls(p.growthPct)}">${fmtPct(p.growthPct)}</span>
+        ${kids.length ? `<button type="button" class="pk-all" data-pk-kids="${escapeHtml(p.name)}" title="${allKidsOn?'Bỏ chọn':'Chọn'} tất cả nhóm con">${allKidsOn?'− con':'+ con'} (${kids.length})</button>` : ''}
+      </div>`;
+    const kidRows = open ? kids.map(k => `
+      <div class="pk-row pk-child">
+        <label><input type="checkbox" data-pk="${escapeHtml(childKey(p.name, k.name))}" ${sel.has(childKey(p.name, k.name))?'checked':''}><span class="pk-name" title="${escapeHtml(k.name)}">${escapeHtml(displayName(k.name))}</span></label>
+        <span class="pk-meta ${gCls(k.growthPct)}">${fmtPct(k.growthPct)}</span>
+      </div>`).join('') : '';
+    return parentRow + kidRows;
+  }).join('');
+  list.scrollTop = scroll;
+}
+
 function renderBarChart(){
-  const cats = [...getVisibleParents()].sort((a,b) => (b.growthPct??-999) - (a.growthPct??-999));
-  const maxAbs = Math.max(1, ...cats.map(c => Math.abs(c.growthPct||0)));
-  document.getElementById('bar-chart').innerHTML = cats.map(c => {
-    const g = c.growthPct;
+  if(!state.chartSel) state.chartSel = new Set(getParents().map(c => c.name));
+  renderChartPicker();
+  const sel = state.chartSel;
+  const items = getChartItems().filter(i => sel.has(i.key))
+    .sort((a,b) => (b.row.growthPct ?? -Infinity) - (a.row.growthPct ?? -Infinity));
+  const maxAbs = Math.max(1, ...items.map(i => Math.abs(i.row.growthPct||0)));
+  const el = document.getElementById('bar-chart');
+  if(!items.length){
+    el.innerHTML = '<p style="margin:8px 0;font-size:12.5px;color:var(--text-faint);">Chưa chọn ngành hàng nào — bấm “Chọn ngành hàng / nhóm hàng hiển thị” để chọn.</p>';
+    return;
+  }
+  el.innerHTML = items.map(i => {
+    const g = i.row.growthPct;
     const pos = (g||0) >= 0;
     const width = g === null ? 0 : Math.max(2, Math.abs(g)/maxAbs*100);
-    return `<div class="bar-row">
-      <span class="bar-name" title="${escapeHtml(displayName(c.name))}">${escapeHtml(displayName(c.name))}</span>
+    const tip = `${displayName(i.row.name)}${i.parentLabel ? ' (thuộc ' + i.parentLabel + ')' : ''} · DT QĐ ${fmt(i.row.revenueQD)} · TB3T ${fmt(i.row.avg3m)}`;
+    return `<div class="bar-row ${i.isChild?'child':'parent'}">
+      <span class="bar-name" title="${escapeHtml(tip)}"><span class="bar-tag">${i.isChild?'CON':'NGÀNH'}</span>${escapeHtml(i.label)}${i.parentLabel ? `<span class="bar-parent">‹ ${escapeHtml(i.parentLabel)}</span>` : ''}</span>
       <div class="bar-track"><div class="bar-fill ${pos?'pos':'neg'}" style="width:${width}%"></div></div>
       <span class="bar-val ${pos?'pos':'neg'}">${fmtPct(g)}</span>
     </div>`;
@@ -1011,13 +1233,15 @@ function cellFor(row, key, idx){
     case 'name': return { html: escapeHtml(displayName(row.name)), cls: 'name-cell' };
     case 'qty': return { html: fmt(row.qty), cls: '' };
     case 'revenueQD': return { html: fmt(row.revenueQD), cls: '' };
-    case 'sharePct': return { html: fmtPct(row.sharePct), cls: '' };
+    case 'sharePct': return { html: fmtPctPlain(row.sharePct), cls: '' };
     case 'revenue': return { html: fmt(row.revenue), cls: '' };
     case 'avg3m': return { html: fmt(row.avg3m), cls: '' };
     case 'growthPct': return { html: fmtPct(row.growthPct), cls: (row.growthPct||0)>=0 ? 'pos':'neg' };
     case 'projected': return { html: fmt(row.projected), cls: '' };
+    case 'directRev': return { html: fmt(row.directRev), cls: '' };
     case 'installRev': return { html: fmt(row.installRev), cls: '' };
-    case 'installPct': return { html: fmtPct(row.installPct), cls: '' };
+    case 'returnRev': return { html: fmt(row.returnRev), cls: '' };
+    case 'installPct': return { html: fmtPctPlain(row.installPct), cls: '' };
     default: return { html: '—', cls: '' };
   }
 }
@@ -1213,29 +1437,81 @@ function renderAll(){
 document.getElementById('parse-button').addEventListener('click', () => {
   const raw = document.getElementById('raw-input').value;
   const status = document.getElementById('parser-status');
+  status.style.color = '';
   try{
     const parsed = parseRaw(raw);
     if(!parsed.categories.length){
       status.textContent = 'Không tìm thấy dòng ngành hàng nào — kiểm tra lại định dạng dữ liệu dán vào.';
+      status.style.color = 'var(--bad)';
       return;
     }
     state.top = parsed.top;
     state.categories = parsed.categories;
     state.total = parsed.total;
     state.hidden = new Set();
-    state.expanded = new Set();
     state.fullHiddenCols = new Set();
     state.goodHiddenCols = new Set();
     state.sort = { key: null, dir: 1 };
     state.kpiPalette = pickKpiPalette();
     state.totalTarget = parsed.top.targetTronKy || 0;
+    // Tự bung dòng "Chưa phân loại" để thấy ngay đó là nhóm hàng nào
+    state.expanded = new Set(getParents().filter(c => normLabel(c.name).includes('CHUA PHAN LOAI')).map(c => c.name));
+    state.chartSel = new Set(getParents().map(c => c.name));
+    state.chartExp = new Set();
     renderAll();
     const parentCount = getParents().length;
-    status.textContent = `Đã phân tích ${parentCount} ngành hàng BI (${parsed.categories.length - parentCount} nhóm hàng con) thành công.`;
+    let msg = `Đã phân tích ${parentCount} ngành hàng BI (${parsed.categories.length - parentCount} nhóm hàng con).`;
+    if(parsed.warnings.length){
+      msg += ' ⚠ ' + parsed.warnings.join(' · ');
+      status.style.color = 'var(--bad)';
+    } else {
+      msg += ' Dữ liệu khớp chéo OK.';
+    }
+    status.textContent = msg;
   }catch(err){
     console.error(err);
     status.textContent = 'Có lỗi khi phân tích dữ liệu. Vui lòng kiểm tra định dạng.';
+    status.style.color = 'var(--bad)';
   }
+});
+
+/* --- bộ chọn biểu đồ biến động --- */
+document.getElementById('chart-picker-toggle').addEventListener('click', () => {
+  state.chartPickerOpen = !state.chartPickerOpen;
+  renderBarChart();
+});
+document.getElementById('chart-picker').addEventListener('click', (e) => {
+  const act = e.target.closest('[data-pk-act]');
+  const exp = e.target.closest('[data-pk-exp]');
+  const kids = e.target.closest('[data-pk-kids]');
+  if(act){
+    const a = act.dataset.pkAct;
+    const parents = getVisibleParents();
+    if(a === 'parents') state.chartSel = new Set(parents.map(p => p.name));
+    else if(a === 'children') state.chartSel = new Set(parents.flatMap(p => getChildrenOf(p.name).map(k => childKey(p.name, k.name))));
+    else if(a === 'all') state.chartSel = new Set(getChartItems().map(i => i.key));
+    else if(a === 'none') state.chartSel = new Set();
+    else if(a === 'expand') parents.forEach(p => { if(getChildrenOf(p.name).length) state.chartExp.add(p.name); });
+    else if(a === 'collapse') state.chartExp = new Set();
+    renderBarChart();
+  } else if(exp){
+    const n = exp.dataset.pkExp;
+    if(state.chartExp.has(n)) state.chartExp.delete(n); else state.chartExp.add(n);
+    renderBarChart();
+  } else if(kids){
+    const n = kids.dataset.pkKids;
+    const keys = getChildrenOf(n).map(k => childKey(n, k.name));
+    const allOn = keys.every(k => state.chartSel.has(k));
+    keys.forEach(k => allOn ? state.chartSel.delete(k) : state.chartSel.add(k));
+    state.chartExp.add(n);
+    renderBarChart();
+  }
+});
+document.getElementById('chart-picker').addEventListener('change', (e) => {
+  const cb = e.target.closest('input[data-pk]');
+  if(!cb) return;
+  if(cb.checked) state.chartSel.add(cb.dataset.pk); else state.chartSel.delete(cb.dataset.pk);
+  renderBarChart();
 });
 
 document.getElementById('full-table').addEventListener('click', (e) => {
@@ -1269,14 +1545,19 @@ document.getElementById('export-button').addEventListener('click', () => {
     const nav = document.querySelector('.mwg-nav');
     const prevVisibility = nav ? nav.style.visibility : '';
     if(nav) nav.style.visibility = 'hidden';
+    const hid = [...document.querySelectorAll('.no-capture')].map(x => [x, x.style.display]);
+    hid.forEach(([x]) => x.style.display = 'none');
+    const restore = () => hid.forEach(([x,d]) => x.style.display = d);
     return html2canvas(el, { backgroundColor: '#f0f4f8', scale: 2 }).then(canvas => {
       if(nav) nav.style.visibility = prevVisibility;
+      restore();
       const link = document.createElement('a');
       link.download = `bao-cao-${store}-${date}-${suffix}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     }).catch(err => {
       if(nav) nav.style.visibility = prevVisibility;
+      restore();
       throw err;
     });
   }
