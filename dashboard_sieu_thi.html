@@ -426,6 +426,8 @@ function normHeaderV1(s){
 function classifyHeaderV1(raw){
   const h = normHeaderV1(raw);
   if(h === 'SO LUONG') return 'sl';
+  if(h.includes('TRA THANG')) return 'directRev';   // DT TRẢ THẲNG QĐ
+  if(h.includes('NHAP TRA'))  return 'returnRev';   // DT NHẬP TRẢ QĐ
   if(h.includes('DOANH THU') && h.includes('QD')) return 'dt';
   if(h.includes('TI TRONG')) return 'tiTrong';
   if(h === 'DOANH THU') return 'dtPlain';
@@ -435,9 +437,41 @@ function classifyHeaderV1(raw){
   if(h === '% TT' || h === 'TT') return 'growthPct';
   if(h.includes('DU KIEN')) return 'projected';
   if(h.includes('TRA GOP') && h.startsWith('%')) return 'installPct';
-  if(h.includes('TRA GOP')) return 'installRev';
+  if(h.includes('TRA GOP')) return 'installRev';   // DT TRẢ GÓP QĐ
   return undefined;
 }
+
+// Token này có phải là DỮ LIỆU (tên dòng dạng "10 - Avapos" / "172556 - Tên NV" / "Tổng ..." / số) không?
+function looksLikeDataV1(tok){
+  return /^-?\d+\s*-\s*\S/.test(tok) || /^online\s*-/i.test(tok) || /^t[ổo]ng\b/i.test(tok) || /^[-+]?[\d.,]+%?$/.test(tok);
+}
+// Đọc phần tiêu đề cột. Mỗi dòng tiêu đề có thể là 1 cột/dòng HOẶC nhiều cột cách nhau bằng tab.
+// Cột lạ không nhận diện được -> giữ chỗ (null) để KHÔNG làm lệch vị trí các cột phía sau.
+function readHeaderColumns(rawLines, defaultCols){
+  const cols = [];
+  let idx = -1;
+  for(let i=0;i<rawLines.length;i++){
+    const t = rawLines[i].trim();
+    if(t === '') continue;
+    const tokens = t.split('\t').map(x=>x.trim()).filter(Boolean);
+    const keys = [];
+    let isData = false;
+    for(const tok of tokens){
+      const n = normHeaderV1(tok);
+      if(n.includes('NGANH HANG BI') || n.includes('NHOM HANG BI') || n === 'NHAN VIEN') continue; // tiêu đề cột tên
+      const k = classifyHeaderV1(tok);
+      if(k === undefined){
+        if(looksLikeDataV1(tok)){ isData = true; break; }
+        keys.push(null);
+      } else keys.push(k);
+    }
+    if(isData){ idx = i; break; }
+    cols.push(...keys);
+  }
+  if(idx === -1) idx = rawLines.length;
+  return { cols: cols.length ? cols : defaultCols, idx };
+}
+const DEFAULT_COLS_V1 = ['sl','dt','tiTrong','avg3m','growthPct','directRev','installRev','returnRev'];
 
 function parseV1(raw){
   const rows = [];
@@ -446,32 +480,16 @@ function parseV1(raw){
 
   const rawLines = raw.replace(/\r/g,'').split('\n');
 
-  // Bước 1: đọc phần tiêu đề để suy ra ĐÚNG thứ tự cột hiện có (số cột và ý nghĩa từng
-  // cột có thể đổi giữa các lần export — không còn giả định cứng số cột nữa).
-  let firstDataLineIdx = -1;
-  const columnOrder = [];
-  let sawTitle = false;
-  for(let i=0;i<rawLines.length;i++){
-    const t = rawLines[i].trim();
-    if(t === '') continue;
-    if(!sawTitle){
-      sawTitle = true;
-      if(/NGÀNH HÀNG BI/i.test(t) && /NHÓM HÀNG BI/i.test(t)) continue; // dòng tiêu đề bảng, bỏ qua
-    }
-    const key = classifyHeaderV1(t);
-    if(key === undefined){ firstDataLineIdx = i; break; }
-    columnOrder.push(key);
-  }
-  if(firstDataLineIdx === -1) firstDataLineIdx = rawLines.length;
-  // Nếu vì lý do gì đó không đọc được tiêu đề (người dùng dán thiếu), vẫn cố lấy tối thiểu
-  // SL/DTQĐ/%Tỉ trọng/Doanh thu theo đúng thứ tự luôn xuất hiện đầu tiên ở mọi định dạng.
-  const cols = columnOrder.length ? columnOrder : ['sl','dt','tiTrong','dtPlain'];
+  // Bước 1: đọc tiêu đề để biết ĐÚNG thứ tự cột của lần export này.
+  const hdr = readHeaderColumns(rawLines, DEFAULT_COLS_V1);
+  const firstDataLineIdx = hdr.idx;
+  const cols = hdr.cols;
 
   const numOrZero = (s)=>{ const n=parseVNNumber(s); return isNaN(n)?0:n; };
   const numOrNull = (s)=>{ const n=parseVNNumber(s); return isNaN(n)?null:n; };
   function buildRow(name, vals){
     const row = { name, nameLow: name.toLowerCase(), level:'', parentName:null,
-      sl:0, dt:0, tiTrong:null, dtPlain:0, avg3m:0, growthPct:null, projected:0, installRev:0, installPct:null };
+      sl:0, dt:0, tiTrong:null, dtPlain:0, avg3m:0, growthPct:null, projected:0, installRev:0, installPct:null, directRev:0, returnRev:0 };
     cols.forEach((key, idx) => {
       if(!key) return; // cột bị bỏ qua có chủ đích (Target, % HT Target)
       const rawVal = vals[idx];
@@ -489,6 +507,7 @@ function parseV1(raw){
     if(/^Đơn vị/i.test(line)){ pendingName = null; continue; }
 
     const parts = rawLine.split('\t').map(s=>s.trim());
+    while(parts.length>1 && parts[parts.length-1]==='') parts.pop(); // bỏ tab thừa cuối dòng
     if(parts.length === 1){
       pendingName = parts[0];
       continue;
@@ -551,14 +570,15 @@ function detectHierarchyV1(rows, grandTotalQD){
 // cùng lúc sẽ cộng đôi (VD từ khoá "laptop" khớp cả "2 - Laptop" (cha) và "5 - Laptop" (con)).
 function summarizeV1(parsed){
   const {rows, tongRow} = parsed;
-  if(!rows.length && !tongRow) return {totalDT:0,totalDTPlain:0,ictRows:[],bkRows:[],totICT:0};
+  if(!rows.length && !tongRow) return {totalDT:0,totalDTPlain:0,totalDirect:0,totalInstall:0,totalReturn:0,ictRows:[],bkRows:[],totICT:0};
 
   const parents = rows.filter(r => r.level === 'parent');
-  let totalDT=0, totalDTPlain=0;
+  let totalDT=0, totalDTPlain=0, totalDirect=0, totalInstall=0, totalReturn=0;
   if(tongRow){
     totalDT = tongRow.dt; totalDTPlain = tongRow.dtPlain;
+    totalDirect = tongRow.directRev; totalInstall = tongRow.installRev; totalReturn = tongRow.returnRev;
   } else {
-    for(const p of parents){ totalDT += p.dt; totalDTPlain += p.dtPlain; }
+    for(const p of parents){ totalDT += p.dt; totalDTPlain += p.dtPlain; totalDirect += p.directRev; totalInstall += p.installRev; totalReturn += p.returnRev; }
   }
 
   // Xây danh sách "lá": con của từng cha nếu có, ngược lại lấy chính dòng cha đó.
@@ -584,7 +604,7 @@ function summarizeV1(parsed){
     return {label:cat.label, sl, pct};
   }).filter(r=>r.sl>0);
 
-  return {totalDT, totalDTPlain, ictRows, bkRows, totICT, parents};
+  return {totalDT, totalDTPlain, totalDirect, totalInstall, totalReturn, ictRows, bkRows, totICT, parents};
 }
 
 // ── VÙNG 2: DỮ LIỆU THI ĐUA (DÁN TRỰC TIẾP) ──
@@ -670,17 +690,15 @@ function parseV3(raw){
   if(!raw || !raw.trim()) return [];
   const lines = raw.replace(/\r/g,'').split('\n');
   const empNameRe = /^(\d+|online)\s*-\s*.+/i;
-  const parseValNum = (s)=>{
-    const n = parseVNNumber(s);
-    return isNaN(n) ? 0 : n;
-  };
-  const parseValOrNull = (s)=>{
-    const n = parseVNNumber(s);
-    return isNaN(n) ? null : n;
-  };
+  const num = (v)=>{ const n = parseVNNumber(v); return isNaN(n) ? 0 : n; };
+  const numOrNull = (v)=>{ const n = parseVNNumber(v); return isNaN(n) ? null : n; };
+
+  // Đọc tiêu đề cột (đúng thứ tự của lần export này) thay vì giả định cứng vị trí cột.
+  const hdr = readHeaderColumns(lines, DEFAULT_COLS_V1);
+  const cols = hdr.cols;
 
   const items=[];
-  let i=0;
+  let i = hdr.idx;
   while(i<lines.length){
     const line = lines[i];
     const trimmed = line.trim();
@@ -689,21 +707,32 @@ function parseV3(raw){
       i++;
       while(i<lines.length && !lines[i].includes('\t')) i++;
       if(i>=lines.length) break;
-      const cols = lines[i].split('\t');
+      const vals = lines[i].split('\t');
       i++;
-      items.push({
-        name,
-        sl:        parseValNum(cols[0]),
-        dtQD:      parseValNum(cols[1]),
-        tiTrong:   parseValOrNull(cols[2]),
-        dt:        parseValNum(cols[3]),
-        target:    parseValOrNull(cols[4]),
-        pctTarget: parseValOrNull(cols[5]),
-        tb3:       parseValNum(cols[6]),
-        pctTT:     parseValOrNull(cols[7]),
-        dtTraGop:  parseValNum(cols[8]),
-        pctTraGop: parseValOrNull(cols[9]),
+      const e = { name, sl:0, dtQD:0, tiTrong:null, dt:0, avg3m:0, growthPct:null,
+                  dtTraThang:0, dtTraGop:0, dtNhapTra:0, pctTraGop:null };
+      cols.forEach((key, idx)=>{
+        if(!key) return;
+        const v = vals[idx];
+        if(v===undefined) return;
+        switch(key){
+          case 'sl':         e.sl = num(v); break;
+          case 'dt':         e.dtQD = num(v); break;
+          case 'tiTrong':    e.tiTrong = numOrNull(v); break;
+          case 'dtPlain':    e.dt = num(v); break;
+          case 'avg3m':      e.avg3m = num(v); break;
+          case 'growthPct':  e.growthPct = numOrNull(v); break;
+          case 'directRev':  e.dtTraThang = num(v); break;
+          case 'installRev': e.dtTraGop = num(v); break;
+          case 'returnRev':  e.dtNhapTra = num(v); break;
+          case 'installPct': e.pctTraGop = numOrNull(v); break;
+        }
       });
+      // Định dạng mới không có sẵn cột "% trả góp" -> tự tính = DT trả góp QĐ / DT QĐ của nhân viên
+      if(!cols.includes('installPct')){
+        e.pctTraGop = e.dtQD > 0 ? (e.dtTraGop / e.dtQD * 100) : null;
+      }
+      items.push(e);
     } else {
       i++;
     }
@@ -796,12 +825,12 @@ function makeRow(g){
 }
 
 const ICT_MAP = [
-  { label:'Điện Thoại', keys:['smartphone','điện thoại di động','điện thoai','nnh điện thoại mới','điện thoại mới','điện thoại'] },
-  { label:'Tablet',     keys:['tablet','máy tính bảng','nnh tablet'] },
-  { label:'Laptop',     keys:['laptop','nnh laptop'] },
+  { label:'Điện Thoại', keys:['smartphone','iphone','điện thoại di động','điện thoai','nnh điện thoại mới','điện thoại mới','điện thoại'] },
+  { label:'Tablet',     keys:['tablet','ipad','máy tính bảng','nnh tablet'] },
+  { label:'Laptop',     keys:['laptop','macbook','nnh laptop'] },
   { label:'Máy Cũ',     keys:['máy cũ','nnh máy cũ'] },
   { label:'Đồng Hồ',   keys:['đồng hồ','nnh đồng hồ'] },
-  { label:'Wearable',   keys:['wearable','nnh wearable'] },
+  { label:'Wearable',   keys:['wearable','apple watch','nnh wearable'] },
 ];
 
 const BK_MAP = [
@@ -951,9 +980,9 @@ function build(){
         <div class="tc-val">${fmtPct(h.totalPct)}</div>
       </div>
       <div class="tc">
-        <div class="tc-label">Doanh thu thực</div>
-        <div class="tc-val">${h.totalDTPlain.toFixed(0)}tr</div>
-        <div class="tc-sub">Chưa quy đổi</div>
+        <div class="tc-label">DT trả góp (QĐ)</div>
+        <div class="tc-val">${h.totalInstall.toFixed(0)}tr</div>
+        <div class="tc-sub">Trả thẳng ${h.totalDirect.toFixed(0)}tr · Nhập trả ${h.totalReturn.toFixed(0)}tr</div>
       </div>
       <div class="tc">
         <div class="tc-label">Nhóm hàng đạt</div>
